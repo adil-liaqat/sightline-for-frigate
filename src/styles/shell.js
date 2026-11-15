@@ -2021,4 +2021,203 @@ ${STYLES}
 .card #eng-wrap:-webkit-full-screen,
 .card #eng-wrap.live-pseudo-fullscreen{height:100vh !important;height:100dvh !important;max-height:none !important;}
 
+
+/* ─────────────────────────────────────────────────────────────
+   Timeline redesign (vertical): flat panel, colour-coded detections,
+   compact event rows and a single LIVE/time playhead pill. Last in the
+   stylesheet so it supersedes the earlier visual passes above.
+   ───────────────────────────────────────────────────────────── */
+.card .tl-sec{
+  background:#161618 !important;
+  border:1px solid rgba(255,255,255,.07) !important;
+  box-shadow:none !important;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.card .tl-head::before{font-size:15px !important;font-weight:650 !important;color:#f5f5f7 !important;}
+.card .tl-head #tl-range{color:#a1a1a6 !important;font-size:11px !important;font-weight:500 !important;font-variant-numeric:tabular-nums;}
+.card .tl-tools .tool,
+.card .tl-tools > .tool{
+  height:32px !important;min-height:32px !important;min-width:32px !important;
+  border-radius:10px !important;border:0 !important;
+  background:#2c2c2e !important;box-shadow:none !important;
+  color:#f5f5f7 !important;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.card .tl-tools .tool:hover{background:#3a3a3c !important;}
+.card .tl-tools > .tool{flex:0 0 auto !important;width:34px !important;padding:0 !important;}
+.card .tl-tools > .tool svg{width:16px;height:16px;}
+.card .tl-tools{justify-content:flex-end !important;}
+.card .tl-zoom-controls{background:#2c2c2e !important;border:0 !important;border-radius:10px !important;box-shadow:none !important;padding:0 !important;}
+.card .tl-zoom-controls .tool{background:transparent !important;}
+
+.card .tl-track.vertical{
+  --tl-gutter:clamp(76px,20vw,90px);
+  --tl-row-left:calc(var(--tl-rail) + 18px);
+  margin-top:16px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(255,255,255,.06) !important;
+  background:#111113 !important;
+  box-shadow:none !important;
+}
+.card .tl-track.vertical::before{display:none !important;}
+.card .tl-track.vertical::after{
+  left:calc(var(--tl-rail) - 3px) !important;width:6px !important;border-radius:3px;
+  background:rgba(255,255,255,.06) !important;box-shadow:none !important;
+}
+
+/* Hatched "future" region above the LIVE line. */
+.card .tl-track.vertical .tl-future{
+  position:absolute;left:0;right:0;top:0;
+  background:repeating-linear-gradient(135deg,rgba(255,255,255,.028) 0 6px,transparent 6px 12px);
+  pointer-events:none;z-index:0;
+}
+
+/* Scale: quiet labels, full-width hairlines on major ticks. */
+.card .tl-track.vertical .tl-scale-mark span{
+  color:#8e8e93 !important;font-size:11px !important;font-weight:600 !important;letter-spacing:0 !important;
+}
+.card .tl-track.vertical .tl-scale-mark.hour span{color:#d1d1d6 !important;}
+.card .tl-track.vertical .tl-scale-mark i{
+  left:var(--tl-gutter) !important;right:0 !important;width:auto !important;transform:none !important;
+  background:rgba(255,255,255,.045) !important;
+}
+.card .tl-track.vertical .tl-scale-mark.hour i{background:rgba(255,255,255,.11) !important;width:auto !important;}
+
+/* Recording coverage: neutral band so detection colours stand out. */
+.card .tl-track.vertical .t-rec{
+  left:calc(var(--tl-rail) - 3px) !important;width:6px !important;border-radius:3px !important;
+  background:var(--rec-color,rgba(235,235,245,.34)) !important;opacity:1 !important;box-shadow:none !important;
+}
+.card .tl-track.vertical .tl-no-recording{left:calc(var(--tl-rail) - 3px) !important;width:6px !important;}
+.card .tl-track.vertical .tl-no-recording span{display:none !important;}
+
+/* Detection markers: a colour dot on the rail. */
+.card .tl-track.vertical .t-ev::before{display:none !important;}
+.card .tl-track.vertical .t-ev .t-dot{
+  left:var(--tl-rail) !important;top:0 !important;transform:translate(-50%,-50%) !important;
+  width:10px !important;height:10px !important;min-width:0 !important;
+  background:var(--ev-color,#8e8e93) !important;
+  border:0 !important;box-shadow:0 0 0 2px #111113 !important;
+}
+.card .tl-track.vertical .t-ev .t-glyph-stack{display:none !important;}
+.card .tl-track.vertical .t-ev .t-connector{display:none !important;}
+.card .tl-track.vertical .t-ev .t-duration{
+  left:calc(var(--tl-rail) - 3px) !important;width:6px !important;border-radius:3px !important;
+  background:var(--ev-color,#8e8e93) !important;opacity:.85 !important;box-shadow:none !important;
+}
+.card .tl-track.vertical .t-ev.selected .t-dot{box-shadow:0 0 0 2px #111113,0 0 0 4px #f5f5f7 !important;}
+
+/* Event rows replace the floating thumbnail cards. */
+.card .tl-track.vertical .t-preview.t-row{
+  left:var(--tl-row-left) !important;right:10px !important;width:auto !important;
+  height:var(--t-row-h,44px) !important;max-width:none !important;padding:3px 10px 3px 3px !important;
+  display:flex !important;align-items:center;gap:10px;
+  border:1px solid rgba(255,255,255,.06) !important;border-radius:11px !important;
+  background:#1f1f22 !important;box-shadow:none !important;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  color:#f5f5f7;text-align:left;cursor:pointer;pointer-events:auto !important;z-index:8 !important;
+  font:inherit;
+}
+.card .tl-track.vertical .t-preview.t-row::before,
+.card .tl-track.vertical .t-preview.t-row::after{
+  content:'';position:absolute;left:auto !important;right:100%;top:50%;width:14px !important;height:1px;background:rgba(255,255,255,.16) !important;
+}
+.card .tl-track.vertical .t-preview.t-row:hover{background:#28282b !important;}
+.card .tl-track.vertical .t-row-thumb{
+  position:relative;flex:0 0 auto;height:var(--t-thumb-h,36px);width:calc(var(--t-thumb-h,36px) * 16 / 9);border-radius:8px;overflow:hidden;background:#2a3038;
+}
+.card .tl-track.vertical .t-row-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.card .tl-track.vertical .t-row-thumb .t-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#8e8e93;--mdc-icon-size:16px;}
+.card .tl-track.vertical .t-row-thumb b{
+  position:absolute;right:3px;bottom:2px;padding:1px 4px;border-radius:5px;background:rgba(0,0,0,.62);
+  color:#fff;font-size:9px;line-height:11px;font-weight:650;font-variant-numeric:tabular-nums;
+}
+.card .tl-track.vertical .t-row-meta{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto;}
+.card .tl-track.vertical .t-row-title{display:flex;align-items:center;gap:6px;min-width:0;font-size:13px;font-weight:600;line-height:16px;}
+.card .tl-track.vertical .t-row-dot{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--ev-color,#8e8e93);}
+.card .tl-track.vertical .t-row-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .tl-track.vertical .t-row-count{font-style:normal;font-size:11px;font-weight:600;color:#a1a1a6;}
+.card .tl-track.vertical .t-row-time{font-size:11px;line-height:14px;color:#a1a1a6;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .tl-track.vertical .t-preview.t-row.selected{border-color:rgba(10,132,255,.6) !important;background:rgba(10,132,255,.14) !important;}
+
+/* Playhead: hairline + one pill; at LIVE the pill turns red and says so. */
+.card .tl-track.vertical .tl-playhead{
+  left:0 !important;right:0 !important;height:2px !important;
+  background:#0a84ff !important;box-shadow:none !important;
+}
+.card .tl-track.vertical .tl-playhead i{
+  left:var(--tl-rail) !important;width:14px !important;height:14px !important;
+  background:#0a84ff !important;border:2px solid #111113 !important;box-shadow:0 0 0 1px #0a84ff !important;
+}
+.card .tl-track.vertical .tl-playhead span{
+  left:auto !important;right:10px !important;max-width:none !important;height:20px !important;padding:0 8px !important;
+  border:0 !important;border-radius:999px !important;background:#0a84ff !important;box-shadow:0 2px 8px rgba(0,0,0,.3) !important;
+  font:700 11px/20px -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif !important;
+  font-variant-numeric:tabular-nums !important;
+}
+.card .tl-track.vertical.following-live .tl-playhead{background:#ff453a !important;}
+.card .tl-track.vertical.following-live .tl-playhead i{background:#ff453a !important;box-shadow:0 0 0 1px #ff453a !important;}
+.card .tl-track.vertical.following-live .tl-playhead span{background:#ff453a !important;}
+.card .tl-track.vertical.following-live .tl-playhead span::before{content:'LIVE';font-weight:800;letter-spacing:.04em;margin-right:6px;padding-right:6px;border-right:1px solid rgba(255,255,255,.45);}
+.card .tl-track.vertical.following-live .tl-live-line::before{display:none !important;}
+.card .tl-track.vertical .tl-live-line{height:2px !important;background:#ff453a !important;box-shadow:none !important;}
+.card .tl-track.vertical .tl-live-line::before{
+  padding:0 8px !important;height:18px;line-height:18px;border:0 !important;border-radius:999px !important;
+  background:#ff453a !important;font-size:10px !important;font-weight:800 !important;box-shadow:none !important;
+}
+
+/* Legend chips: colour dot, label, count. */
+.card .legend{gap:6px !important;flex-wrap:wrap;}
+.card .legend .lg{
+  display:inline-flex !important;align-items:center;gap:6px;height:28px;min-height:28px !important;padding:0 10px !important;
+  border:1px solid rgba(255,255,255,.1) !important;border-radius:999px !important;background:#1f1f22 !important;
+  color:#f5f5f7 !important;font-size:12px !important;font-weight:600 !important;line-height:1 !important;box-shadow:none !important;
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.card .legend .lg i,
+.card .legend .lg.tl-detection-legend i{
+  width:8px !important;height:8px !important;min-width:8px;border-radius:50% !important;overflow:hidden;
+  background:var(--ev-color,currentColor) !important;box-shadow:none !important;font-size:0 !important;color:transparent !important;
+}
+.card .legend .lg i > *,
+.card .legend .lg.tl-detection-legend i > *{display:none !important;}
+.card .legend .lg em{font-style:normal;color:#8e8e93;font-variant-numeric:tabular-nums;}
+.card .legend .lg-rec{--ev-color:rgba(235,235,245,.55);}
+/* Away from LIVE the time pill sits in the scale gutter so it never covers rows. */
+.card .tl-track.vertical:not(.following-live) .tl-playhead{right:auto !important;width:calc(var(--tl-row-left) - 4px) !important;}
+.card .tl-track.vertical:not(.following-live) .tl-playhead span{
+  left:4px !important;right:auto !important;max-width:calc(var(--tl-gutter) - 4px) !important;
+  padding:0 6px !important;font-size:10px !important;
+}
+
+/* Timeline redesign — light theme. */
+.card.theme-light .tl-sec{background:#ffffff !important;border-color:rgba(0,0,0,.08) !important;}
+.card.theme-light .tl-head::before{color:#1d1d1f !important;}
+.card.theme-light .tl-head #tl-range{color:#6e6e73 !important;}
+.card.theme-light .tl-tools .tool,
+.card.theme-light .tl-zoom-controls{background:#f2f2f7 !important;color:#1d1d1f !important;}
+.card.theme-light .tl-zoom-controls .tool{background:transparent !important;}
+.card.theme-light .tl-tools .tool:hover{background:#e5e5ea !important;}
+.card.theme-light .tl-track.vertical{background:#fafafc !important;border-color:rgba(0,0,0,.07) !important;}
+.card.theme-light .tl-track.vertical::after{background:rgba(0,0,0,.06) !important;}
+.card.theme-light .tl-track.vertical .tl-future{background:repeating-linear-gradient(135deg,rgba(0,0,0,.035) 0 6px,transparent 6px 12px);}
+.card.theme-light .tl-track.vertical .tl-scale-mark span{color:#6e6e73 !important;}
+.card.theme-light .tl-track.vertical .tl-scale-mark.hour span{color:#1d1d1f !important;}
+.card.theme-light .tl-track.vertical .tl-scale-mark i{background:rgba(0,0,0,.06) !important;}
+.card.theme-light .tl-track.vertical .tl-scale-mark.hour i{background:rgba(0,0,0,.14) !important;}
+.card.theme-light .tl-track.vertical .t-rec{background:var(--rec-color,rgba(60,60,67,.30)) !important;}
+.card.theme-light .tl-track.vertical .t-ev .t-dot{box-shadow:0 0 0 2px #fafafc !important;}
+.card.theme-light .tl-track.vertical .t-ev.selected .t-dot{box-shadow:0 0 0 2px #fafafc,0 0 0 4px #1d1d1f !important;}
+.card.theme-light .tl-track.vertical .tl-playhead i{border-color:#fafafc !important;}
+.card.theme-light .tl-track.vertical .t-preview.t-row{background:#ffffff !important;border-color:rgba(0,0,0,.08) !important;color:#1d1d1f !important;box-shadow:0 1px 2px rgba(0,0,0,.05) !important;}
+.card.theme-light .tl-track.vertical .t-preview.t-row:hover{background:#f2f2f7 !important;}
+.card.theme-light .tl-track.vertical .t-preview.t-row::before,
+.card.theme-light .tl-track.vertical .t-preview.t-row::after{background:rgba(0,0,0,.16) !important;}
+.card.theme-light .tl-track.vertical .t-row-thumb{background:#e5e5ea;}
+.card.theme-light .tl-track.vertical .t-row-time,
+.card.theme-light .tl-track.vertical .t-row-count{color:#6e6e73;}
+.card.theme-light .legend .lg{background:#f2f2f7 !important;border-color:rgba(0,0,0,.08) !important;color:#1d1d1f !important;}
+.card.theme-light .legend .lg em{color:#6e6e73;}
+.card.theme-light .legend .lg-rec{--ev-color:rgba(60,60,67,.5);}
+.card.theme-light .tl-track.vertical .t-preview.t-row.selected{background:rgba(10,132,255,.10) !important;border-color:rgba(10,132,255,.55) !important;}
 `;

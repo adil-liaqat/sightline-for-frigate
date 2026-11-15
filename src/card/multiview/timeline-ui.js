@@ -1,6 +1,6 @@
 /** Multiview timeline legend, preview geometry, and download-range UI. */
 import { CAM_COLORS } from '../../constants.js';
-import { cap, camDisplayName, timelineGlyph } from '../../helpers.js';
+import { cap, camDisplayName, timelineGlyph, labelColor } from '../../helpers.js';
 import { browserMethods } from '../browser.js';
 import { downloadMethods } from '../download.js';
 import { timelineRenderMethods } from '../timeline-render.js';
@@ -12,6 +12,8 @@ export const multiviewTimelineMethods = {
     if(this._config?.timeline?.show_legend===false){el.innerHTML='';el.style.display='none';return;}
     el.style.display='';
     const labels=this._labels();
+    const counts=new Map();
+    for(const ev of this._timelineEvents?.()||[]) { const k=this._normalizeObjectLabel((ev._tl||this._timelineLabelInfo(ev)).key); if(k) counts.set(k,(counts.get(k)||0)+1); }
     const current=this._filterLabel==='all'?'all':this._normalizeObjectLabel(this._filterLabel);
     let html=labels.map(raw=>{
       const label=this._normalizeObjectLabel(raw);
@@ -19,7 +21,7 @@ export const multiviewTimelineMethods = {
       const active=current!=='all'&&label===current;
       const display=this._filterDisplayName('label',label);
       const activeStyle=active?'background:var(--c-acc-bg)!important;border-color:var(--c-acc-bdr)!important;color:var(--c-acc-text)!important;':'';
-      return `<button type="button" class="lg tl-detection-legend${active?' active':''}" data-legend-label="${label}" aria-pressed="${active?'true':'false'}" style="appearance:none;-webkit-appearance:none;font:inherit;cursor:pointer;touch-action:manipulation;${activeStyle}"><i>${timelineGlyph(label)}</i>${display}</button>`;
+      return `<button type="button" class="lg tl-detection-legend${active?' active':''}" data-legend-label="${label}" aria-pressed="${active?'true':'false'}" style="appearance:none;-webkit-appearance:none;font:inherit;cursor:pointer;touch-action:manipulation;--ev-color:${labelColor(label)};${activeStyle}"><i>${timelineGlyph(label)}</i>${display}${counts.has(label)?`<em>${counts.get(label)}</em>`:''}</button>`;
     }).join('');
     if(this._eventsMode==='all'){
       this._config.cameras.forEach((c,i)=>{
@@ -27,7 +29,7 @@ export const multiviewTimelineMethods = {
         html+=`<span class="lg"><i style="background:${color}"></i>${cap(camDisplayName(c))} rec</span>`;
       });
     }else{
-      html+=`<span class="lg"><i style="background:${CAM_COLORS[0].replace('.5','1').replace('rgba','rgb').replace(',1)',')')}"></i>Rec</span>`;
+      html+=`<span class="lg lg-rec"><i></i>Recording</span>`;
     }
     el.innerHTML=html;
   },
@@ -59,9 +61,17 @@ export const multiviewTimelineMethods = {
     return Math.max(48,Math.min(140,Math.round(Number(this._config?.timeline?.thumbnail_size ?? 84))));
   },
 
+  /** Event rows scale with timeline.thumbnail_size (84 → 44px rows). */
+  _timelineRowHeight() {
+    return Math.max(44,Math.round(this._timelineConfiguredPreviewHeight()*0.52));
+  },
+
   _syncTimelinePreviewGeometry() {
     const track=this._$('#tl-track');
     if(!track)return;
+    const rowH=this._timelineRowHeight();
+    track.style.setProperty('--t-row-h',`${rowH}px`);
+    track.style.setProperty('--t-thumb-h',`${rowH-8}px`);
     const h=this._timelineConfiguredPreviewHeight();
     const w=Math.max(154,Math.min(420,Math.round(h*3.15)));
     const s=Number(this._winStart),e=Number(this._winEnd);
@@ -71,6 +81,13 @@ export const multiviewTimelineMethods = {
     const yPct=ts=>Math.max(0,Math.min(100,50+((focus-Number(ts))/span)*100));
     for(const preview of track.querySelectorAll('.t-preview[data-ts]')){
       const ts=Number(preview.dataset.ts);
+      if(preview.classList.contains('t-row')){
+        preview.style.setProperty('height',`${rowH}px`,'important');
+        preview.style.removeProperty('width');
+        preview.style.removeProperty('max-width');
+        if(Number.isFinite(ts)) preview.style.top=`${(yPct(ts)/100)*trackPx-rowH/2}px`;
+        continue;
+      }
       preview.style.setProperty('height',`${h}px`,'important');
       preview.style.setProperty('width',`min(${w}px, calc(100% - var(--tl-content) - 10px))`,'important');
       preview.style.setProperty('max-width',`${w}px`,'important');

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Redesigned the vertical timeline: a flat panel with a quiet time scale, a neutral recording rail with detections as colour-coded dots, compact event rows (thumbnail, label, time, duration) in place of the large overlapping preview cards, a hatched future region above LIVE, and a single playhead pill (red `LIVE | time` at the live edge, blue time in the scale gutter during playback). Legend chips show a colour dot and the detection count. `timeline.thumbnail_size` now scales the event rows. Includes light-theme styling.
+
 ## 1.1.6
 
 - Restored the dedicated fullscreen button on desktop single-camera Live. It fullscreens the existing `#eng-wrap` WebRTC wrapper without replacing the stream, remains available in Multiview, stays hidden for iOS live MediaStreams, and avoids duplicating the native fullscreen control on single-camera recorded playback.

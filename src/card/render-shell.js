@@ -39,7 +39,7 @@ _renderShell() {
             <div id="timeline-view" style="${this._config.timeline.enabled?'':'display:none'}">
               <div class="tl-head">
                 <div class="tl-tools">
-                  <button class="tool" id="now-btn" title="Jump to now">⟳</button>
+                  <button class="tool" id="now-btn" title="Jump to now" aria-label="Jump to now"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v5l3 2"></path><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"></path><path d="M21 4v4h-4"></path></svg></button>
                   ${this._config.timeline.show_zoom_controls ? `<div class="tl-zoom-controls" role="group" aria-label="Timeline zoom">
                     <button class="tool tl-zoom-btn" id="tl-zoom-out" title="Zoom out" aria-label="Zoom out">−</button>
                     <button class="tool tl-zoom-level" id="tl-zoom-level" title="Reset timeline zoom">${Math.round(this._config.timeline.default_minutes)}m</button>

@@ -87,6 +87,7 @@ _updateTimelineLive() {
     }
     const yPct = ts => Math.max(0,Math.min(100,50 + ((focus-Number(ts))/span)*100));
     const liveLine=track.querySelector('.tl-live-line');
+    const future=track.querySelector('.tl-future');
     if (liveLine) {
       if (nowTs >= s && nowTs <= e) {
         liveLine.style.display='block';
@@ -94,6 +95,10 @@ _updateTimelineLive() {
       } else {
         liveLine.style.display='none';
       }
+    }
+    if (future) {
+      if (nowTs <= e) { future.style.display='block'; future.style.height=`${nowTs>=s?yPct(nowTs):100}%`; }
+      else future.style.display='none';
     }
     const events=this._timelineEvents();
     const byId=new Map(events.map(ev=>[String(ev.id),ev]));

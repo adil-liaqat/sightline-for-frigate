@@ -5,7 +5,7 @@
  * stable so existing card behavior and tests remain unchanged.
  */
 import { DAY, ICONS, CAM_COLORS } from '../../constants.js';
-import { cap, timelineGlyph, camDisplayName } from '../../helpers.js';
+import { cap, timelineGlyph, camDisplayName, labelColor } from '../../helpers.js';
 
 export const timelineViewMethods = {
 _renderAll() {
@@ -190,13 +190,15 @@ _renderTimeline(forceFull=false) {
       const aria=group.totalDetections>1
         ? `${labelText} detection cluster at ${this._timelineTime(markerTs)} (${group.totalDetections} detections)`
         : `${info.display} at ${this._timelineTime(markerTs)}`;
-      html+=`<button class="t-ev ${selected?'selected':''}${clusterClass}" data-tick="${ev.id}" data-ts="${markerTs}" data-start="${group.startTs}" data-end="${group.endTs}" style="top:${pct}%" aria-label="${aria}"><span class="t-duration" style="height:${durationPx}px"></span><span class="t-dot"><span class="t-glyph-stack">${glyphs}</span></span><span class="t-connector"></span></button>`;
+      html+=`<button class="t-ev ${selected?'selected':''}${clusterClass}" data-tick="${ev.id}" data-ts="${markerTs}" data-start="${group.startTs}" data-end="${group.endTs}" style="top:${pct}%;--ev-color:${labelColor(info.key)}" aria-label="${aria}"><span class="t-duration" style="height:${durationPx}px"></span><span class="t-dot"><span class="t-glyph-stack">${glyphs}</span></span><span class="t-connector"></span></button>`;
     });
 
     // Promote a sparse set of representative detection moments into thumbnail
     // cards. Use the same true in-window anchor as the glyph so cards cannot
     // remain glued to the viewport edge while their event scrolls away.
-    const cardH=Math.max(82,Math.min(118,trackPx*.19)), gap=Math.max(8,Math.min(14,trackPx*.018));
+    // Compact event rows (thumbnail + label + time) instead of large floating
+    // cards: more events fit and nothing overlaps the scale or each other.
+    const cardH=this._timelineRowHeight?.()||44, gap=6;
     // Fit previews to the *actual* rendered timeline height. The old 4-mobile /
     // 6-desktop cap hid perfectly valid thumbnails on tall phones, tablets and
     // portrait dashboards even when there was plenty of vertical room.
@@ -232,14 +234,14 @@ _renderTimeline(forceFull=false) {
         ? `<img src="${thumbUrl}" data-frigate-thumb="1" data-thumb-src="${thumbUrl}" loading="eager" decoding="async" alt="${label}"><div class="t-ph thumb-fallback" style="display:none">${timelineGlyph(info.key)}</div>`
         : `<div class="t-ph thumb-fallback">${timelineGlyph(info.key)}</div>`;
       const cardTop=y-cardH/2;
-      html+=`<button type="button" class="t-preview" data-event-id="${ev.id}" data-ts="${ts}" data-start="${group.startTs}" data-end="${group.endTs}" style="top:${cardTop}px" aria-label="Play ${label} event at ${this._timelineTime(ts)}">
-        <div class="t-preview-thumb">${thumb}
-          <span class="t-badge"><span class="t-badge-glyph">${timelineGlyph(info.key)}</span>${label}</span>
-          ${sub}
-          ${count}
-          <span class="t-preview-time">${this._timelineScaleTime(ts)}</span>
-          <b>${dur}s</b>
-        </div>
+      const countBadge=group.totalDetections>1?`<em class="t-row-count">×${group.totalDetections}</em>`:'';
+      const rowSelected=group.events.some(x=>String(x.id)===String(this._timelineSelected));
+      html+=`<button type="button" class="t-preview t-row${rowSelected?' selected':''}" data-event-id="${ev.id}" data-ts="${ts}" data-start="${group.startTs}" data-end="${group.endTs}" style="top:${cardTop}px;--ev-color:${labelColor(info.key)}" aria-label="Play ${label} event at ${this._timelineTime(ts)}">
+        <span class="t-row-thumb">${thumb}<b>${dur}s</b></span>
+        <span class="t-row-meta">
+          <span class="t-row-title"><i class="t-row-dot"></i><span class="t-row-label">${label}</span>${countBadge}</span>
+          <span class="t-row-time">${this._timelineTime(ts)}${info.sub?` · ${info.sub}`:''}</span>
+        </span>
       </button>`;
     });
 
@@ -256,6 +258,7 @@ _renderTimeline(forceFull=false) {
     const nowTs = Math.floor(Date.now()/1000);
     if (nowTs >= s && nowTs <= e) {
       const livePct = yPct(nowTs);
+      html+=`<div class="tl-future" style="height:${livePct}%" aria-hidden="true"></div>`;
       html+=`<div class="tl-live-line" style="top:${livePct}%" aria-label="Live"></div>`;
     }
 
