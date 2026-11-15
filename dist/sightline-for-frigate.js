@@ -3855,6 +3855,18 @@ ${STYLES}
 /* Selected row is opaque so the playhead line passes cleanly behind it. */
 .card .tl-track.vertical .t-preview.t-row.selected{background:#132a44 !important;}
 .card.theme-light .tl-track.vertical .t-preview.t-row.selected{background:#e7f1ff !important;}
+
+/* Calendar button grows to show the selected past date (and tints blue so
+   it is clear the timeline is not on today). */
+.card .tl-tools > .tool.has-date-label{
+  width:auto !important;min-width:34px !important;padding:0 10px 0 9px !important;gap:6px !important;
+  background:rgba(10,132,255,.18) !important;color:#64b5ff !important;
+}
+.card .tl-tools > .tool.has-date-label .timeline-date-label{color:inherit;}
+.card.theme-light .tl-tools > .tool.has-date-label{background:rgba(10,132,255,.12) !important;color:#0a64d6 !important;}
+/* Narrow cards: let the toolbar wrap under the title rather than overflow. */
+.card .tl-head{flex-wrap:wrap !important;row-gap:8px;}
+.card .tl-tools{flex-wrap:wrap !important;}
 `;
 
 // ── src/utils/apply-method-groups.js ──
