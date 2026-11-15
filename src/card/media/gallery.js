@@ -11,6 +11,30 @@ const CHECK_ICON='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" st
 const PLAY_ICON='<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg>';
 
 export const mediaGalleryMethods = {
+/** "Today", "Yesterday", "Fri, Nov 14" (year added when not this year). */
+_galleryDayLabel(ts) {
+    const d=new Date(Number(ts)*1000);
+    if(Number.isNaN(d.getTime())) return '';
+    const key=(x)=>`${x.getFullYear()}-${x.getMonth()}-${x.getDate()}`;
+    const today=new Date(); const yesterday=new Date(); yesterday.setDate(today.getDate()-1);
+    if(key(d)===key(today)) return 'Today';
+    if(key(d)===key(yesterday)) return 'Yesterday';
+    const opts={weekday:'short',month:'short',day:'numeric'};
+    if(d.getFullYear()!==today.getFullYear()) opts.year='numeric';
+    return d.toLocaleDateString([],opts);
+  },
+
+/** Render rows newest-first with a sticky day header whenever the day changes. */
+_galleryGroupByDay(items, tsOf, rowHtml) {
+    let last=null, html='';
+    for(const item of items) {
+      const label=this._galleryDayLabel(tsOf(item));
+      if(label!==last){ html+=`<div class="mg-day" role="heading" aria-level="3">${label}</div>`; last=label; }
+      html+=rowHtml(item);
+    }
+    return html;
+  },
+
 _renderGallery(force=false) {
     const gallery=this.shadowRoot.querySelector('#media-gallery'); if(!gallery || !this._galleryMode) return;
     // While a native date/time picker owns the screen, do not mutate any part
@@ -27,14 +51,14 @@ _renderGallery(force=false) {
     this._normalizeMediaFilterState();
     const activeFilters=this._mediaFilterActive();
     if(tab==='clips') {
-      const events=this._filterMediaEvents(this._eventsMode==='all'?this._allDisplayEvents():this._events); title='Clips'; count=events.length;
-      content=events.length ? events.map(ev=>this._eventCardHTML(ev,false)).join('') : this._emptyState(ICONS.clips,'No clips match','Try changing the filters');
+      const events=[...this._filterMediaEvents(this._eventsMode==='all'?this._allDisplayEvents():this._events)].sort((a,b)=>Number(b.start_time)-Number(a.start_time)); title='Clips'; count=events.length;
+      content=events.length ? this._galleryGroupByDay(events,ev=>ev.start_time,ev=>this._eventCardHTML(ev,false)) : this._emptyState(ICONS.clips,'No clips match','Try changing the filters');
     } else if(tab==='recordings') {
       const recs=this._filterMediaRecordings(this._recordingBrowse.length ? this._recordingBrowse : this._mergeRecs(this._recordings)).sort((a,b)=>b.start_time-a.start_time); title='Recordings'; count=recs.length;
-      content=recs.length ? recs.map(r=>{ const rs=Math.floor(r.start_time), re=Math.floor(r.end_time||Date.now()/1000); const d=Math.max(1,re-rs), mm=Math.floor(d/60), ss=d%60; return `<div class="rec" data-rs="${rs}" data-re="${re}"><div class="ric">${ICONS.recordings}</div><div class="rinf"><div class="rt">${this._time(r.start_time)} – ${this._time(r.end_time||Date.now()/1000)}</div><div class="rsub">${d>=3600?`${Math.floor(d/3600)}h ${Math.floor((d%3600)/60)}m`:`${mm?mm+'m ':''}${ss}s`}${r.events?' · '+r.events+(r.events===1?' event':' events'):''}</div></div><div class="rp" aria-hidden="true">${PLAY_ICON}</div></div>`; }).join('') : this._emptyState(ICONS.recordings,'No recordings match','Try changing the filters');
+      content=recs.length ? this._galleryGroupByDay(recs,r=>r.start_time,r=>{ const rs=Math.floor(r.start_time), re=Math.floor(r.end_time||Date.now()/1000); const d=Math.max(1,re-rs), mm=Math.floor(d/60), ss=d%60; return `<div class="rec" data-rs="${rs}" data-re="${re}"><div class="ric">${ICONS.recordings}</div><div class="rinf"><div class="rt">${this._time(r.start_time)} – ${this._time(r.end_time||Date.now()/1000)}</div><div class="rsub">${d>=3600?`${Math.floor(d/3600)}h ${Math.floor((d%3600)/60)}m`:`${mm?mm+'m ':''}${ss}s`}${r.events?' · '+r.events+(r.events===1?' event':' events'):''}</div></div><div class="rp" aria-hidden="true">${PLAY_ICON}</div></div>`; }) : this._emptyState(ICONS.recordings,'No recordings match','Try changing the filters');
     } else if(tab==='reviews') {
       const revs=this._filterMediaReviews(this._reviews).sort((a,b)=>b.start_time-a.start_time); title='Reviews'; count=revs.length;
-      content=revs.length ? revs.map(r=>{ const sev=r.severity==='alert'?'alert':'detection'; const objs=this._reviewLabelList(r).map(x=>this._filterDisplayName('label',x)).join(', '); const title=r.data?.metadata?.title||objs||cap(r.severity); const firstDet=(r.data?.detections&&r.data.detections[0])||''; const reviewed=r.has_been_reviewed; const reviewThumbUrl=firstDet?this._mediaForEvent({id:firstDet,camera:r.camera},'thumbnail.jpg'):''; const thumb=firstDet?`<div class="rev-th"><img src="${reviewThumbUrl}" data-frigate-thumb="1" data-thumb-src="${reviewThumbUrl}" loading="lazy"><div class="tph thumb-fallback" style="display:none">${ICONS.reviews}</div></div>`:`<div class="rev-th"><div class="tph thumb-fallback">${ICONS.reviews}</div></div>`; const firstLabel=this._reviewLabelList(r)[0]||''; const dur=Math.max(1,Math.round(Number(r.end_time||r.start_time)-Number(r.start_time))); const playing=firstDet&&String(this._playing?.id??'')===String(firstDet); return `<div class="rev ${sev}${reviewed?' reviewed':''}${playing?' playing':''}" data-review-id="${r.id}" ${firstDet?`data-review-open="${firstDet}"`:''} style="--ev-color:${labelColor(firstLabel)}"><div class="rev-sev ${sev}"></div>${thumb}<div class="rev-inf"><div class="rev-t"><i class="ec-dot" aria-hidden="true"></i><span>${title}</span>${playing?'<span class="ec-now">Playing</span>':''}</div><div class="rev-m"><span class="rev-pill ${sev}">${cap(sev)}</span><span>${this._time(r.start_time)}</span><span>${dur}s</span>${reviewed?'<span class="rev-done">✓ Reviewed</span>':''}</div></div>${reviewed?'':`<button class="ico" data-mark title="Mark as reviewed" aria-label="Mark as reviewed">${CHECK_ICON}</button>`}</div>`; }).join('') : this._emptyState(ICONS.reviews,'No reviews match','Try changing the filters');
+      content=revs.length ? this._galleryGroupByDay(revs,r=>r.start_time,r=>{ const sev=r.severity==='alert'?'alert':'detection'; const objs=this._reviewLabelList(r).map(x=>this._filterDisplayName('label',x)).join(', '); const title=r.data?.metadata?.title||objs||cap(r.severity); const firstDet=(r.data?.detections&&r.data.detections[0])||''; const reviewed=r.has_been_reviewed; const reviewThumbUrl=firstDet?this._mediaForEvent({id:firstDet,camera:r.camera},'thumbnail.jpg'):''; const thumb=firstDet?`<div class="rev-th"><img src="${reviewThumbUrl}" data-frigate-thumb="1" data-thumb-src="${reviewThumbUrl}" loading="lazy"><div class="tph thumb-fallback" style="display:none">${ICONS.reviews}</div></div>`:`<div class="rev-th"><div class="tph thumb-fallback">${ICONS.reviews}</div></div>`; const firstLabel=this._reviewLabelList(r)[0]||''; const dur=Math.max(1,Math.round(Number(r.end_time||r.start_time)-Number(r.start_time))); const playing=firstDet&&String(this._playing?.id??'')===String(firstDet); return `<div class="rev ${sev}${reviewed?' reviewed':''}${playing?' playing':''}" data-review-id="${r.id}" ${firstDet?`data-review-open="${firstDet}"`:''} style="--ev-color:${labelColor(firstLabel)}"><div class="rev-sev ${sev}"></div>${thumb}<div class="rev-inf"><div class="rev-t"><i class="ec-dot" aria-hidden="true"></i><span>${title}</span>${playing?'<span class="ec-now">Playing</span>':''}</div><div class="rev-m"><span class="rev-pill ${sev}">${cap(sev)}</span><span>${this._time(r.start_time)}</span><span>${dur}s</span>${reviewed?'<span class="rev-done">✓ Reviewed</span>':''}</div></div>${reviewed?'':`<button class="ico" data-mark title="Mark as reviewed" aria-label="Mark as reviewed">${CHECK_ICON}</button>`}</div>`; }) : this._emptyState(ICONS.reviews,'No reviews match','Try changing the filters');
     } else return;
 
     // IMPORTANT: never replace the filter panel merely because clips/recordings

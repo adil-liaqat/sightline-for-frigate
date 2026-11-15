@@ -2669,4 +2669,26 @@ ${STYLES}
 .card .media-gallery .em,
 .card .media-gallery .rev-m{flex-wrap:nowrap !important;overflow:hidden;
   -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 14px),transparent);}
+
+/* Gallery day headers stick to the top while their day scrolls past. */
+.card .media-gallery .mg-day{
+  position:sticky;top:0;z-index:3;margin:6px -10px -2px;padding:6px 14px 6px;
+  font-size:12px;font-weight:700;letter-spacing:.01em;color:#a1a1a6;
+  background:linear-gradient(var(--c-bg,#000) 70%,transparent);
+}
+.card .media-gallery .mg-day:first-child{margin-top:0;}
+/* Re-rendering inserts day headers above the first row; browser scroll
+   anchoring would then scroll that row under the sticky header. */
+.card .media-gallery .media-gallery-grid{overflow-anchor:none;}
+/* Rows scroll-snap to the top; leave room for the sticky day header so a
+   snapped row is never tucked underneath it. */
+.card .media-gallery .media-gallery-grid .ec,
+.card .media-gallery .media-gallery-grid .rec,
+.card .media-gallery .media-gallery-grid .rev{scroll-margin-top:34px;}
+.card .media-gallery .mg-day{scroll-snap-align:start;}
+.card.theme-light .media-gallery .mg-day{color:#6e6e73;background:linear-gradient(var(--c-bg,#fff) 70%,rgba(255,255,255,0));}
+/* Keep the label whole; let a sub-label (e.g. a face name) shorten instead. */
+.card .media-gallery .ec-title{flex:0 0 auto;overflow:visible !important;}
+.card .media-gallery .etop .subl{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.card .media-gallery .etop .subl::before{content:'·';margin-right:6px;color:#636366;}
 `;
