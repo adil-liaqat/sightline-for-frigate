@@ -3658,6 +3658,148 @@ ${STYLES}
 .card.theme-light .legend .lg em{color:#6e6e73;}
 .card.theme-light .legend .lg-rec{--ev-color:rgba(60,60,67,.5);}
 .card.theme-light .tl-track.vertical .t-preview.t-row.selected{background:rgba(10,132,255,.10) !important;border-color:rgba(10,132,255,.55) !important;}
+
+/* ─────────────────────────────────────────────────────────────
+   Horizontal timeline (wide cards): time runs left→right, newest on the
+   right, with a Recording lane and one lane per detection class under a
+   time ruler. A fixed centred playhead, like the vertical timeline.
+   ───────────────────────────────────────────────────────────── */
+.card.tl-horizontal .workspace-timeline{height:auto !important;min-height:0 !important;overflow:visible !important;}
+.card.tl-horizontal #timeline-view{height:auto !important;display:block !important;}
+.card.dashboard-split.tl-horizontal .workspace-media{height:var(--workspace-column-h,auto) !important;}
+
+.card .tl-track.horizontal{
+  --tl-ruler:24px;--tl-lane-h:26px;--tl-gutter:0px;--tl-rail:0px;
+  position:relative;
+  height:calc(var(--tl-ruler) + var(--tl-lanes,2) * var(--tl-lane-h) + 10px) !important;
+  min-height:0 !important;max-height:none !important;flex:0 0 auto !important;
+  margin-top:12px !important;border-radius:14px !important;
+  border:1px solid rgba(255,255,255,.06) !important;background:#111113 !important;box-shadow:none !important;
+  overflow:hidden !important;cursor:grab;touch-action:pan-y;
+}
+.card .tl-track.horizontal::before,
+.card .tl-track.horizontal::after,
+.card .tl-track.horizontal .tl-now{display:none !important;}
+
+.card .tl-track.horizontal .tl-future{
+  position:absolute;top:0;bottom:0;right:0;width:auto;height:auto !important;
+  background:repeating-linear-gradient(135deg,rgba(255,255,255,.03) 0 6px,transparent 6px 12px);
+  pointer-events:none;z-index:0;
+}
+
+/* Ruler: labels along the top, faint full-height ticks. */
+.card .tl-track.horizontal .tl-scale-mark{
+  position:absolute;top:0 !important;bottom:0 !important;right:auto !important;width:0 !important;height:auto !important;
+  z-index:1;pointer-events:none;
+}
+.card .tl-track.horizontal .tl-scale-mark span{
+  position:absolute;left:0 !important;top:5px !important;width:auto !important;transform:translateX(-50%) !important;
+  color:#8e8e93 !important;font-size:11px !important;font-weight:600 !important;line-height:14px !important;
+  white-space:nowrap !important;overflow:visible !important;text-align:center !important;
+}
+.card .tl-track.horizontal .tl-scale-mark.hour span{color:#d1d1d6 !important;}
+.card .tl-track.horizontal .tl-scale-mark i{
+  position:absolute;left:0 !important;right:auto !important;top:var(--tl-ruler) !important;bottom:0 !important;
+  width:1px !important;height:auto !important;transform:none !important;background:rgba(255,255,255,.05) !important;
+}
+.card .tl-track.horizontal .tl-scale-mark.hour i{background:rgba(255,255,255,.12) !important;}
+
+/* Lanes: subtle row backgrounds and a label pinned to the left edge. */
+.card .tl-track.horizontal .tl-lane-label{
+  position:absolute;left:8px;top:calc(var(--tl-ruler) + var(--lane) * var(--tl-lane-h) + 4px);
+  height:calc(var(--tl-lane-h) - 8px);display:flex;align-items:center;padding:0 7px;border-radius:6px;
+  background:rgba(17,17,19,.82);color:#a1a1a6;font-size:11px;font-weight:600;line-height:1;
+  z-index:12;pointer-events:none;white-space:nowrap;
+}
+.card .tl-track.horizontal .tl-lane-label::after{
+  content:'';position:absolute;left:-8px;width:4000px;top:-4px;bottom:-4px;z-index:-1;
+  border-top:1px solid rgba(255,255,255,.035);pointer-events:none;
+}
+
+.card .tl-track.horizontal .t-rec{
+  top:calc(var(--tl-ruler) + 6px) !important;height:calc(var(--tl-lane-h) - 12px) !important;
+  right:auto !important;bottom:auto !important;border-radius:4px !important;
+  background:var(--rec-color,rgba(235,235,245,.30)) !important;opacity:1 !important;box-shadow:none !important;z-index:2 !important;
+}
+.card .tl-track.horizontal .tl-no-recording{
+  top:calc(var(--tl-ruler) + 6px) !important;height:calc(var(--tl-lane-h) - 12px) !important;
+  right:auto !important;bottom:auto !important;border-radius:4px !important;z-index:2 !important;
+}
+.card .tl-track.horizontal .tl-no-recording span{display:none !important;}
+
+/* Detections: a bar per event in its lane, as long as the event lasts. */
+.card .tl-track.horizontal .t-ev{
+  position:absolute !important;top:calc(var(--tl-ruler) + var(--lane) * var(--tl-lane-h) + 5px) !important;
+  right:auto !important;width:0 !important;height:calc(var(--tl-lane-h) - 10px) !important;
+  padding:0 !important;margin:0 !important;border:0 !important;background:transparent !important;
+  overflow:visible !important;z-index:8 !important;cursor:pointer;
+}
+.card .tl-track.horizontal .t-ev::before,
+.card .tl-track.horizontal .t-ev::after,
+.card .tl-track.horizontal .t-ev .t-dot,
+.card .tl-track.horizontal .t-ev .t-connector{display:none !important;}
+.card .tl-track.horizontal .t-ev .t-duration{
+  position:absolute !important;left:0 !important;top:0 !important;bottom:0 !important;right:auto !important;
+  height:100% !important;min-width:6px !important;border-radius:4px !important;
+  background:var(--ev-color,#8e8e93) !important;opacity:.92 !important;box-shadow:none !important;transform:none !important;
+  pointer-events:auto !important;cursor:pointer;
+}
+.card .tl-track.horizontal .t-ev:hover .t-duration{opacity:1 !important;filter:brightness(1.15);}
+.card .tl-track.horizontal .t-ev.selected .t-duration{box-shadow:0 0 0 2px #111113,0 0 0 3px #f5f5f7 !important;}
+.card .tl-track.horizontal .t-preview{display:none !important;}
+
+/* Live edge and centred playhead become vertical lines. */
+.card .tl-track.horizontal .tl-live-line{
+  top:var(--tl-ruler) !important;bottom:0 !important;right:auto !important;width:2px !important;height:auto !important;
+  margin-left:-1px;background:#ff453a !important;box-shadow:none !important;z-index:14 !important;
+}
+.card .tl-track.horizontal .tl-live-line::before{
+  content:'LIVE';position:absolute;left:50% !important;right:auto !important;top:auto !important;bottom:4px !important;
+  transform:translateX(-50%) !important;padding:0 6px !important;height:16px;line-height:16px;border-radius:999px !important;
+  background:#ff453a !important;color:#fff;font-size:9px !important;font-weight:800 !important;border:0 !important;box-shadow:none !important;
+}
+.card .tl-track.horizontal.following-live .tl-live-line::before{display:none !important;}
+.card .tl-track.horizontal .tl-playhead{
+  left:50% !important;right:auto !important;top:0 !important;bottom:0 !important;width:2px !important;height:auto !important;
+  margin-left:-1px;background:#f5f5f7 !important;box-shadow:none !important;z-index:30 !important;pointer-events:none;
+}
+.card .tl-track.horizontal .tl-playhead i{
+  left:50% !important;top:calc(var(--tl-ruler) - 4px) !important;width:16px !important;height:10px !important;
+  transform:translateX(-50%) !important;border-radius:3px !important;
+  background:#f5f5f7 !important;border:0 !important;box-shadow:0 1px 4px rgba(0,0,0,.4) !important;pointer-events:auto !important;cursor:ew-resize;
+}
+.card .tl-track.horizontal .tl-playhead span{
+  position:absolute !important;left:50% !important;right:auto !important;top:2px !important;bottom:auto !important;
+  transform:translateX(-50%) !important;width:auto !important;min-width:0 !important;max-width:none !important;height:18px !important;padding:0 8px !important;opacity:1 !important;
+  display:inline-flex !important;align-items:center;border:0 !important;border-radius:999px !important;
+  background:#f5f5f7 !important;color:#111113 !important;box-shadow:0 2px 8px rgba(0,0,0,.35) !important;
+  font:700 11px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif !important;font-variant-numeric:tabular-nums !important;
+  white-space:nowrap !important;z-index:3 !important;
+}
+.card .tl-track.horizontal.following-live .tl-playhead{background:#ff453a !important;}
+.card .tl-track.horizontal.following-live .tl-playhead i{background:#ff453a !important;}
+.card .tl-track.horizontal.following-live .tl-playhead span{background:#ff453a !important;color:#fff !important;}
+.card .tl-track.horizontal.following-live .tl-playhead span::before{content:'LIVE';font-weight:800;letter-spacing:.04em;margin-right:6px;padding-right:6px;border-right:1px solid rgba(255,255,255,.45);}
+
+/* Download range: vertical handles over a highlighted band. */
+.card .tl-track.horizontal .tl-range-band{top:var(--tl-ruler) !important;bottom:0 !important;height:auto !important;right:auto !important;}
+.card .tl-track.horizontal .tl-range-boundary{top:var(--tl-ruler) !important;bottom:0 !important;width:2px !important;height:auto !important;right:auto !important;}
+.card .tl-track.horizontal .tl-range-boundary>i{left:50% !important;top:50% !important;}
+.card .tl-track.horizontal .tl-range-boundary>span{left:6px !important;top:2px !important;transform:none !important;}
+
+/* Light theme. */
+.card.theme-light .tl-track.horizontal{background:#fafafc !important;border-color:rgba(0,0,0,.07) !important;}
+.card.theme-light .tl-track.horizontal .tl-future{background:repeating-linear-gradient(135deg,rgba(0,0,0,.035) 0 6px,transparent 6px 12px);}
+.card.theme-light .tl-track.horizontal .tl-scale-mark span{color:#6e6e73 !important;}
+.card.theme-light .tl-track.horizontal .tl-scale-mark.hour span{color:#1d1d1f !important;}
+.card.theme-light .tl-track.horizontal .tl-scale-mark i{background:rgba(0,0,0,.06) !important;}
+.card.theme-light .tl-track.horizontal .tl-lane-label{background:rgba(250,250,252,.9);color:#6e6e73;}
+.card.theme-light .tl-track.horizontal .tl-lane-label::after{border-top-color:rgba(0,0,0,.05);}
+.card.theme-light .tl-track.horizontal .t-rec{background:var(--rec-color,rgba(60,60,67,.28)) !important;}
+.card.theme-light .tl-track.horizontal .tl-playhead,
+.card.theme-light .tl-track.horizontal .tl-playhead i{background:#1d1d1f !important;}
+.card.theme-light .tl-track.horizontal .tl-playhead span{background:#1d1d1f !important;color:#fff !important;}
+.card.theme-light .tl-track.horizontal .t-ev.selected .t-duration{box-shadow:0 0 0 2px #fafafc,0 0 0 3px #1d1d1f !important;}
 `;
 
 // ── src/utils/apply-method-groups.js ──
@@ -3917,6 +4059,8 @@ setConfig(config) {
       show_filter_button: timelineIn.show_filter_button !== false,
       show_calendar_button: timelineIn.show_calendar_button !== false,
       clustering: timelineIn.clustering !== false,
+      // auto: horizontal lanes on wide (split) cards, vertical elsewhere.
+      orientation: ['auto','vertical','horizontal'].includes(String(timelineIn.orientation)) ? String(timelineIn.orientation) : 'auto',
       same_label_cluster_seconds: num(timelineIn.same_label_cluster_seconds,12,0,120),
       visual_cluster_max_seconds: num(timelineIn.visual_cluster_max_seconds,60,0,300),
       glyph_min_px: num(timelineIn.glyph_min_px,20,12,40),
@@ -8727,6 +8871,18 @@ _wireScrub() {
     let scrubber=false,scrubberLastY=0,scrubberAutoRaf=0,scrubberAutoY=0;
     let rangeDrag=null,rangeLastLabel=0,rangePointerId=null;
     let pinch=false,pinchDistance=0,pinchSpan=0,pinchAnchorTs=0,pinchAnchorRatio=0;
+    // Axis coordinate measured from the NEWEST edge of the track: the top on
+    // the vertical timeline, the right edge on the horizontal one. Larger
+    // values are older. Every gesture below works in this coordinate, so one
+    // implementation drives both orientations.
+    const horiz=()=>track.classList.contains('horizontal');
+    const axis=(x,y)=>horiz()?-Number(x):Number(y);
+    const axisRect=()=>{
+      const r=track.getBoundingClientRect();
+      return horiz()
+        ? {start:-r.right,size:Math.max(1,track.clientWidth||r.width||1)}
+        : {start:r.top,size:Math.max(1,track.clientHeight||r.height||1)};
+    };
     const stopScrubberAuto=()=>{
       if(scrubberAutoRaf){cancelAnimationFrame(scrubberAutoRaf);scrubberAutoRaf=0;}
     };
@@ -8755,8 +8911,8 @@ _wireScrub() {
       this._exhausted=false;
     };
     const rangeTimestampAtY=(y)=>{
-      const rect=track.getBoundingClientRect();
-      const ratio=Math.max(0,Math.min(1,(y-rect.top)/Math.max(1,rect.height)));
+      const ar=axisRect();
+      const ratio=Math.max(0,Math.min(1,(y-ar.start)/ar.size));
       return this._winEnd-ratio*Math.max(1,this._winEnd-this._winStart);
     };
     const rangeKindAtY=(y,preferred)=>{
@@ -8813,15 +8969,15 @@ _wireScrub() {
     };
     const moveScrubber=(y)=>{
       if(!scrubber)return;
-      const rect=track.getBoundingClientRect();
-      const size=Math.max(1,track.clientHeight||rect.height||1);
+      const ar=axisRect();
+      const size=ar.size;
       const span=Math.max(1,this._winEnd-this._winStart);
       const dy=y-scrubberLastY;
       if(Math.abs(dy)>0.01){
         // Dragging the center scrubber downward moves toward older footage.
         // Once the finger is held in the lower part of the rail, progressively
         // increase the time rate so a long timeline can be traversed quickly.
-        const localY=Math.max(0,Math.min(size,y-rect.top));
+        const localY=Math.max(0,Math.min(size,y-ar.start));
         const lower=Math.max(0,Math.min(1,(localY/size-.58)/.42));
         const speed=1+4*lower*lower;
         const next=(this._scrubTarget ?? this._timelineFocusTs ?? ((this._winStart+this._winEnd)/2)) - (dy/size)*span*speed;
@@ -8836,9 +8992,9 @@ _wireScrub() {
     };
     const scrubberAuto=()=>{
       if(!scrubber)return;
-      const rect=track.getBoundingClientRect();
-      const size=Math.max(1,track.clientHeight||rect.height||1);
-      const localY=Math.max(0,Math.min(size,scrubberAutoY-rect.top));
+      const ar=axisRect();
+      const size=ar.size;
+      const localY=Math.max(0,Math.min(size,scrubberAutoY-ar.start));
       // Holding near the bottom edge keeps walking backward through time.
       // This is deliberately bounded so a small accidental touch cannot race
       // through hours of recordings.
@@ -8972,15 +9128,15 @@ _wireScrub() {
         if(e.pointerType==='mouse' && e.button!==0) return;
         e.preventDefault(); e.stopPropagation();
         const preferred=e.target.closest('[data-range-handle]')?.dataset?.rangeHandle||null;
-        const kind=rangeKindAtY(e.clientY,preferred);
+        const kind=rangeKindAtY(axis(e.clientX,e.clientY),preferred);
         rangePointerId=e.pointerId;
         try{track.setPointerCapture(e.pointerId);}catch(_){}
-        startRangeHandle(kind,e.clientY);
+        startRangeHandle(kind,axis(e.clientX,e.clientY));
       },{passive:false,signal});
       track.addEventListener('pointermove',e=>{
         if(rangePointerId==null || e.pointerId!==rangePointerId || !rangeDrag) return;
         e.preventDefault();
-        moveRangeHandle(e.clientY);
+        moveRangeHandle(axis(e.clientX,e.clientY));
       },{passive:false,signal});
       const finishRangePointer=e=>{
         if(rangePointerId==null || e.pointerId!==rangePointerId) return;
@@ -9001,15 +9157,15 @@ _wireScrub() {
         if(!('PointerEvent' in window)){
           e.preventDefault(); e.stopPropagation();
           const preferred=e.target.closest('[data-range-handle]')?.dataset?.rangeHandle||null;
-          startRangeHandle(rangeKindAtY(e.clientY,preferred),e.clientY);
+          startRangeHandle(rangeKindAtY(axis(e.clientX,e.clientY),preferred),axis(e.clientX,e.clientY));
         }
         return;
       }
-      if(e.target.closest('.tl-playhead i')){e.preventDefault();startScrubber(e.clientY);return;}
+      if(e.target.closest('.tl-playhead i')){e.preventDefault();startScrubber(axis(e.clientX,e.clientY));return;}
       if(e.target.closest('.t-ev,.t-preview,.tl-zoom-controls'))return;
       e.preventDefault();dn(e.clientX,e.clientY);
     },{signal});
-    window.addEventListener('mousemove',e=>{if(rangeDrag&&rangePointerId==null){e.preventDefault();moveRangeHandle(e.clientY);return;}if(scrubber){e.preventDefault();moveScrubber(e.clientY);return;}mv(e.clientX,e.clientY);},{signal});
+    window.addEventListener('mousemove',e=>{if(rangeDrag&&rangePointerId==null){e.preventDefault();moveRangeHandle(axis(e.clientX,e.clientY));return;}if(scrubber){e.preventDefault();moveScrubber(axis(e.clientX,e.clientY));return;}mv(e.clientX,e.clientY);},{signal});
     window.addEventListener('mouseup',()=>{if(rangeDrag&&rangePointerId==null){stopRangeHandle();return;}if(scrubber){stopScrubber();return;}up();},{signal});
     track.addEventListener('touchstart',e=>{
       if(this._downloadRange){
@@ -9020,7 +9176,7 @@ _wireScrub() {
            captured, use touch as a real fallback instead of assuming support. */
         if(rangePointerId==null && !rangeDrag && e.touches.length){
           e.preventDefault(); e.stopPropagation();
-          const y=e.touches[0].clientY;
+          const y=axis(e.touches[0].clientX,e.touches[0].clientY);
           const preferred=e.target.closest('[data-range-handle]')?.dataset?.rangeHandle||null;
           startRangeHandle(rangeKindAtY(y,preferred),y);
         }
@@ -9028,7 +9184,7 @@ _wireScrub() {
       }
       if(e.target.closest('.tl-playhead i')){
         e.preventDefault();
-        startScrubber(e.touches[0].clientY);
+        startScrubber(axis(e.touches[0].clientX,e.touches[0].clientY));
         scrubberAutoRaf=requestAnimationFrame(scrubberAuto);
         return;
       }
@@ -9040,9 +9196,9 @@ _wireScrub() {
         const a=e.touches[0],b=e.touches[1];
         pinchDistance=Math.max(1,Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY));
         pinchSpan=Math.max(1,this._winEnd-this._winStart);
-        const rect=track.getBoundingClientRect();
-        const midY=(a.clientY+b.clientY)/2;
-        pinchAnchorRatio=Math.max(0,Math.min(1,(midY-rect.top)/Math.max(1,rect.height)));
+        const ar=axisRect();
+        const mid=axis((a.clientX+b.clientX)/2,(a.clientY+b.clientY)/2);
+        pinchAnchorRatio=Math.max(0,Math.min(1,(mid-ar.start)/ar.size));
         pinchAnchorTs=(this._timelineFocusTs ?? this._winEnd) + (0.5-pinchAnchorRatio)*pinchSpan;
         track.classList.add('grab');
         e.preventDefault();
@@ -9052,8 +9208,8 @@ _wireScrub() {
       dn(e.touches[0].clientX,e.touches[0].clientY);
     },{passive:false,signal});
     track.addEventListener('touchmove',e=>{
-      if(rangeDrag&&rangePointerId==null){e.preventDefault();moveRangeHandle(e.touches[0].clientY);return;}
-      if(scrubber){e.preventDefault();moveScrubber(e.touches[0].clientY);return;}
+      if(rangeDrag&&rangePointerId==null){e.preventDefault();moveRangeHandle(axis(e.touches[0].clientX,e.touches[0].clientY));return;}
+      if(scrubber){e.preventDefault();moveScrubber(axis(e.touches[0].clientX,e.touches[0].clientY));return;}
       if(pinch&&e.touches.length>=2){e.preventDefault();pinchMove(e.touches);return;}
       if(drag){e.preventDefault();mv(e.touches[0].clientX,e.touches[0].clientY);}
     },{passive:false,signal});
@@ -9062,17 +9218,19 @@ _wireScrub() {
     track.addEventListener('wheel',e=>{
       e.preventDefault();
       if(this._downloadRange) return;
-      const rect=track.getBoundingClientRect();
+      const ar=axisRect();
       const span=this._winEnd-this._winStart;
-      // Ctrl/Meta wheel behaves like pinch zoom; normal wheel pans vertically.
+      // Ctrl/Meta wheel behaves like pinch zoom; normal wheel pans the timeline.
       if(e.ctrlKey||e.metaKey){
-        const midY=Math.max(0,Math.min(rect.height,e.clientY-rect.top));
-        const ratio=midY/Math.max(1,rect.height);
+        const local=Math.max(0,Math.min(ar.size,axis(e.clientX,e.clientY)-ar.start));
+        const ratio=local/ar.size;
         const anchor=this._timelineTimestampAtRatio(ratio,this._timelineFocusTs,span);
         this._zoomTimeline(e.deltaY>0?1/1.12:1.12,anchor,ratio);
         return;
       }
-      const delta=e.deltaY||e.deltaX;
+      // Horizontal track: a sideways trackpad swipe pans naturally; a plain
+      // mouse wheel still works through deltaY.
+      const delta=horiz() ? (Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY) : (e.deltaY||e.deltaX);
       // Wheel scrolling is a timeline interaction too. While following LIVE,
       // _updateTimelineLive() normally keeps the viewport centered on now.
       // If we don't explicitly leave that state before applying a wheel shift,
@@ -9086,7 +9244,7 @@ _wireScrub() {
       this._timelineInteracting=true;
       if (this._playing || this._activePlaybackCleanup) this._invalidatePlaybackForTimelineMove();
       clearTimeout(this._wt);
-      const shift=Math.round(delta/Math.max(1,rect.height)*span);
+      const shift=Math.round(delta/ar.size*span);
       let ns=this._winStart+shift, ne=this._winEnd+shift;
       let nf=(this._timelineFocusTs ?? ((this._winStart+this._winEnd)/2))+shift;
       const now=Math.floor(Date.now()/1000);
@@ -9226,10 +9384,13 @@ _wireScrub() {
 
       event.preventDefault?.();
       event.stopPropagation?.();
+      const horizontal=track.classList?.contains?.('horizontal');
       const rect=track.getBoundingClientRect();
-      const height=Math.max(1,track.clientHeight||rect.height||1);
+      const size=Math.max(1,(horizontal?(track.clientWidth||rect.width):(track.clientHeight||rect.height))||1);
       const span=Math.max(1,gesture.windowEnd-gesture.windowStart);
-      const pan=Math.round((event.clientY-gesture.startY)/height*span);
+      // Dragging toward the newest edge (down / right) moves to newer footage.
+      const moved=horizontal?-(event.clientX-gesture.startX):(event.clientY-gesture.startY);
+      const pan=Math.round(moved/size*span);
       let start=gesture.windowStart+pan;
       let end=gesture.windowEnd+pan;
       let focus=gesture.focus+pan;
@@ -10061,6 +10222,7 @@ _timelineNodeKey(el) {
     if (el.classList.contains('tl-scale-mark')) return `scale:${el.dataset.ts||''}`;
     if (el.classList.contains('tl-live-line')) return 'live-line';
     if (el.classList.contains('tl-future')) return 'future';
+    if (el.classList.contains('tl-lane-label')) return `lane:${el.dataset.lane||''}`;
     if (el.classList.contains('tl-download-range')) return 'download-range';
     if (el.classList.contains('tl-playhead')) return 'playhead';
     if (el.classList.contains('tl-offline')) return 'offline';
@@ -10157,18 +10319,23 @@ _updateTimelineLive() {
       this._scrubTarget=nowTs;
     }
     const yPct = ts => Math.max(0,Math.min(100,50 + ((focus-Number(ts))/span)*100));
+    const H=this._timelineIsHorizontal?.(track)===true;
     const liveLine=track.querySelector('.tl-live-line');
     const future=track.querySelector('.tl-future');
     if (liveLine) {
       if (nowTs >= s && nowTs <= e) {
         liveLine.style.display='block';
-        liveLine.style.top=`${yPct(nowTs)}%`;
+        this._tlSetPoint(liveLine,yPct(nowTs),H);
       } else {
         liveLine.style.display='none';
       }
     }
     if (future) {
-      if (nowTs <= e) { future.style.display='block'; future.style.height=`${nowTs>=s?yPct(nowTs):100}%`; }
+      if (nowTs <= e) {
+        future.style.display='block';
+        const p=nowTs>=s?yPct(nowTs):100;
+        if(H) future.style.setProperty('left',`${100-p}%`,'important'); else future.style.height=`${p}%`;
+      }
       else future.style.display='none';
     }
     const events=this._timelineEvents();
@@ -10193,9 +10360,9 @@ _updateTimelineLive() {
         el.style.visibility='hidden'; el.style.pointerEvents='none'; return;
       }
       el.style.visibility=''; el.style.pointerEvents='';
-      el.style.top=`${yPct(anchor)}%`;
+      this._tlSetPoint(el,yPct(anchor),H);
     });
-    track.querySelectorAll('.t-preview').forEach(el=>{
+    if(!H) track.querySelectorAll('.t-preview').forEach(el=>{
       const ev=byId.get(String(el.dataset.eventId));
       if(!ev) { el.style.visibility='hidden'; el.style.pointerEvents='none'; return; }
       const anchor=Number.isFinite(Number(el.dataset.ts)) ? Number(el.dataset.ts) : Number(ev.start_time);
@@ -10212,7 +10379,7 @@ _updateTimelineLive() {
       const a=Number(el.dataset.start), b=Number(el.dataset.end); if(!Number.isFinite(a)||!Number.isFinite(b)) return;
       const top=yPct(Math.min(b,e));
       const h=Math.max(.45,((Math.min(b,e)-Math.max(a,s))/span)*100);
-      el.style.top=`${top}%`; el.style.height=`${h}%`;
+      this._tlSetSpan(el,top,h,H);
     });
     track.querySelectorAll('.tl-no-recording').forEach(el=>{
       const a=Number(el.dataset.start), b=Number(el.dataset.end);
@@ -10224,7 +10391,7 @@ _updateTimelineLive() {
       el.style.display='block';
       const top=yPct(clippedB);
       const h=Math.max(.55,((clippedB-clippedA)/span)*100);
-      el.style.top=`${top}%`; el.style.height=`${h}%`;
+      this._tlSetSpan(el,top,h,H);
     });
     // The scale labels are part of the moving timeline, not a static axis.
     // During a scroll the window timestamps change every frame. The previous
@@ -10303,6 +10470,51 @@ _renderLatest() {
 
 _time(ts) { return this._timeMinute(ts); },
 
+/** Horizontal (wide-card) timeline: newest time on the right instead of the top. */
+_timelineIsHorizontal(track=this._$('#tl-track')) { return !!track?.classList?.contains('horizontal'); },
+
+/**
+ * Every timeline position is computed once as a "vertical" percentage
+ * (0 = newest edge). These helpers express it as top/height on the vertical
+ * track or left/width on the horizontal one, so render, live-follow and
+ * download-range code share one coordinate system.
+ */
+_tlPointStyle(pct, horizontal=this._timelineIsHorizontal()) {
+    // Horizontal positions are !important: legacy vertical-rail rules pin
+    // left/width on several node types with !important.
+    return horizontal ? `left:${100-pct}% !important` : `top:${pct}%`;
+  },
+
+_tlSpanStyle(top, size, horizontal=this._timelineIsHorizontal()) {
+    return horizontal ? `left:${100-top-size}% !important;width:${size}% !important` : `top:${top}%;height:${size}%`;
+  },
+
+_tlSetPoint(el, pct, horizontal=this._timelineIsHorizontal()) {
+    if(!el) return;
+    if(horizontal){ el.style.setProperty('left',`${100-pct}%`,'important'); el.style.removeProperty('top'); }
+    else { el.style.top=`${pct}%`; el.style.removeProperty('left'); }
+  },
+
+_tlSetSpan(el, top, size, horizontal=this._timelineIsHorizontal()) {
+    if(!el) return;
+    if(horizontal){ el.style.setProperty('left',`${100-top-size}%`,'important'); el.style.setProperty('width',`${size}%`,'important'); el.style.removeProperty('top'); el.style.removeProperty('height'); }
+    else { el.style.top=`${top}%`; el.style.height=`${size}%`; el.style.removeProperty('left'); el.style.removeProperty('width'); }
+  },
+
+/** Horizontal lanes group detections into broad classes. */
+_timelineLaneKey(key) {
+    const k=String(key||'').toLowerCase();
+    if(['person','face','people'].includes(k)) return 'person';
+    if(['car','truck','bus','motorcycle','motorbike','bicycle','boat','van','vehicle','license_plate','train','airplane'].includes(k)) return 'vehicle';
+    if(['dog','cat','bird','horse','bear','deer','animal','cow','sheep','fox','raccoon','squirrel','rabbit','goat','elephant','zebra','giraffe'].includes(k)) return 'animal';
+    return 'other';
+  },
+
+_timelineLanes() {
+    const present=new Set(this._timelineEvents().map(ev=>this._timelineLaneKey((ev._tl||this._timelineLabelInfo(ev)).key)));
+    return ['person','vehicle','animal','other'].filter(k=>present.has(k));
+  },
+
 _timelineScaleTime(ts) { return this._timeMinute(ts); },
 
 _timelineTime(ts) { return this._timeSec(ts); },
@@ -10338,7 +10550,7 @@ _syncTimelineScaleNodes(track, s, e, span, focus, yPct) {
       el.classList.toggle('hour',isHour);
       const label=el.querySelector('span');
       if(label) label.textContent=this._timelineScaleTime(ts);
-      el.style.top=`${yPct(ts)}%`;
+      this._tlSetPoint(el,yPct(ts));
     });
   },
 
@@ -10357,7 +10569,19 @@ _renderTimeline(forceFull=false) {
     // Scrypted-style centered playhead: the selected wall-clock time sits at
     // the visual center while the timeline itself scrolls underneath it.
     const yPct = ts => Math.max(0,Math.min(100,50 + ((focus-Number(ts))/span)*100));
+    const H=this._timelineIsHorizontal(track);
     let html='';
+    // Horizontal lanes: Recording, then one lane per detection class present.
+    const lanes=H ? this._timelineLanes() : [];
+    const laneIndex=new Map(lanes.map((k,i)=>[k,i+1]));
+    if(H){
+      track.style.setProperty('--tl-lanes',String(lanes.length+1));
+      const names={person:'Person',vehicle:'Vehicle',animal:'Animal',other:'Other'};
+      html+=`<div class="tl-lane-label" data-lane="rec" style="--lane:0">Recording</div>`;
+      lanes.forEach((k,i)=>{ html+=`<div class="tl-lane-label" data-lane="${k}" style="--lane:${i+1}">${names[k]}</div>`; });
+    } else {
+      track.style.removeProperty('--tl-lanes');
+    }
 
     // Scrypted-style recording ribbon: a single blue activity rail behind the
     // event markers. Newest time is always at the top.
@@ -10369,7 +10593,7 @@ _renderTimeline(forceFull=false) {
           const a=Number(r.start_time),b=Number(r.end_time||e); if(b<s||a>e) continue;
           const top=yPct(Math.min(b,e));
           const h=Math.max(.45,((Math.min(b,e)-Math.max(a,s))/span)*100);
-          html+=`<div class="t-rec" data-start="${a}" data-end="${b}" style="top:${top}%;height:${h}%;--rec-color:${col}"></div>`;
+          html+=`<div class="t-rec" data-start="${a}" data-end="${b}" style="${this._tlSpanStyle(top,h,H)};--rec-color:${col}"></div>`;
         }
       });
     } else {
@@ -10377,7 +10601,7 @@ _renderTimeline(forceFull=false) {
         const a=Number(r.start_time),b=Number(r.end_time||e); if(b<s||a>e) continue;
         const top=yPct(Math.min(b,e));
         const h=Math.max(.45,((Math.min(b,e)-Math.max(a,s))/span)*100);
-        html+=`<div class="t-rec" data-start="${a}" data-end="${b}" style="top:${top}%;height:${h}%"></div>`;
+        html+=`<div class="t-rec" data-start="${a}" data-end="${b}" style="${this._tlSpanStyle(top,h,H)}"></div>`;
       }
     }
 
@@ -10389,7 +10613,7 @@ _renderTimeline(forceFull=false) {
       if (!(b>a)) continue;
       const top=yPct(b);
       const h=Math.max(.55,((b-a)/span)*100);
-      html+=`<div class="tl-no-recording" data-gap="${gap.key}" data-start="${a}" data-end="${b}" style="top:${top}%;height:${h}%" aria-label="No Recording"><span>No Recording</span></div>`;
+      html+=`<div class="tl-no-recording" data-gap="${gap.key}" data-start="${a}" data-end="${b}" style="${this._tlSpanStyle(top,h,H)}" aria-label="No Recording"><span>No Recording</span></div>`;
     }
 
     // Time scale lives in the left gutter. Keep it sparse at all zoom levels;
@@ -10397,7 +10621,7 @@ _renderTimeline(forceFull=false) {
     const step=span<=900 ? 60 : span<=1800 ? 2*60 : span<=3600 ? 5*60 : span<=7200 ? 10*60 : 30*60;
     for(let ts=Math.ceil(s/step)*step;ts<=e;ts+=step) {
       const pct=yPct(ts), d=new Date(ts*1000), isHour=d.getMinutes()===0;
-      html+=`<div class="tl-scale-mark ${isHour?'hour':''}" data-ts="${ts}" style="top:${pct}%"><span>${this._timelineScaleTime(ts)}</span><i></i></div>`;
+      html+=`<div class="tl-scale-mark ${isHour?'hour':''}" data-ts="${ts}" style="${this._tlPointStyle(pct,H)}"><span>${this._timelineScaleTime(ts)}</span><i></i></div>`;
     }
 
     // Render Scrypted-style detection rows: a blue rail marker plus a separate
@@ -10406,7 +10630,7 @@ _renderTimeline(forceFull=false) {
     // A cluster may overlap the viewport after its first event has already
     // scrolled away. In that case anchor to the first *actual* detection still
     // inside the window instead of clamping the old cluster start to an edge.
-    const trackPx=Math.max(track.clientHeight||420,360);
+    const trackPx=H ? Math.max(track.clientWidth||900,320) : Math.max(track.clientHeight||420,360);
     const metrics=this._timelineResponsiveMetrics(track);
     track.style.setProperty('--tl-glyph-size',`${metrics.glyphPx}px`);
     track.style.setProperty('--tl-glyph-gap',`${metrics.glyphGapPx}px`);
@@ -10440,7 +10664,8 @@ _renderTimeline(forceFull=false) {
       const aria=group.totalDetections>1
         ? `${labelText} detection cluster at ${this._timelineTime(markerTs)} (${group.totalDetections} detections)`
         : `${info.display} at ${this._timelineTime(markerTs)}`;
-      html+=`<button class="t-ev ${selected?'selected':''}${clusterClass}" data-tick="${ev.id}" data-ts="${markerTs}" data-start="${group.startTs}" data-end="${group.endTs}" style="top:${pct}%;--ev-color:${labelColor(info.key)}" aria-label="${aria}"><span class="t-duration" style="height:${durationPx}px"></span><span class="t-dot"><span class="t-glyph-stack">${glyphs}</span></span><span class="t-connector"></span></button>`;
+      const lane=H ? (laneIndex.get(this._timelineLaneKey(info.key))||1) : 0;
+      html+=`<button class="t-ev ${selected?'selected':''}${clusterClass}" data-tick="${ev.id}" data-ts="${markerTs}" data-start="${group.startTs}" data-end="${group.endTs}" style="${this._tlPointStyle(pct,H)};--ev-color:${labelColor(info.key)};--lane:${lane}" aria-label="${aria}"><span class="t-duration" style="${H?`width:${durationPx}px !important`:`height:${durationPx}px`}"></span><span class="t-dot"><span class="t-glyph-stack">${glyphs}</span></span><span class="t-connector"></span></button>`;
     });
 
     // Promote a sparse set of representative detection moments into thumbnail
@@ -10453,7 +10678,7 @@ _renderTimeline(forceFull=false) {
     // 6-desktop cap hid perfectly valid thumbnails on tall phones, tablets and
     // portrait dashboards even when there was plenty of vertical room.
     const configuredThumbMax=Math.max(0,Math.round(Number(this._config?.timeline?.max_thumbnails ?? 12)));
-    const maxCards=this._config.timeline.show_thumbnails && configuredThumbMax>0
+    const maxCards=!H && this._config.timeline.show_thumbnails && configuredThumbMax>0
       ? Math.max(1,Math.min(configuredThumbMax,Math.floor((trackPx+gap)/(cardH+gap)))) : 0;
     const candidates=visualGroups.map(group=>({
       group,
@@ -10508,8 +10733,8 @@ _renderTimeline(forceFull=false) {
     const nowTs = Math.floor(Date.now()/1000);
     if (nowTs >= s && nowTs <= e) {
       const livePct = yPct(nowTs);
-      html+=`<div class="tl-future" style="height:${livePct}%" aria-hidden="true"></div>`;
-      html+=`<div class="tl-live-line" style="top:${livePct}%" aria-label="Live"></div>`;
+      html+=`<div class="tl-future" style="${H?`left:${100-livePct}%`:`height:${livePct}%`}" aria-hidden="true"></div>`;
+      html+=`<div class="tl-live-line" style="${this._tlPointStyle(livePct,H)}" aria-label="Live"></div>`;
     }
 
     // Download trim mode is drawn in the same timestamp coordinate space as
@@ -10524,9 +10749,9 @@ _renderTimeline(forceFull=false) {
       const bandHeight=Math.max(.35,Math.abs(startPct-endPct));
       const duration=this._formatDownloadRangeDuration(Number(r.end)-Number(r.start));
       html+=`<div class="tl-download-range" data-start="${Math.floor(Number(r.start))}" data-end="${Math.floor(Number(r.end))}" aria-label="Download range ${this._timelineTime(r.start)} to ${this._timelineTime(r.end)}">
-        <div class="tl-range-band" style="top:${bandTop}%;height:${bandHeight}%"></div>
-        <div class="tl-range-boundary tl-range-end" data-range-handle="end" style="top:${endPct}%" role="slider" aria-label="Download end" aria-valuetext="${this._timelineTime(r.end)}"><i></i><span><b>END</b>${this._timelineScaleTime(r.end)}</span></div>
-        <div class="tl-range-boundary tl-range-start" data-range-handle="start" style="top:${startPct}%" role="slider" aria-label="Download start" aria-valuetext="${this._timelineTime(r.start)}"><i></i><span><b>START</b>${this._timelineScaleTime(r.start)}</span></div>
+        <div class="tl-range-band" style="${this._tlSpanStyle(bandTop,bandHeight,H)}"></div>
+        <div class="tl-range-boundary tl-range-end" data-range-handle="end" style="${this._tlPointStyle(endPct,H)}" role="slider" aria-label="Download end" aria-valuetext="${this._timelineTime(r.end)}"><i></i><span><b>END</b>${this._timelineScaleTime(r.end)}</span></div>
+        <div class="tl-range-boundary tl-range-start" data-range-handle="start" style="${this._tlPointStyle(startPct,H)}" role="slider" aria-label="Download start" aria-valuetext="${this._timelineTime(r.start)}"><i></i><span><b>START</b>${this._timelineScaleTime(r.start)}</span></div>
         <div class="tl-range-actions"><span class="tl-range-duration">${duration}</span><button type="button" data-range-cancel>Cancel</button><button type="button" class="primary" data-range-download>${ICONS.download}<span>Download</span></button></div>
       </div>`;
     }
@@ -10575,8 +10800,17 @@ _reconcileTimeline(track, html) {
         if(old.classList.contains('t-ev')) {
           const oldDot=old.querySelector('.t-dot'); const newDot=next.querySelector('.t-dot');
           if(oldDot && newDot && oldDot.innerHTML!==newDot.innerHTML) oldDot.innerHTML=newDot.innerHTML;
+          // Duration length (and its axis) changes with zoom and orientation.
+          const oldDur=old.querySelector('.t-duration'); const newDur=next.querySelector('.t-duration');
+          if(oldDur && newDur && oldDur.getAttribute('style')!==newDur.getAttribute('style')) oldDur.setAttribute('style',newDur.getAttribute('style')||'');
         }
         if(old.classList.contains('tl-download-range') && old.innerHTML!==next.innerHTML) old.innerHTML=next.innerHTML;
+        // The playhead node is reused, so its time label must be refreshed here
+        // too; otherwise jumping the timeline leaves the previous (LIVE) time.
+        if(old.classList.contains('tl-playhead')) {
+          const oldLabel=old.querySelector('span'); const newLabel=next.querySelector('span');
+          if(oldLabel && newLabel && oldLabel.textContent!==newLabel.textContent) oldLabel.textContent=newLabel.textContent;
+        }
         if(old.classList.contains('tl-offline') && old.textContent!==next.textContent) old.textContent=next.textContent;
         frag.appendChild(old);
       } else {
@@ -10770,11 +11004,11 @@ _syncDownloadRangePickerDOM(activeKind=null) {
     const yPct=ts=>Math.max(0,Math.min(100,50+((focus-Number(ts))/span)*100));
     const endPct=yPct(r.end), startPct=yPct(r.start);
     const band=root.querySelector('.tl-range-band');
-    if(band){band.style.top=`${Math.min(endPct,startPct)}%`;band.style.height=`${Math.max(.35,Math.abs(startPct-endPct))}%`;}
+    if(band) this._tlSetSpan(band,Math.min(endPct,startPct),Math.max(.35,Math.abs(startPct-endPct)));
     const syncHandle=(kind,pct,ts)=>{
       const h=root.querySelector(`[data-range-handle="${kind}"]`);
       if(!h) return;
-      h.style.top=`${pct}%`;
+      this._tlSetPoint(h,pct);
       h.setAttribute('aria-valuetext',this._timelineTime(ts));
       h.classList.toggle('dragging',activeKind===kind);
       const label=h.querySelector('span');
@@ -11476,6 +11710,22 @@ const responsiveUxMethods = {
     const galleryOpen=!!this._galleryMode;
     const timelineEnabled=this._config?.timeline?.enabled!==false;
     const playbackFull=card.classList.contains('playback-fullcard');
+
+    // Timeline orientation. Wide cards get a full-width horizontal timeline
+    // with lanes under the player; phones and narrow cards keep the vertical
+    // one. timeline.orientation can force either.
+    const orientation=this._config?.timeline?.orientation||'auto';
+    const horizontal=!editorPreview && (orientation==='horizontal' || (orientation==='auto' && split));
+    card.classList.toggle('tl-horizontal',horizontal);
+    const track=this.shadowRoot.querySelector('#tl-track');
+    if(track && track.classList.contains('horizontal')!==horizontal){
+      track.classList.toggle('horizontal',horizontal);
+      track.classList.toggle('vertical',!horizontal);
+      // Every node's inline position flips between top/height and
+      // left/width, so rebuild once on the orientation change.
+      const raf=typeof requestAnimationFrame==='function' ? requestAnimationFrame : (fn)=>setTimeout(fn,0);
+      raf(()=>{ if(this.isConnected) this._renderTimeline?.(true); });
+    }
     card.classList.toggle('gallery-active',galleryOpen);
 
     const layout=this.shadowRoot.querySelector('.layout');
@@ -11507,7 +11757,7 @@ const responsiveUxMethods = {
       setImportant(engWrap,'display','block');
       setImportant(grid,'display','none');
     } else if(galleryOpen){
-      setImportant(media,'display',workstation || (split&&!timelineEnabled) ? 'flex' : 'block');
+      setImportant(media,'display',workstation || (split&&(!timelineEnabled||horizontal)) ? 'flex' : 'block');
       media?.setAttribute?.('aria-hidden','false');
     } else {
       setImportant(media,'display','none');
@@ -11531,7 +11781,21 @@ const responsiveUxMethods = {
     // these templates eliminate that dead track entirely. playback-fullcard is
     // intentionally excluded because its single-pane template is owned by the
     // playback layout and must survive responsive reconciliation unchanged.
-    if(layout && !playbackFull){
+    if(layout && !playbackFull && horizontal && (split || workstation)){
+      if(timelineEnabled && galleryOpen){
+        setImportant(layout,'grid-template-columns','minmax(0,1.5fr) minmax(320px,.78fr)');
+        setImportant(layout,'grid-template-areas','"feed media" "timeline timeline"');
+      } else if(timelineEnabled){
+        setImportant(layout,'grid-template-columns','minmax(0,1fr)');
+        setImportant(layout,'grid-template-areas','"feed" "timeline"');
+      } else if(galleryOpen){
+        setImportant(layout,'grid-template-columns','minmax(0,1.5fr) minmax(320px,.78fr)');
+        setImportant(layout,'grid-template-areas','"feed media"');
+      } else {
+        setImportant(layout,'grid-template-columns','minmax(0,1fr)');
+        setImportant(layout,'grid-template-areas','"feed"');
+      }
+    } else if(layout && !playbackFull){
       if(workstation){
         if(timelineEnabled && galleryOpen){
           setImportant(layout,'grid-template-columns','minmax(440px,1.36fr) minmax(340px,.82fr) minmax(330px,.82fr)');
@@ -11584,7 +11848,8 @@ const responsiveUxMethods = {
     const timelineEnabled=this._config?.timeline?.enabled!==false;
     const split=card.classList.contains('dashboard-split');
     const workstation=card.classList.contains('workstation');
-    const sideBySide=workstation || (split && !timelineEnabled);
+    // Horizontal timeline: the media list sits beside the player.
+    const sideBySide=workstation || (split && (!timelineEnabled || card.classList.contains('tl-horizontal')));
 
     setImportant(gallery,'min-height','0');
     setImportant(grid,'min-height','0');
@@ -12258,6 +12523,7 @@ _render() {
         <div class="adv-grid">
           <label class="chk-lbl"><input type="checkbox" id="timeline_enabled" ${tl.enabled!==false?'checked':''}> Show timeline on Live</label>
           <label><span class="field-label">Default zoom (minutes)</span><input class="tf" id="timeline_default_minutes" type="number" min="5" max="60" value="${tl.default_minutes??10}"></label>
+          <label><span class="field-label">Orientation</span><select class="tf" id="timeline_orientation"><option value="auto" ${(tl.orientation||'auto')==='auto'?'selected':''}>Auto (horizontal on wide cards)</option><option value="vertical" ${tl.orientation==='vertical'?'selected':''}>Always vertical</option><option value="horizontal" ${tl.orientation==='horizontal'?'selected':''}>Always horizontal</option></select></label>
           <label class="chk-lbl"><input type="checkbox" id="timeline_show_thumbnails" ${tl.show_thumbnails!==false?'checked':''}> Event thumbnails</label>
           <label class="chk-lbl"><input type="checkbox" id="timeline_show_glyphs" ${tl.show_glyphs!==false?'checked':''}> Detection glyphs</label>
           <label class="chk-lbl"><input type="checkbox" id="timeline_show_legend" ${tl.show_legend!==false?'checked':''}> Detection legend</label>
@@ -12435,6 +12701,7 @@ _u() {
     c.timeline = { ...(this._config?.timeline || {}),
       enabled: this.querySelector('#timeline_enabled')?.checked !== false,
       default_minutes: Math.max(5,Math.min(60,Number(g('timeline_default_minutes')||10))),
+      orientation: ['auto','vertical','horizontal'].includes(this.querySelector('#timeline_orientation')?.value) ? this.querySelector('#timeline_orientation').value : 'auto',
       show_thumbnails: this.querySelector('#timeline_show_thumbnails')?.checked !== false,
       show_glyphs: this.querySelector('#timeline_show_glyphs')?.checked !== false,
       show_legend: this.querySelector('#timeline_show_legend')?.checked !== false,

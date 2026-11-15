@@ -73,11 +73,11 @@ _syncDownloadRangePickerDOM(activeKind=null) {
     const yPct=ts=>Math.max(0,Math.min(100,50+((focus-Number(ts))/span)*100));
     const endPct=yPct(r.end), startPct=yPct(r.start);
     const band=root.querySelector('.tl-range-band');
-    if(band){band.style.top=`${Math.min(endPct,startPct)}%`;band.style.height=`${Math.max(.35,Math.abs(startPct-endPct))}%`;}
+    if(band) this._tlSetSpan(band,Math.min(endPct,startPct),Math.max(.35,Math.abs(startPct-endPct)));
     const syncHandle=(kind,pct,ts)=>{
       const h=root.querySelector(`[data-range-handle="${kind}"]`);
       if(!h) return;
-      h.style.top=`${pct}%`;
+      this._tlSetPoint(h,pct);
       h.setAttribute('aria-valuetext',this._timelineTime(ts));
       h.classList.toggle('dragging',activeKind===kind);
       const label=h.querySelector('span');

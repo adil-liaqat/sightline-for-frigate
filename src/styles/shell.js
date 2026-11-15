@@ -2220,4 +2220,146 @@ ${STYLES}
 .card.theme-light .legend .lg em{color:#6e6e73;}
 .card.theme-light .legend .lg-rec{--ev-color:rgba(60,60,67,.5);}
 .card.theme-light .tl-track.vertical .t-preview.t-row.selected{background:rgba(10,132,255,.10) !important;border-color:rgba(10,132,255,.55) !important;}
+
+/* ─────────────────────────────────────────────────────────────
+   Horizontal timeline (wide cards): time runs left→right, newest on the
+   right, with a Recording lane and one lane per detection class under a
+   time ruler. A fixed centred playhead, like the vertical timeline.
+   ───────────────────────────────────────────────────────────── */
+.card.tl-horizontal .workspace-timeline{height:auto !important;min-height:0 !important;overflow:visible !important;}
+.card.tl-horizontal #timeline-view{height:auto !important;display:block !important;}
+.card.dashboard-split.tl-horizontal .workspace-media{height:var(--workspace-column-h,auto) !important;}
+
+.card .tl-track.horizontal{
+  --tl-ruler:24px;--tl-lane-h:26px;--tl-gutter:0px;--tl-rail:0px;
+  position:relative;
+  height:calc(var(--tl-ruler) + var(--tl-lanes,2) * var(--tl-lane-h) + 10px) !important;
+  min-height:0 !important;max-height:none !important;flex:0 0 auto !important;
+  margin-top:12px !important;border-radius:14px !important;
+  border:1px solid rgba(255,255,255,.06) !important;background:#111113 !important;box-shadow:none !important;
+  overflow:hidden !important;cursor:grab;touch-action:pan-y;
+}
+.card .tl-track.horizontal::before,
+.card .tl-track.horizontal::after,
+.card .tl-track.horizontal .tl-now{display:none !important;}
+
+.card .tl-track.horizontal .tl-future{
+  position:absolute;top:0;bottom:0;right:0;width:auto;height:auto !important;
+  background:repeating-linear-gradient(135deg,rgba(255,255,255,.03) 0 6px,transparent 6px 12px);
+  pointer-events:none;z-index:0;
+}
+
+/* Ruler: labels along the top, faint full-height ticks. */
+.card .tl-track.horizontal .tl-scale-mark{
+  position:absolute;top:0 !important;bottom:0 !important;right:auto !important;width:0 !important;height:auto !important;
+  z-index:1;pointer-events:none;
+}
+.card .tl-track.horizontal .tl-scale-mark span{
+  position:absolute;left:0 !important;top:5px !important;width:auto !important;transform:translateX(-50%) !important;
+  color:#8e8e93 !important;font-size:11px !important;font-weight:600 !important;line-height:14px !important;
+  white-space:nowrap !important;overflow:visible !important;text-align:center !important;
+}
+.card .tl-track.horizontal .tl-scale-mark.hour span{color:#d1d1d6 !important;}
+.card .tl-track.horizontal .tl-scale-mark i{
+  position:absolute;left:0 !important;right:auto !important;top:var(--tl-ruler) !important;bottom:0 !important;
+  width:1px !important;height:auto !important;transform:none !important;background:rgba(255,255,255,.05) !important;
+}
+.card .tl-track.horizontal .tl-scale-mark.hour i{background:rgba(255,255,255,.12) !important;}
+
+/* Lanes: subtle row backgrounds and a label pinned to the left edge. */
+.card .tl-track.horizontal .tl-lane-label{
+  position:absolute;left:8px;top:calc(var(--tl-ruler) + var(--lane) * var(--tl-lane-h) + 4px);
+  height:calc(var(--tl-lane-h) - 8px);display:flex;align-items:center;padding:0 7px;border-radius:6px;
+  background:rgba(17,17,19,.82);color:#a1a1a6;font-size:11px;font-weight:600;line-height:1;
+  z-index:12;pointer-events:none;white-space:nowrap;
+}
+.card .tl-track.horizontal .tl-lane-label::after{
+  content:'';position:absolute;left:-8px;width:4000px;top:-4px;bottom:-4px;z-index:-1;
+  border-top:1px solid rgba(255,255,255,.035);pointer-events:none;
+}
+
+.card .tl-track.horizontal .t-rec{
+  top:calc(var(--tl-ruler) + 6px) !important;height:calc(var(--tl-lane-h) - 12px) !important;
+  right:auto !important;bottom:auto !important;border-radius:4px !important;
+  background:var(--rec-color,rgba(235,235,245,.30)) !important;opacity:1 !important;box-shadow:none !important;z-index:2 !important;
+}
+.card .tl-track.horizontal .tl-no-recording{
+  top:calc(var(--tl-ruler) + 6px) !important;height:calc(var(--tl-lane-h) - 12px) !important;
+  right:auto !important;bottom:auto !important;border-radius:4px !important;z-index:2 !important;
+}
+.card .tl-track.horizontal .tl-no-recording span{display:none !important;}
+
+/* Detections: a bar per event in its lane, as long as the event lasts. */
+.card .tl-track.horizontal .t-ev{
+  position:absolute !important;top:calc(var(--tl-ruler) + var(--lane) * var(--tl-lane-h) + 5px) !important;
+  right:auto !important;width:0 !important;height:calc(var(--tl-lane-h) - 10px) !important;
+  padding:0 !important;margin:0 !important;border:0 !important;background:transparent !important;
+  overflow:visible !important;z-index:8 !important;cursor:pointer;
+}
+.card .tl-track.horizontal .t-ev::before,
+.card .tl-track.horizontal .t-ev::after,
+.card .tl-track.horizontal .t-ev .t-dot,
+.card .tl-track.horizontal .t-ev .t-connector{display:none !important;}
+.card .tl-track.horizontal .t-ev .t-duration{
+  position:absolute !important;left:0 !important;top:0 !important;bottom:0 !important;right:auto !important;
+  height:100% !important;min-width:6px !important;border-radius:4px !important;
+  background:var(--ev-color,#8e8e93) !important;opacity:.92 !important;box-shadow:none !important;transform:none !important;
+  pointer-events:auto !important;cursor:pointer;
+}
+.card .tl-track.horizontal .t-ev:hover .t-duration{opacity:1 !important;filter:brightness(1.15);}
+.card .tl-track.horizontal .t-ev.selected .t-duration{box-shadow:0 0 0 2px #111113,0 0 0 3px #f5f5f7 !important;}
+.card .tl-track.horizontal .t-preview{display:none !important;}
+
+/* Live edge and centred playhead become vertical lines. */
+.card .tl-track.horizontal .tl-live-line{
+  top:var(--tl-ruler) !important;bottom:0 !important;right:auto !important;width:2px !important;height:auto !important;
+  margin-left:-1px;background:#ff453a !important;box-shadow:none !important;z-index:14 !important;
+}
+.card .tl-track.horizontal .tl-live-line::before{
+  content:'LIVE';position:absolute;left:50% !important;right:auto !important;top:auto !important;bottom:4px !important;
+  transform:translateX(-50%) !important;padding:0 6px !important;height:16px;line-height:16px;border-radius:999px !important;
+  background:#ff453a !important;color:#fff;font-size:9px !important;font-weight:800 !important;border:0 !important;box-shadow:none !important;
+}
+.card .tl-track.horizontal.following-live .tl-live-line::before{display:none !important;}
+.card .tl-track.horizontal .tl-playhead{
+  left:50% !important;right:auto !important;top:0 !important;bottom:0 !important;width:2px !important;height:auto !important;
+  margin-left:-1px;background:#f5f5f7 !important;box-shadow:none !important;z-index:30 !important;pointer-events:none;
+}
+.card .tl-track.horizontal .tl-playhead i{
+  left:50% !important;top:calc(var(--tl-ruler) - 4px) !important;width:16px !important;height:10px !important;
+  transform:translateX(-50%) !important;border-radius:3px !important;
+  background:#f5f5f7 !important;border:0 !important;box-shadow:0 1px 4px rgba(0,0,0,.4) !important;pointer-events:auto !important;cursor:ew-resize;
+}
+.card .tl-track.horizontal .tl-playhead span{
+  position:absolute !important;left:50% !important;right:auto !important;top:2px !important;bottom:auto !important;
+  transform:translateX(-50%) !important;width:auto !important;min-width:0 !important;max-width:none !important;height:18px !important;padding:0 8px !important;opacity:1 !important;
+  display:inline-flex !important;align-items:center;border:0 !important;border-radius:999px !important;
+  background:#f5f5f7 !important;color:#111113 !important;box-shadow:0 2px 8px rgba(0,0,0,.35) !important;
+  font:700 11px/18px -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif !important;font-variant-numeric:tabular-nums !important;
+  white-space:nowrap !important;z-index:3 !important;
+}
+.card .tl-track.horizontal.following-live .tl-playhead{background:#ff453a !important;}
+.card .tl-track.horizontal.following-live .tl-playhead i{background:#ff453a !important;}
+.card .tl-track.horizontal.following-live .tl-playhead span{background:#ff453a !important;color:#fff !important;}
+.card .tl-track.horizontal.following-live .tl-playhead span::before{content:'LIVE';font-weight:800;letter-spacing:.04em;margin-right:6px;padding-right:6px;border-right:1px solid rgba(255,255,255,.45);}
+
+/* Download range: vertical handles over a highlighted band. */
+.card .tl-track.horizontal .tl-range-band{top:var(--tl-ruler) !important;bottom:0 !important;height:auto !important;right:auto !important;}
+.card .tl-track.horizontal .tl-range-boundary{top:var(--tl-ruler) !important;bottom:0 !important;width:2px !important;height:auto !important;right:auto !important;}
+.card .tl-track.horizontal .tl-range-boundary>i{left:50% !important;top:50% !important;}
+.card .tl-track.horizontal .tl-range-boundary>span{left:6px !important;top:2px !important;transform:none !important;}
+
+/* Light theme. */
+.card.theme-light .tl-track.horizontal{background:#fafafc !important;border-color:rgba(0,0,0,.07) !important;}
+.card.theme-light .tl-track.horizontal .tl-future{background:repeating-linear-gradient(135deg,rgba(0,0,0,.035) 0 6px,transparent 6px 12px);}
+.card.theme-light .tl-track.horizontal .tl-scale-mark span{color:#6e6e73 !important;}
+.card.theme-light .tl-track.horizontal .tl-scale-mark.hour span{color:#1d1d1f !important;}
+.card.theme-light .tl-track.horizontal .tl-scale-mark i{background:rgba(0,0,0,.06) !important;}
+.card.theme-light .tl-track.horizontal .tl-lane-label{background:rgba(250,250,252,.9);color:#6e6e73;}
+.card.theme-light .tl-track.horizontal .tl-lane-label::after{border-top-color:rgba(0,0,0,.05);}
+.card.theme-light .tl-track.horizontal .t-rec{background:var(--rec-color,rgba(60,60,67,.28)) !important;}
+.card.theme-light .tl-track.horizontal .tl-playhead,
+.card.theme-light .tl-track.horizontal .tl-playhead i{background:#1d1d1f !important;}
+.card.theme-light .tl-track.horizontal .tl-playhead span{background:#1d1d1f !important;color:#fff !important;}
+.card.theme-light .tl-track.horizontal .t-ev.selected .t-duration{box-shadow:0 0 0 2px #fafafc,0 0 0 3px #1d1d1f !important;}
 `;

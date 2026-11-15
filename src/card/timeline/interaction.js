@@ -53,6 +53,18 @@ _wireScrub() {
     let scrubber=false,scrubberLastY=0,scrubberAutoRaf=0,scrubberAutoY=0;
     let rangeDrag=null,rangeLastLabel=0,rangePointerId=null;
     let pinch=false,pinchDistance=0,pinchSpan=0,pinchAnchorTs=0,pinchAnchorRatio=0;
+    // Axis coordinate measured from the NEWEST edge of the track: the top on
+    // the vertical timeline, the right edge on the horizontal one. Larger
+    // values are older. Every gesture below works in this coordinate, so one
+    // implementation drives both orientations.
+    const horiz=()=>track.classList.contains('horizontal');
+    const axis=(x,y)=>horiz()?-Number(x):Number(y);
+    const axisRect=()=>{
+      const r=track.getBoundingClientRect();
+      return horiz()
+        ? {start:-r.right,size:Math.max(1,track.clientWidth||r.width||1)}
+        : {start:r.top,size:Math.max(1,track.clientHeight||r.height||1)};
+    };
     const stopScrubberAuto=()=>{
       if(scrubberAutoRaf){cancelAnimationFrame(scrubberAutoRaf);scrubberAutoRaf=0;}
     };
@@ -81,8 +93,8 @@ _wireScrub() {
       this._exhausted=false;
     };
     const rangeTimestampAtY=(y)=>{
-      const rect=track.getBoundingClientRect();
-      const ratio=Math.max(0,Math.min(1,(y-rect.top)/Math.max(1,rect.height)));
+      const ar=axisRect();
+      const ratio=Math.max(0,Math.min(1,(y-ar.start)/ar.size));
       return this._winEnd-ratio*Math.max(1,this._winEnd-this._winStart);
     };
     const rangeKindAtY=(y,preferred)=>{
@@ -139,15 +151,15 @@ _wireScrub() {
     };
     const moveScrubber=(y)=>{
       if(!scrubber)return;
-      const rect=track.getBoundingClientRect();
-      const size=Math.max(1,track.clientHeight||rect.height||1);
+      const ar=axisRect();
+      const size=ar.size;
       const span=Math.max(1,this._winEnd-this._winStart);
       const dy=y-scrubberLastY;
       if(Math.abs(dy)>0.01){
         // Dragging the center scrubber downward moves toward older footage.
         // Once the finger is held in the lower part of the rail, progressively
         // increase the time rate so a long timeline can be traversed quickly.
-        const localY=Math.max(0,Math.min(size,y-rect.top));
+        const localY=Math.max(0,Math.min(size,y-ar.start));
         const lower=Math.max(0,Math.min(1,(localY/size-.58)/.42));
         const speed=1+4*lower*lower;
         const next=(this._scrubTarget ?? this._timelineFocusTs ?? ((this._winStart+this._winEnd)/2)) - (dy/size)*span*speed;
@@ -162,9 +174,9 @@ _wireScrub() {
     };
     const scrubberAuto=()=>{
       if(!scrubber)return;
-      const rect=track.getBoundingClientRect();
-      const size=Math.max(1,track.clientHeight||rect.height||1);
-      const localY=Math.max(0,Math.min(size,scrubberAutoY-rect.top));
+      const ar=axisRect();
+      const size=ar.size;
+      const localY=Math.max(0,Math.min(size,scrubberAutoY-ar.start));
       // Holding near the bottom edge keeps walking backward through time.
       // This is deliberately bounded so a small accidental touch cannot race
       // through hours of recordings.
@@ -298,15 +310,15 @@ _wireScrub() {
         if(e.pointerType==='mouse' && e.button!==0) return;
         e.preventDefault(); e.stopPropagation();
         const preferred=e.target.closest('[data-range-handle]')?.dataset?.rangeHandle||null;
-        const kind=rangeKindAtY(e.clientY,preferred);
+        const kind=rangeKindAtY(axis(e.clientX,e.clientY),preferred);
         rangePointerId=e.pointerId;
         try{track.setPointerCapture(e.pointerId);}catch(_){}
-        startRangeHandle(kind,e.clientY);
+        startRangeHandle(kind,axis(e.clientX,e.clientY));
       },{passive:false,signal});
       track.addEventListener('pointermove',e=>{
         if(rangePointerId==null || e.pointerId!==rangePointerId || !rangeDrag) return;
         e.preventDefault();
-        moveRangeHandle(e.clientY);
+        moveRangeHandle(axis(e.clientX,e.clientY));
       },{passive:false,signal});
       const finishRangePointer=e=>{
         if(rangePointerId==null || e.pointerId!==rangePointerId) return;
@@ -327,15 +339,15 @@ _wireScrub() {
         if(!('PointerEvent' in window)){
           e.preventDefault(); e.stopPropagation();
           const preferred=e.target.closest('[data-range-handle]')?.dataset?.rangeHandle||null;
-          startRangeHandle(rangeKindAtY(e.clientY,preferred),e.clientY);
+          startRangeHandle(rangeKindAtY(axis(e.clientX,e.clientY),preferred),axis(e.clientX,e.clientY));
         }
         return;
       }
-      if(e.target.closest('.tl-playhead i')){e.preventDefault();startScrubber(e.clientY);return;}
+      if(e.target.closest('.tl-playhead i')){e.preventDefault();startScrubber(axis(e.clientX,e.clientY));return;}
       if(e.target.closest('.t-ev,.t-preview,.tl-zoom-controls'))return;
       e.preventDefault();dn(e.clientX,e.clientY);
     },{signal});
-    window.addEventListener('mousemove',e=>{if(rangeDrag&&rangePointerId==null){e.preventDefault();moveRangeHandle(e.clientY);return;}if(scrubber){e.preventDefault();moveScrubber(e.clientY);return;}mv(e.clientX,e.clientY);},{signal});
+    window.addEventListener('mousemove',e=>{if(rangeDrag&&rangePointerId==null){e.preventDefault();moveRangeHandle(axis(e.clientX,e.clientY));return;}if(scrubber){e.preventDefault();moveScrubber(axis(e.clientX,e.clientY));return;}mv(e.clientX,e.clientY);},{signal});
     window.addEventListener('mouseup',()=>{if(rangeDrag&&rangePointerId==null){stopRangeHandle();return;}if(scrubber){stopScrubber();return;}up();},{signal});
     track.addEventListener('touchstart',e=>{
       if(this._downloadRange){
@@ -346,7 +358,7 @@ _wireScrub() {
            captured, use touch as a real fallback instead of assuming support. */
         if(rangePointerId==null && !rangeDrag && e.touches.length){
           e.preventDefault(); e.stopPropagation();
-          const y=e.touches[0].clientY;
+          const y=axis(e.touches[0].clientX,e.touches[0].clientY);
           const preferred=e.target.closest('[data-range-handle]')?.dataset?.rangeHandle||null;
           startRangeHandle(rangeKindAtY(y,preferred),y);
         }
@@ -354,7 +366,7 @@ _wireScrub() {
       }
       if(e.target.closest('.tl-playhead i')){
         e.preventDefault();
-        startScrubber(e.touches[0].clientY);
+        startScrubber(axis(e.touches[0].clientX,e.touches[0].clientY));
         scrubberAutoRaf=requestAnimationFrame(scrubberAuto);
         return;
       }
@@ -366,9 +378,9 @@ _wireScrub() {
         const a=e.touches[0],b=e.touches[1];
         pinchDistance=Math.max(1,Math.hypot(b.clientX-a.clientX,b.clientY-a.clientY));
         pinchSpan=Math.max(1,this._winEnd-this._winStart);
-        const rect=track.getBoundingClientRect();
-        const midY=(a.clientY+b.clientY)/2;
-        pinchAnchorRatio=Math.max(0,Math.min(1,(midY-rect.top)/Math.max(1,rect.height)));
+        const ar=axisRect();
+        const mid=axis((a.clientX+b.clientX)/2,(a.clientY+b.clientY)/2);
+        pinchAnchorRatio=Math.max(0,Math.min(1,(mid-ar.start)/ar.size));
         pinchAnchorTs=(this._timelineFocusTs ?? this._winEnd) + (0.5-pinchAnchorRatio)*pinchSpan;
         track.classList.add('grab');
         e.preventDefault();
@@ -378,8 +390,8 @@ _wireScrub() {
       dn(e.touches[0].clientX,e.touches[0].clientY);
     },{passive:false,signal});
     track.addEventListener('touchmove',e=>{
-      if(rangeDrag&&rangePointerId==null){e.preventDefault();moveRangeHandle(e.touches[0].clientY);return;}
-      if(scrubber){e.preventDefault();moveScrubber(e.touches[0].clientY);return;}
+      if(rangeDrag&&rangePointerId==null){e.preventDefault();moveRangeHandle(axis(e.touches[0].clientX,e.touches[0].clientY));return;}
+      if(scrubber){e.preventDefault();moveScrubber(axis(e.touches[0].clientX,e.touches[0].clientY));return;}
       if(pinch&&e.touches.length>=2){e.preventDefault();pinchMove(e.touches);return;}
       if(drag){e.preventDefault();mv(e.touches[0].clientX,e.touches[0].clientY);}
     },{passive:false,signal});
@@ -388,17 +400,19 @@ _wireScrub() {
     track.addEventListener('wheel',e=>{
       e.preventDefault();
       if(this._downloadRange) return;
-      const rect=track.getBoundingClientRect();
+      const ar=axisRect();
       const span=this._winEnd-this._winStart;
-      // Ctrl/Meta wheel behaves like pinch zoom; normal wheel pans vertically.
+      // Ctrl/Meta wheel behaves like pinch zoom; normal wheel pans the timeline.
       if(e.ctrlKey||e.metaKey){
-        const midY=Math.max(0,Math.min(rect.height,e.clientY-rect.top));
-        const ratio=midY/Math.max(1,rect.height);
+        const local=Math.max(0,Math.min(ar.size,axis(e.clientX,e.clientY)-ar.start));
+        const ratio=local/ar.size;
         const anchor=this._timelineTimestampAtRatio(ratio,this._timelineFocusTs,span);
         this._zoomTimeline(e.deltaY>0?1/1.12:1.12,anchor,ratio);
         return;
       }
-      const delta=e.deltaY||e.deltaX;
+      // Horizontal track: a sideways trackpad swipe pans naturally; a plain
+      // mouse wheel still works through deltaY.
+      const delta=horiz() ? (Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY) : (e.deltaY||e.deltaX);
       // Wheel scrolling is a timeline interaction too. While following LIVE,
       // _updateTimelineLive() normally keeps the viewport centered on now.
       // If we don't explicitly leave that state before applying a wheel shift,
@@ -412,7 +426,7 @@ _wireScrub() {
       this._timelineInteracting=true;
       if (this._playing || this._activePlaybackCleanup) this._invalidatePlaybackForTimelineMove();
       clearTimeout(this._wt);
-      const shift=Math.round(delta/Math.max(1,rect.height)*span);
+      const shift=Math.round(delta/ar.size*span);
       let ns=this._winStart+shift, ne=this._winEnd+shift;
       let nf=(this._timelineFocusTs ?? ((this._winStart+this._winEnd)/2))+shift;
       const now=Math.floor(Date.now()/1000);
@@ -552,10 +566,13 @@ _wireScrub() {
 
       event.preventDefault?.();
       event.stopPropagation?.();
+      const horizontal=track.classList?.contains?.('horizontal');
       const rect=track.getBoundingClientRect();
-      const height=Math.max(1,track.clientHeight||rect.height||1);
+      const size=Math.max(1,(horizontal?(track.clientWidth||rect.width):(track.clientHeight||rect.height))||1);
       const span=Math.max(1,gesture.windowEnd-gesture.windowStart);
-      const pan=Math.round((event.clientY-gesture.startY)/height*span);
+      // Dragging toward the newest edge (down / right) moves to newer footage.
+      const moved=horizontal?-(event.clientX-gesture.startX):(event.clientY-gesture.startY);
+      const pan=Math.round(moved/size*span);
       let start=gesture.windowStart+pan;
       let end=gesture.windowEnd+pan;
       let focus=gesture.focus+pan;

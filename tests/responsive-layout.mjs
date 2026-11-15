@@ -42,7 +42,7 @@ function el(classes=[]){
   };
 }
 
-function workspace(width,{timeline=true,gallery='clips'}={}){
+function workspace(width,{timeline=true,gallery='clips',orientation='vertical'}={}){
   const card=el(['card']);
   const layout=el(['layout']);
   const feed=el(['workspace-feed']);
@@ -61,7 +61,7 @@ function workspace(width,{timeline=true,gallery='clips'}={}){
   const ctx={
     _cardWidth:0,
     _galleryMode:gallery,
-    _config:{timeline:{enabled:timeline,show_calendar_button:true},default_tab:'live'},
+    _config:{timeline:{enabled:timeline,show_calendar_button:true,orientation},default_tab:'live'},
     _viewMode:'single',
     _playing:null,
     _engine:{},
@@ -100,6 +100,39 @@ function workspace(width,{timeline=true,gallery='clips'}={}){
   responsiveUxMethods._syncResponsiveWorkspace.call(w.ctx);
   assert.equal(w.layout.style.getPropertyValue('grid-template-areas'),'"feed"');
   assert.equal(w.media.style.getPropertyValue('display'),'none');
+}
+
+// Horizontal timeline (orientation auto on wide cards): the timeline spans the
+// full width under the player and the selected browser sits beside the player.
+{
+  const track=el(['tl-track','vertical']);
+  const w=workspace(1400,{timeline:true,gallery:'clips',orientation:'auto'});
+  const q=w.ctx.shadowRoot.querySelector;
+  w.ctx.shadowRoot.querySelector=sel=>sel==='#tl-track'?track:q(sel);
+  w.ctx._renderTimeline=()=>{};
+  responsiveUxMethods._syncResponsiveWorkspace.call(w.ctx);
+  assert.equal(w.card.classList.contains('tl-horizontal'),true);
+  assert.equal(track.classList.contains('horizontal'),true);
+  assert.equal(track.classList.contains('vertical'),false);
+  assert.equal(w.layout.style.getPropertyValue('grid-template-areas'),'"feed media" "timeline timeline"');
+  assert.equal(w.media.style.getPropertyValue('display'),'flex');
+  assert.equal(w.timelineWrap.style.getPropertyValue('display'),'');
+
+  w.ctx._galleryMode='';
+  responsiveUxMethods._syncResponsiveWorkspace.call(w.ctx);
+  assert.equal(w.layout.style.getPropertyValue('grid-template-areas'),'"feed" "timeline"');
+
+  // Narrow cards stay vertical under auto; horizontal can be forced.
+  const n=workspace(390,{timeline:true,gallery:'',orientation:'auto'});
+  responsiveUxMethods._syncResponsiveWorkspace.call(n.ctx);
+  assert.equal(n.card.classList.contains('tl-horizontal'),false);
+  const f=workspace(390,{timeline:true,gallery:'',orientation:'horizontal'});
+  responsiveUxMethods._syncResponsiveWorkspace.call(f.ctx);
+  assert.equal(f.card.classList.contains('tl-horizontal'),true);
+  const v=workspace(1400,{timeline:true,gallery:'clips',orientation:'vertical'});
+  responsiveUxMethods._syncResponsiveWorkspace.call(v.ctx);
+  assert.equal(v.card.classList.contains('tl-horizontal'),false);
+  assert.equal(v.layout.style.getPropertyValue('grid-template-areas'),'"feed timeline media"');
 }
 
 // Medium split cards also collapse the missing timeline and use the freed

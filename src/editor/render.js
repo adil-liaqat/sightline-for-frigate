@@ -214,6 +214,7 @@ _render() {
         <div class="adv-grid">
           <label class="chk-lbl"><input type="checkbox" id="timeline_enabled" ${tl.enabled!==false?'checked':''}> Show timeline on Live</label>
           <label><span class="field-label">Default zoom (minutes)</span><input class="tf" id="timeline_default_minutes" type="number" min="5" max="60" value="${tl.default_minutes??10}"></label>
+          <label><span class="field-label">Orientation</span><select class="tf" id="timeline_orientation"><option value="auto" ${(tl.orientation||'auto')==='auto'?'selected':''}>Auto (horizontal on wide cards)</option><option value="vertical" ${tl.orientation==='vertical'?'selected':''}>Always vertical</option><option value="horizontal" ${tl.orientation==='horizontal'?'selected':''}>Always horizontal</option></select></label>
           <label class="chk-lbl"><input type="checkbox" id="timeline_show_thumbnails" ${tl.show_thumbnails!==false?'checked':''}> Event thumbnails</label>
           <label class="chk-lbl"><input type="checkbox" id="timeline_show_glyphs" ${tl.show_glyphs!==false?'checked':''}> Detection glyphs</label>
           <label class="chk-lbl"><input type="checkbox" id="timeline_show_legend" ${tl.show_legend!==false?'checked':''}> Detection legend</label>

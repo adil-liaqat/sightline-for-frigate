@@ -53,6 +53,51 @@ _renderLatest() {
 
 _time(ts) { return this._timeMinute(ts); },
 
+/** Horizontal (wide-card) timeline: newest time on the right instead of the top. */
+_timelineIsHorizontal(track=this._$('#tl-track')) { return !!track?.classList?.contains('horizontal'); },
+
+/**
+ * Every timeline position is computed once as a "vertical" percentage
+ * (0 = newest edge). These helpers express it as top/height on the vertical
+ * track or left/width on the horizontal one, so render, live-follow and
+ * download-range code share one coordinate system.
+ */
+_tlPointStyle(pct, horizontal=this._timelineIsHorizontal()) {
+    // Horizontal positions are !important: legacy vertical-rail rules pin
+    // left/width on several node types with !important.
+    return horizontal ? `left:${100-pct}% !important` : `top:${pct}%`;
+  },
+
+_tlSpanStyle(top, size, horizontal=this._timelineIsHorizontal()) {
+    return horizontal ? `left:${100-top-size}% !important;width:${size}% !important` : `top:${top}%;height:${size}%`;
+  },
+
+_tlSetPoint(el, pct, horizontal=this._timelineIsHorizontal()) {
+    if(!el) return;
+    if(horizontal){ el.style.setProperty('left',`${100-pct}%`,'important'); el.style.removeProperty('top'); }
+    else { el.style.top=`${pct}%`; el.style.removeProperty('left'); }
+  },
+
+_tlSetSpan(el, top, size, horizontal=this._timelineIsHorizontal()) {
+    if(!el) return;
+    if(horizontal){ el.style.setProperty('left',`${100-top-size}%`,'important'); el.style.setProperty('width',`${size}%`,'important'); el.style.removeProperty('top'); el.style.removeProperty('height'); }
+    else { el.style.top=`${top}%`; el.style.height=`${size}%`; el.style.removeProperty('left'); el.style.removeProperty('width'); }
+  },
+
+/** Horizontal lanes group detections into broad classes. */
+_timelineLaneKey(key) {
+    const k=String(key||'').toLowerCase();
+    if(['person','face','people'].includes(k)) return 'person';
+    if(['car','truck','bus','motorcycle','motorbike','bicycle','boat','van','vehicle','license_plate','train','airplane'].includes(k)) return 'vehicle';
+    if(['dog','cat','bird','horse','bear','deer','animal','cow','sheep','fox','raccoon','squirrel','rabbit','goat','elephant','zebra','giraffe'].includes(k)) return 'animal';
+    return 'other';
+  },
+
+_timelineLanes() {
+    const present=new Set(this._timelineEvents().map(ev=>this._timelineLaneKey((ev._tl||this._timelineLabelInfo(ev)).key)));
+    return ['person','vehicle','animal','other'].filter(k=>present.has(k));
+  },
+
 _timelineScaleTime(ts) { return this._timeMinute(ts); },
 
 _timelineTime(ts) { return this._timeSec(ts); },
@@ -88,7 +133,7 @@ _syncTimelineScaleNodes(track, s, e, span, focus, yPct) {
       el.classList.toggle('hour',isHour);
       const label=el.querySelector('span');
       if(label) label.textContent=this._timelineScaleTime(ts);
-      el.style.top=`${yPct(ts)}%`;
+      this._tlSetPoint(el,yPct(ts));
     });
   },
 
@@ -107,7 +152,19 @@ _renderTimeline(forceFull=false) {
     // Scrypted-style centered playhead: the selected wall-clock time sits at
     // the visual center while the timeline itself scrolls underneath it.
     const yPct = ts => Math.max(0,Math.min(100,50 + ((focus-Number(ts))/span)*100));
+    const H=this._timelineIsHorizontal(track);
     let html='';
+    // Horizontal lanes: Recording, then one lane per detection class present.
+    const lanes=H ? this._timelineLanes() : [];
+    const laneIndex=new Map(lanes.map((k,i)=>[k,i+1]));
+    if(H){
+      track.style.setProperty('--tl-lanes',String(lanes.length+1));
+      const names={person:'Person',vehicle:'Vehicle',animal:'Animal',other:'Other'};
+      html+=`<div class="tl-lane-label" data-lane="rec" style="--lane:0">Recording</div>`;
+      lanes.forEach((k,i)=>{ html+=`<div class="tl-lane-label" data-lane="${k}" style="--lane:${i+1}">${names[k]}</div>`; });
+    } else {
+      track.style.removeProperty('--tl-lanes');
+    }
 
     // Scrypted-style recording ribbon: a single blue activity rail behind the
     // event markers. Newest time is always at the top.
@@ -119,7 +176,7 @@ _renderTimeline(forceFull=false) {
           const a=Number(r.start_time),b=Number(r.end_time||e); if(b<s||a>e) continue;
           const top=yPct(Math.min(b,e));
           const h=Math.max(.45,((Math.min(b,e)-Math.max(a,s))/span)*100);
-          html+=`<div class="t-rec" data-start="${a}" data-end="${b}" style="top:${top}%;height:${h}%;--rec-color:${col}"></div>`;
+          html+=`<div class="t-rec" data-start="${a}" data-end="${b}" style="${this._tlSpanStyle(top,h,H)};--rec-color:${col}"></div>`;
         }
       });
     } else {
@@ -127,7 +184,7 @@ _renderTimeline(forceFull=false) {
         const a=Number(r.start_time),b=Number(r.end_time||e); if(b<s||a>e) continue;
         const top=yPct(Math.min(b,e));
         const h=Math.max(.45,((Math.min(b,e)-Math.max(a,s))/span)*100);
-        html+=`<div class="t-rec" data-start="${a}" data-end="${b}" style="top:${top}%;height:${h}%"></div>`;
+        html+=`<div class="t-rec" data-start="${a}" data-end="${b}" style="${this._tlSpanStyle(top,h,H)}"></div>`;
       }
     }
 
@@ -139,7 +196,7 @@ _renderTimeline(forceFull=false) {
       if (!(b>a)) continue;
       const top=yPct(b);
       const h=Math.max(.55,((b-a)/span)*100);
-      html+=`<div class="tl-no-recording" data-gap="${gap.key}" data-start="${a}" data-end="${b}" style="top:${top}%;height:${h}%" aria-label="No Recording"><span>No Recording</span></div>`;
+      html+=`<div class="tl-no-recording" data-gap="${gap.key}" data-start="${a}" data-end="${b}" style="${this._tlSpanStyle(top,h,H)}" aria-label="No Recording"><span>No Recording</span></div>`;
     }
 
     // Time scale lives in the left gutter. Keep it sparse at all zoom levels;
@@ -147,7 +204,7 @@ _renderTimeline(forceFull=false) {
     const step=span<=900 ? 60 : span<=1800 ? 2*60 : span<=3600 ? 5*60 : span<=7200 ? 10*60 : 30*60;
     for(let ts=Math.ceil(s/step)*step;ts<=e;ts+=step) {
       const pct=yPct(ts), d=new Date(ts*1000), isHour=d.getMinutes()===0;
-      html+=`<div class="tl-scale-mark ${isHour?'hour':''}" data-ts="${ts}" style="top:${pct}%"><span>${this._timelineScaleTime(ts)}</span><i></i></div>`;
+      html+=`<div class="tl-scale-mark ${isHour?'hour':''}" data-ts="${ts}" style="${this._tlPointStyle(pct,H)}"><span>${this._timelineScaleTime(ts)}</span><i></i></div>`;
     }
 
     // Render Scrypted-style detection rows: a blue rail marker plus a separate
@@ -156,7 +213,7 @@ _renderTimeline(forceFull=false) {
     // A cluster may overlap the viewport after its first event has already
     // scrolled away. In that case anchor to the first *actual* detection still
     // inside the window instead of clamping the old cluster start to an edge.
-    const trackPx=Math.max(track.clientHeight||420,360);
+    const trackPx=H ? Math.max(track.clientWidth||900,320) : Math.max(track.clientHeight||420,360);
     const metrics=this._timelineResponsiveMetrics(track);
     track.style.setProperty('--tl-glyph-size',`${metrics.glyphPx}px`);
     track.style.setProperty('--tl-glyph-gap',`${metrics.glyphGapPx}px`);
@@ -190,7 +247,8 @@ _renderTimeline(forceFull=false) {
       const aria=group.totalDetections>1
         ? `${labelText} detection cluster at ${this._timelineTime(markerTs)} (${group.totalDetections} detections)`
         : `${info.display} at ${this._timelineTime(markerTs)}`;
-      html+=`<button class="t-ev ${selected?'selected':''}${clusterClass}" data-tick="${ev.id}" data-ts="${markerTs}" data-start="${group.startTs}" data-end="${group.endTs}" style="top:${pct}%;--ev-color:${labelColor(info.key)}" aria-label="${aria}"><span class="t-duration" style="height:${durationPx}px"></span><span class="t-dot"><span class="t-glyph-stack">${glyphs}</span></span><span class="t-connector"></span></button>`;
+      const lane=H ? (laneIndex.get(this._timelineLaneKey(info.key))||1) : 0;
+      html+=`<button class="t-ev ${selected?'selected':''}${clusterClass}" data-tick="${ev.id}" data-ts="${markerTs}" data-start="${group.startTs}" data-end="${group.endTs}" style="${this._tlPointStyle(pct,H)};--ev-color:${labelColor(info.key)};--lane:${lane}" aria-label="${aria}"><span class="t-duration" style="${H?`width:${durationPx}px !important`:`height:${durationPx}px`}"></span><span class="t-dot"><span class="t-glyph-stack">${glyphs}</span></span><span class="t-connector"></span></button>`;
     });
 
     // Promote a sparse set of representative detection moments into thumbnail
@@ -203,7 +261,7 @@ _renderTimeline(forceFull=false) {
     // 6-desktop cap hid perfectly valid thumbnails on tall phones, tablets and
     // portrait dashboards even when there was plenty of vertical room.
     const configuredThumbMax=Math.max(0,Math.round(Number(this._config?.timeline?.max_thumbnails ?? 12)));
-    const maxCards=this._config.timeline.show_thumbnails && configuredThumbMax>0
+    const maxCards=!H && this._config.timeline.show_thumbnails && configuredThumbMax>0
       ? Math.max(1,Math.min(configuredThumbMax,Math.floor((trackPx+gap)/(cardH+gap)))) : 0;
     const candidates=visualGroups.map(group=>({
       group,
@@ -258,8 +316,8 @@ _renderTimeline(forceFull=false) {
     const nowTs = Math.floor(Date.now()/1000);
     if (nowTs >= s && nowTs <= e) {
       const livePct = yPct(nowTs);
-      html+=`<div class="tl-future" style="height:${livePct}%" aria-hidden="true"></div>`;
-      html+=`<div class="tl-live-line" style="top:${livePct}%" aria-label="Live"></div>`;
+      html+=`<div class="tl-future" style="${H?`left:${100-livePct}%`:`height:${livePct}%`}" aria-hidden="true"></div>`;
+      html+=`<div class="tl-live-line" style="${this._tlPointStyle(livePct,H)}" aria-label="Live"></div>`;
     }
 
     // Download trim mode is drawn in the same timestamp coordinate space as
@@ -274,9 +332,9 @@ _renderTimeline(forceFull=false) {
       const bandHeight=Math.max(.35,Math.abs(startPct-endPct));
       const duration=this._formatDownloadRangeDuration(Number(r.end)-Number(r.start));
       html+=`<div class="tl-download-range" data-start="${Math.floor(Number(r.start))}" data-end="${Math.floor(Number(r.end))}" aria-label="Download range ${this._timelineTime(r.start)} to ${this._timelineTime(r.end)}">
-        <div class="tl-range-band" style="top:${bandTop}%;height:${bandHeight}%"></div>
-        <div class="tl-range-boundary tl-range-end" data-range-handle="end" style="top:${endPct}%" role="slider" aria-label="Download end" aria-valuetext="${this._timelineTime(r.end)}"><i></i><span><b>END</b>${this._timelineScaleTime(r.end)}</span></div>
-        <div class="tl-range-boundary tl-range-start" data-range-handle="start" style="top:${startPct}%" role="slider" aria-label="Download start" aria-valuetext="${this._timelineTime(r.start)}"><i></i><span><b>START</b>${this._timelineScaleTime(r.start)}</span></div>
+        <div class="tl-range-band" style="${this._tlSpanStyle(bandTop,bandHeight,H)}"></div>
+        <div class="tl-range-boundary tl-range-end" data-range-handle="end" style="${this._tlPointStyle(endPct,H)}" role="slider" aria-label="Download end" aria-valuetext="${this._timelineTime(r.end)}"><i></i><span><b>END</b>${this._timelineScaleTime(r.end)}</span></div>
+        <div class="tl-range-boundary tl-range-start" data-range-handle="start" style="${this._tlPointStyle(startPct,H)}" role="slider" aria-label="Download start" aria-valuetext="${this._timelineTime(r.start)}"><i></i><span><b>START</b>${this._timelineScaleTime(r.start)}</span></div>
         <div class="tl-range-actions"><span class="tl-range-duration">${duration}</span><button type="button" data-range-cancel>Cancel</button><button type="button" class="primary" data-range-download>${ICONS.download}<span>Download</span></button></div>
       </div>`;
     }
@@ -325,8 +383,17 @@ _reconcileTimeline(track, html) {
         if(old.classList.contains('t-ev')) {
           const oldDot=old.querySelector('.t-dot'); const newDot=next.querySelector('.t-dot');
           if(oldDot && newDot && oldDot.innerHTML!==newDot.innerHTML) oldDot.innerHTML=newDot.innerHTML;
+          // Duration length (and its axis) changes with zoom and orientation.
+          const oldDur=old.querySelector('.t-duration'); const newDur=next.querySelector('.t-duration');
+          if(oldDur && newDur && oldDur.getAttribute('style')!==newDur.getAttribute('style')) oldDur.setAttribute('style',newDur.getAttribute('style')||'');
         }
         if(old.classList.contains('tl-download-range') && old.innerHTML!==next.innerHTML) old.innerHTML=next.innerHTML;
+        // The playhead node is reused, so its time label must be refreshed here
+        // too; otherwise jumping the timeline leaves the previous (LIVE) time.
+        if(old.classList.contains('tl-playhead')) {
+          const oldLabel=old.querySelector('span'); const newLabel=next.querySelector('span');
+          if(oldLabel && newLabel && oldLabel.textContent!==newLabel.textContent) oldLabel.textContent=newLabel.textContent;
+        }
         if(old.classList.contains('tl-offline') && old.textContent!==next.textContent) old.textContent=next.textContent;
         frag.appendChild(old);
       } else {

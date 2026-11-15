@@ -304,6 +304,7 @@ _timelineNodeKey(el) {
     if (el.classList.contains('tl-scale-mark')) return `scale:${el.dataset.ts||''}`;
     if (el.classList.contains('tl-live-line')) return 'live-line';
     if (el.classList.contains('tl-future')) return 'future';
+    if (el.classList.contains('tl-lane-label')) return `lane:${el.dataset.lane||''}`;
     if (el.classList.contains('tl-download-range')) return 'download-range';
     if (el.classList.contains('tl-playhead')) return 'playhead';
     if (el.classList.contains('tl-offline')) return 'offline';

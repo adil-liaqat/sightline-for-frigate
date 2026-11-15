@@ -44,6 +44,8 @@ setConfig(config) {
       show_filter_button: timelineIn.show_filter_button !== false,
       show_calendar_button: timelineIn.show_calendar_button !== false,
       clustering: timelineIn.clustering !== false,
+      // auto: horizontal lanes on wide (split) cards, vertical elsewhere.
+      orientation: ['auto','vertical','horizontal'].includes(String(timelineIn.orientation)) ? String(timelineIn.orientation) : 'auto',
       same_label_cluster_seconds: num(timelineIn.same_label_cluster_seconds,12,0,120),
       visual_cluster_max_seconds: num(timelineIn.visual_cluster_max_seconds,60,0,300),
       glyph_min_px: num(timelineIn.glyph_min_px,20,12,40),

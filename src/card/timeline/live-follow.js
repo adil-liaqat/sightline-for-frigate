@@ -86,18 +86,23 @@ _updateTimelineLive() {
       this._scrubTarget=nowTs;
     }
     const yPct = ts => Math.max(0,Math.min(100,50 + ((focus-Number(ts))/span)*100));
+    const H=this._timelineIsHorizontal?.(track)===true;
     const liveLine=track.querySelector('.tl-live-line');
     const future=track.querySelector('.tl-future');
     if (liveLine) {
       if (nowTs >= s && nowTs <= e) {
         liveLine.style.display='block';
-        liveLine.style.top=`${yPct(nowTs)}%`;
+        this._tlSetPoint(liveLine,yPct(nowTs),H);
       } else {
         liveLine.style.display='none';
       }
     }
     if (future) {
-      if (nowTs <= e) { future.style.display='block'; future.style.height=`${nowTs>=s?yPct(nowTs):100}%`; }
+      if (nowTs <= e) {
+        future.style.display='block';
+        const p=nowTs>=s?yPct(nowTs):100;
+        if(H) future.style.setProperty('left',`${100-p}%`,'important'); else future.style.height=`${p}%`;
+      }
       else future.style.display='none';
     }
     const events=this._timelineEvents();
@@ -122,9 +127,9 @@ _updateTimelineLive() {
         el.style.visibility='hidden'; el.style.pointerEvents='none'; return;
       }
       el.style.visibility=''; el.style.pointerEvents='';
-      el.style.top=`${yPct(anchor)}%`;
+      this._tlSetPoint(el,yPct(anchor),H);
     });
-    track.querySelectorAll('.t-preview').forEach(el=>{
+    if(!H) track.querySelectorAll('.t-preview').forEach(el=>{
       const ev=byId.get(String(el.dataset.eventId));
       if(!ev) { el.style.visibility='hidden'; el.style.pointerEvents='none'; return; }
       const anchor=Number.isFinite(Number(el.dataset.ts)) ? Number(el.dataset.ts) : Number(ev.start_time);
@@ -141,7 +146,7 @@ _updateTimelineLive() {
       const a=Number(el.dataset.start), b=Number(el.dataset.end); if(!Number.isFinite(a)||!Number.isFinite(b)) return;
       const top=yPct(Math.min(b,e));
       const h=Math.max(.45,((Math.min(b,e)-Math.max(a,s))/span)*100);
-      el.style.top=`${top}%`; el.style.height=`${h}%`;
+      this._tlSetSpan(el,top,h,H);
     });
     track.querySelectorAll('.tl-no-recording').forEach(el=>{
       const a=Number(el.dataset.start), b=Number(el.dataset.end);
@@ -153,7 +158,7 @@ _updateTimelineLive() {
       el.style.display='block';
       const top=yPct(clippedB);
       const h=Math.max(.55,((clippedB-clippedA)/span)*100);
-      el.style.top=`${top}%`; el.style.height=`${h}%`;
+      this._tlSetSpan(el,top,h,H);
     });
     // The scale labels are part of the moving timeline, not a static axis.
     // During a scroll the window timestamps change every frame. The previous

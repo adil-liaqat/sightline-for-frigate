@@ -250,7 +250,8 @@ timeline:
 | `glyph_min_px` | `20` | Minimum responsive glyph size. |
 | `glyph_max_px` | `30` | Maximum responsive glyph size. |
 | `max_glyphs` | `3` | Maximum glyphs displayed for a burst. |
-| `max_thumbnails` | `12` | Maximum visible timeline thumbnails. `0` hides them. |
+| `max_thumbnails` | `12` | Maximum visible event rows on the vertical timeline. `0` hides them. |
+| `orientation` | `auto` | `auto` shows a horizontal timeline with Recording/Person/Vehicle/Animal lanes under the player on wide (≥820px) cards and the vertical timeline elsewhere. `vertical` or `horizontal` forces one layout. |
 
 ## Filters and face recognition
 

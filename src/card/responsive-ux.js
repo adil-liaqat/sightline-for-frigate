@@ -52,6 +52,22 @@ export const responsiveUxMethods = {
     const galleryOpen=!!this._galleryMode;
     const timelineEnabled=this._config?.timeline?.enabled!==false;
     const playbackFull=card.classList.contains('playback-fullcard');
+
+    // Timeline orientation. Wide cards get a full-width horizontal timeline
+    // with lanes under the player; phones and narrow cards keep the vertical
+    // one. timeline.orientation can force either.
+    const orientation=this._config?.timeline?.orientation||'auto';
+    const horizontal=!editorPreview && (orientation==='horizontal' || (orientation==='auto' && split));
+    card.classList.toggle('tl-horizontal',horizontal);
+    const track=this.shadowRoot.querySelector('#tl-track');
+    if(track && track.classList.contains('horizontal')!==horizontal){
+      track.classList.toggle('horizontal',horizontal);
+      track.classList.toggle('vertical',!horizontal);
+      // Every node's inline position flips between top/height and
+      // left/width, so rebuild once on the orientation change.
+      const raf=typeof requestAnimationFrame==='function' ? requestAnimationFrame : (fn)=>setTimeout(fn,0);
+      raf(()=>{ if(this.isConnected) this._renderTimeline?.(true); });
+    }
     card.classList.toggle('gallery-active',galleryOpen);
 
     const layout=this.shadowRoot.querySelector('.layout');
@@ -83,7 +99,7 @@ export const responsiveUxMethods = {
       setImportant(engWrap,'display','block');
       setImportant(grid,'display','none');
     } else if(galleryOpen){
-      setImportant(media,'display',workstation || (split&&!timelineEnabled) ? 'flex' : 'block');
+      setImportant(media,'display',workstation || (split&&(!timelineEnabled||horizontal)) ? 'flex' : 'block');
       media?.setAttribute?.('aria-hidden','false');
     } else {
       setImportant(media,'display','none');
@@ -107,7 +123,21 @@ export const responsiveUxMethods = {
     // these templates eliminate that dead track entirely. playback-fullcard is
     // intentionally excluded because its single-pane template is owned by the
     // playback layout and must survive responsive reconciliation unchanged.
-    if(layout && !playbackFull){
+    if(layout && !playbackFull && horizontal && (split || workstation)){
+      if(timelineEnabled && galleryOpen){
+        setImportant(layout,'grid-template-columns','minmax(0,1.5fr) minmax(320px,.78fr)');
+        setImportant(layout,'grid-template-areas','"feed media" "timeline timeline"');
+      } else if(timelineEnabled){
+        setImportant(layout,'grid-template-columns','minmax(0,1fr)');
+        setImportant(layout,'grid-template-areas','"feed" "timeline"');
+      } else if(galleryOpen){
+        setImportant(layout,'grid-template-columns','minmax(0,1.5fr) minmax(320px,.78fr)');
+        setImportant(layout,'grid-template-areas','"feed media"');
+      } else {
+        setImportant(layout,'grid-template-columns','minmax(0,1fr)');
+        setImportant(layout,'grid-template-areas','"feed"');
+      }
+    } else if(layout && !playbackFull){
       if(workstation){
         if(timelineEnabled && galleryOpen){
           setImportant(layout,'grid-template-columns','minmax(440px,1.36fr) minmax(340px,.82fr) minmax(330px,.82fr)');
@@ -160,7 +190,8 @@ export const responsiveUxMethods = {
     const timelineEnabled=this._config?.timeline?.enabled!==false;
     const split=card.classList.contains('dashboard-split');
     const workstation=card.classList.contains('workstation');
-    const sideBySide=workstation || (split && !timelineEnabled);
+    // Horizontal timeline: the media list sits beside the player.
+    const sideBySide=workstation || (split && (!timelineEnabled || card.classList.contains('tl-horizontal')));
 
     setImportant(gallery,'min-height','0');
     setImportant(grid,'min-height','0');
