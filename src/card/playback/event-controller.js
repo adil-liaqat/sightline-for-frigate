@@ -219,6 +219,8 @@ async _showClip(ev) {
     this._enter();
     this._playing={id:ev.id};
     this._renderStreamCtrl();
+    // Keep the Clips/Reviews list in step with the player.
+    this._revealPlayingInGallery?.(ev);
     const viewer=this.shadowRoot.querySelector('#viewer');
     viewer.innerHTML='<div class="ld">Loading…</div>';
     const token=++this._playSeq;

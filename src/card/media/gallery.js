@@ -24,6 +24,57 @@ _galleryDayLabel(ts) {
     return d.toLocaleDateString([],opts);
   },
 
+/** The gallery row for an event: its clip row, or the review that contains it. */
+_galleryRowFor(id, tab=this._galleryMode) {
+    const grid=this.shadowRoot?.querySelector?.('.media-gallery-grid');
+    if(!grid) return null;
+    const esc=(v)=>String(v).replace(/["\\]/g,'\\$&');
+    if(tab==='clips') return grid.querySelector(`.ec[data-ev="${esc(id)}"]`);
+    if(tab==='reviews') {
+      const review=(this._reviews||[]).find(r=>(r?.data?.detections||[]).map(String).includes(String(id)));
+      return review ? grid.querySelector(`.rev[data-review-id="${esc(review.id)}"]`) : null;
+    }
+    return null;
+  },
+
+/**
+ * Selecting a clip anywhere (timeline, home item) marks it Playing in the
+ * Clips/Reviews list and scrolls the list to it. A clip outside the list's
+ * date range switches the list's date filter to that clip's day first.
+ */
+async _revealPlayingInGallery(ev) {
+    const tab=this._galleryMode;
+    if(!ev || (tab!=='clips' && tab!=='reviews')) return;
+    const seq=this._galleryRevealSeq=(this._galleryRevealSeq||0)+1;
+    const id=String(ev.id);
+    let row=this._galleryRowFor(id,tab);
+    const st=Number(ev.start_time);
+    if(!row && Number.isFinite(st) && this._mediaFilter && this._mediaQueryBounds) {
+      const b=this._mediaQueryBounds();
+      if(st<b.start || st>=b.end) {
+        const d=new Date(st*1000);
+        this._mediaFilter.date=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        if(tab==='reviews') await this._loadReviews(); else await this._loadWindow(true);
+        if(seq!==this._galleryRevealSeq || this._galleryMode!==tab || String(this._playing?.id??'')!==id) return;
+        this._renderGallery();
+        row=this._galleryRowFor(id,tab);
+      }
+    }
+    if(!row) return;
+    const grid=row.closest('.media-gallery-grid');
+    grid?.querySelectorAll('.playing').forEach(el=>{ if(el!==row) el.classList.remove('playing'); });
+    grid?.querySelectorAll('.ec-now').forEach(el=>{ if(!row.contains(el)) el.remove(); });
+    row.classList.add('playing');
+    const thumb=row.querySelector('.et,.rev-th');
+    if(thumb && !thumb.querySelector('.ec-now')) thumb.insertAdjacentHTML('beforeend','<span class="ec-now">Playing</span>');
+    if(!grid) return;
+    const g=grid.getBoundingClientRect(), r=row.getBoundingClientRect();
+    const header=grid.querySelector('.mg-day')?.getBoundingClientRect().height||0;
+    if(r.top>=g.top+header && r.bottom<=g.bottom) return;
+    const top=grid.scrollTop+(r.top-g.top)-Math.max(header,(grid.clientHeight-r.height)/2);
+    grid.scrollTo?.({top:Math.max(0,top),behavior:'smooth'});
+  },
+
 /** Render rows newest-first with a sticky day header whenever the day changes. */
 _galleryGroupByDay(items, tsOf, rowHtml) {
     let last=null, html='';

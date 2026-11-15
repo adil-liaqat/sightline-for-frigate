@@ -82,4 +82,34 @@ assert.equal(startup._autoplayed, 'unchanged', 'startup state must not replay tw
   assert.match(src,/class="scb-back" data-playback-back title="\$\{backLabel\}" aria-label="\$\{backLabel\}">\$\{ICONS\.back\}<\/button>/,'Back button renders only its icon');
 }
 
+// Selecting a clip scrolls the Clips list to it and marks it Playing.
+{
+  const rv = new Card();
+  const mkEl=(cls,top)=>({cls:new Set(cls),html:'',children:[],classList:{add(c){this._s.add(c);},remove(c){this._s.delete(c);},contains(c){return this._s.has(c);},_s:null},getBoundingClientRect:()=>({top,bottom:top+80,height:80})});
+  const row=mkEl(['ec'],900); row.classList._s=row.cls;
+  const thumb={html:'',querySelector:()=>null,insertAdjacentHTML(_,h){this.html+=h;}};
+  let scrolled=null;
+  const grid={scrollTop:0,clientHeight:400,getBoundingClientRect:()=>({top:100,bottom:500}),querySelector:(sel)=>sel.startsWith('.ec[data-ev="ev7"]')?row:null,querySelectorAll:()=>[],scrollTo(o){scrolled=o;}};
+  row.closest=()=>grid; row.querySelector=()=>thumb; row.contains=()=>false;
+  rv.shadowRoot={querySelector:(sel)=>sel==='.media-gallery-grid'?grid:null};
+  rv._galleryMode='clips'; rv._playing={id:'ev7'};
+  rv._mediaQueryBounds=()=>({start:0,end:Number.MAX_SAFE_INTEGER});
+  await rv._revealPlayingInGallery({id:'ev7',start_time:1000});
+  assert.ok(row.cls.has('playing'),'the selected clip row is marked playing');
+  assert.match(thumb.html,/Playing/);
+  assert.ok(scrolled && scrolled.top>0,'the list scrolls to an off-screen clip');
+
+  // A clip outside the list's range switches the list to that clip's day.
+  const old = new Card();
+  old.shadowRoot={querySelector:()=>null};
+  old._galleryMode='clips'; old._playing={id:'x'};
+  old._mediaFilter={date:'all'};
+  old._mediaQueryBounds=()=>({start:2e9,end:2e9+86400});
+  let loaded=0; old._loadWindow=async()=>{ loaded++; }; old._renderGallery=()=>{};
+  const ts=Math.floor(new Date(2026,10,13,8,10,34).getTime()/1000);
+  await old._revealPlayingInGallery({id:'x',start_time:ts});
+  assert.equal(old._mediaFilter.date,'2026-11-13');
+  assert.equal(loaded,1,'the list reloads for that day');
+}
+
 console.log('Smoke test passed.');
