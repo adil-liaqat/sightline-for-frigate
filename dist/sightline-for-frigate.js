@@ -4118,12 +4118,12 @@ ${STYLES}
 /* Re-rendering inserts day headers above the first row; browser scroll
    anchoring would then scroll that row under the sticky header. */
 .card .media-gallery .media-gallery-grid{overflow-anchor:none;}
-/* Rows scroll-snap to the top; leave room for the sticky day header so a
-   snapped row is never tucked underneath it. */
-.card .media-gallery .media-gallery-grid .ec,
-.card .media-gallery .media-gallery-grid .rec,
-.card .media-gallery .media-gallery-grid .rev{scroll-margin-top:34px;}
-.card .media-gallery .mg-day{scroll-snap-align:start;}
+/* No scroll snapping in the media list: tiny scroll deltas (Magic Mouse or
+   trackpad contact while moving the pointer) were amplified into whole-row
+   snaps, so the list crept on its own, and snapping to sticky day headers
+   re-triggers as they stick. */
+.card .media-gallery .media-gallery-grid{scroll-snap-type:none !important;}
+.card .media-gallery .media-gallery-grid > *{scroll-snap-align:none !important;}
 .card.theme-light .media-gallery .mg-day{color:#6e6e73;background:linear-gradient(var(--c-bg,#fff) 70%,rgba(255,255,255,0));}
 /* Keep the label whole; let a sub-label (e.g. a face name) shorten instead. */
 .card .media-gallery .ec-title{flex:0 0 auto;overflow:visible !important;}
