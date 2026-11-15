@@ -23,9 +23,9 @@ _eventCardHTML(ev,expanded,compact=false) {
     const playing=String(this._playing?.id??'')===String(ev.id);
     const kind=!ev.has_clip&&ev.has_snapshot?'<span>Snapshot</span>':'';
     return `<div class="ec${compact?' compact':''}${playing?' playing':''}" data-ev="${ev.id}" style="--ev-color:${col}">
-      <div class="et">${thumb}<div class="ed">${this._dur(ev)}s</div></div>
+      <div class="et">${thumb}<div class="ed">${this._dur(ev)}s</div>${playing?'<span class="ec-now">Playing</span>':''}</div>
       <div class="ei">
-        <div class="etop"><i class="ec-dot" aria-hidden="true"></i><span class="ec-title">${cap(ev.label)}</span>${subl}${camLabel}${playing?'<span class="ec-now">Playing</span>':''}</div>
+        <div class="etop"><i class="ec-dot" aria-hidden="true"></i><span class="ec-title">${cap(ev.label)}</span>${subl}${camLabel}</div>
         <div class="em"><span>${this._time(ev.start_time)}</span>${zone?`<span>${zone}</span>`:''}${score?`<span>${score}</span>`:''}${kind}</div>
         ${desc}
       </div>

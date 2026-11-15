@@ -4129,6 +4129,61 @@ ${STYLES}
 .card .media-gallery .ec-title{flex:0 0 auto;overflow:visible !important;}
 .card .media-gallery .etop .subl{min-width:0;overflow:hidden;text-overflow:ellipsis;}
 .card .media-gallery .etop .subl::before{content:'·';margin-right:6px;color:#636366;}
+
+/* "Playing" sits on the thumbnail so it never competes with the title. */
+.card .media-gallery .ec .et .ec-now,
+.card .media-gallery .rev .rev-th .ec-now{
+  position:absolute;left:4px;top:4px;margin:0;padding:1px 6px;border-radius:5px;
+  background:#0a84ff;color:#fff;font-size:10px;font-weight:700;line-height:14px;letter-spacing:.02em;
+}
+
+/* ── Media filter panel redesign (both themes) ── */
+.card .media-filter-panel{
+  padding:12px 14px !important;margin:0 10px 8px !important;border-radius:14px !important;
+  background:#1c1c1e !important;border:1px solid rgba(255,255,255,.07) !important;box-shadow:none !important;
+}
+.card .media-filter-panel .media-filter-row{display:flex !important;flex-wrap:wrap;align-items:center;gap:6px !important;margin:0 0 8px !important;}
+.card .media-filter-panel .media-filter-label{
+  flex:0 0 58px;font-size:11px !important;font-weight:650 !important;letter-spacing:.04em;text-transform:uppercase;color:#8e8e93 !important;
+}
+.card .media-filter-panel .media-filter-chip{
+  height:30px !important;min-height:30px !important;padding:0 11px !important;border-radius:999px !important;
+  border:1px solid rgba(255,255,255,.1) !important;background:transparent !important;color:#e5e5ea !important;
+  font:600 12px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif !important;box-shadow:none !important;
+}
+.card .media-filter-panel .media-filter-chip.on{background:#f5f5f7 !important;color:#000 !important;border-color:transparent !important;}
+.card .media-filter-panel .media-filter-date-control,
+.card .media-filter-panel .media-filter-time-control{
+  display:inline-flex !important;align-items:center;gap:6px !important;height:30px !important;min-height:30px !important;padding:0 10px !important;
+  border-radius:999px !important;border:1px solid rgba(255,255,255,.1) !important;background:#2c2c2e !important;color:#e5e5ea !important;box-shadow:none !important;
+}
+.card .media-filter-panel .media-filter-date-control svg{width:14px;height:14px;color:#a1a1a6;}
+.card .media-filter-panel .media-filter-time-control span{font-size:11px !important;color:#a1a1a6 !important;font-weight:600 !important;}
+.card .media-filter-panel .media-filter-date-control input,
+.card .media-filter-panel .media-filter-time-control input{
+  background:transparent !important;color:#f5f5f7 !important;font:600 12px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif !important;
+  font-variant-numeric:tabular-nums;color-scheme:dark;border:0 !important;outline:0;
+}
+.card .media-filter-panel .media-filter-reset-date,
+.card .media-filter-panel #media-filter-reset{background:transparent !important;border:0 !important;color:#0a84ff !important;font-weight:600 !important;font-size:12px !important;}
+.card .media-gallery .media-gallery-filter-btn:focus:not(:focus-visible){outline:none !important;box-shadow:none !important;}
+
+.card.theme-light .media-filter-panel{background:#ffffff !important;border-color:rgba(0,0,0,.08) !important;}
+.card.theme-light .media-filter-panel .media-filter-label{color:#6e6e73 !important;}
+.card.theme-light .media-filter-panel .media-filter-chip{border-color:rgba(0,0,0,.1) !important;color:#1d1d1f !important;}
+.card.theme-light .media-filter-panel .media-filter-chip.on{background:#1d1d1f !important;color:#fff !important;}
+.card.theme-light .media-filter-panel .media-filter-date-control,
+.card.theme-light .media-filter-panel .media-filter-time-control{background:#f2f2f7 !important;border-color:rgba(0,0,0,.08) !important;color:#1d1d1f !important;}
+.card.theme-light .media-filter-panel .media-filter-date-control svg,
+.card.theme-light .media-filter-panel .media-filter-time-control span{color:#6e6e73 !important;}
+.card.theme-light .media-filter-panel .media-filter-date-control input,
+.card.theme-light .media-filter-panel .media-filter-time-control input{color:#1d1d1f !important;color-scheme:light;}
+.card.theme-light .media-filter-panel input::-webkit-calendar-picker-indicator{filter:none !important;opacity:.6;}
+
+/* Filter rows: label in its own column so wrapped chips stay aligned. */
+.card .media-filter-panel .media-filter-row{position:relative;padding-left:66px !important;min-height:30px;}
+.card .media-filter-panel .media-filter-row .media-filter-label{position:absolute;left:0;top:8px;width:60px;flex:none !important;}
+.card .media-filter-panel .media-filter-row:last-child{padding-left:0 !important;justify-content:flex-end;margin-bottom:0 !important;}
 `;
 
 // ── src/utils/apply-method-groups.js ──
@@ -7135,7 +7190,7 @@ _renderGallery(force=false) {
       content=recs.length ? this._galleryGroupByDay(recs,r=>r.start_time,r=>{ const rs=Math.floor(r.start_time), re=Math.floor(r.end_time||Date.now()/1000); const d=Math.max(1,re-rs), mm=Math.floor(d/60), ss=d%60; return `<div class="rec" data-rs="${rs}" data-re="${re}"><div class="ric">${ICONS.recordings}</div><div class="rinf"><div class="rt">${this._time(r.start_time)} – ${this._time(r.end_time||Date.now()/1000)}</div><div class="rsub">${d>=3600?`${Math.floor(d/3600)}h ${Math.floor((d%3600)/60)}m`:`${mm?mm+'m ':''}${ss}s`}${r.events?' · '+r.events+(r.events===1?' event':' events'):''}</div></div><div class="rp" aria-hidden="true">${PLAY_ICON}</div></div>`; }) : this._emptyState(ICONS.recordings,'No recordings match','Try changing the filters');
     } else if(tab==='reviews') {
       const revs=this._filterMediaReviews(this._reviews).sort((a,b)=>b.start_time-a.start_time); title='Reviews'; count=revs.length;
-      content=revs.length ? this._galleryGroupByDay(revs,r=>r.start_time,r=>{ const sev=r.severity==='alert'?'alert':'detection'; const objs=this._reviewLabelList(r).map(x=>this._filterDisplayName('label',x)).join(', '); const title=r.data?.metadata?.title||objs||cap(r.severity); const firstDet=(r.data?.detections&&r.data.detections[0])||''; const reviewed=r.has_been_reviewed; const reviewThumbUrl=firstDet?this._mediaForEvent({id:firstDet,camera:r.camera},'thumbnail.jpg'):''; const thumb=firstDet?`<div class="rev-th"><img src="${reviewThumbUrl}" data-frigate-thumb="1" data-thumb-src="${reviewThumbUrl}" loading="lazy"><div class="tph thumb-fallback" style="display:none">${ICONS.reviews}</div></div>`:`<div class="rev-th"><div class="tph thumb-fallback">${ICONS.reviews}</div></div>`; const firstLabel=this._reviewLabelList(r)[0]||''; const dur=Math.max(1,Math.round(Number(r.end_time||r.start_time)-Number(r.start_time))); const playing=firstDet&&String(this._playing?.id??'')===String(firstDet); return `<div class="rev ${sev}${reviewed?' reviewed':''}${playing?' playing':''}" data-review-id="${r.id}" ${firstDet?`data-review-open="${firstDet}"`:''} style="--ev-color:${labelColor(firstLabel)}"><div class="rev-sev ${sev}"></div>${thumb}<div class="rev-inf"><div class="rev-t"><i class="ec-dot" aria-hidden="true"></i><span>${title}</span>${playing?'<span class="ec-now">Playing</span>':''}</div><div class="rev-m"><span class="rev-pill ${sev}">${cap(sev)}</span><span>${this._time(r.start_time)}</span><span>${dur}s</span>${reviewed?'<span class="rev-done">✓ Reviewed</span>':''}</div></div>${reviewed?'':`<button class="ico" data-mark title="Mark as reviewed" aria-label="Mark as reviewed">${CHECK_ICON}</button>`}</div>`; }) : this._emptyState(ICONS.reviews,'No reviews match','Try changing the filters');
+      content=revs.length ? this._galleryGroupByDay(revs,r=>r.start_time,r=>{ const sev=r.severity==='alert'?'alert':'detection'; const objs=this._reviewLabelList(r).map(x=>this._filterDisplayName('label',x)).join(', '); const title=r.data?.metadata?.title||objs||cap(r.severity); const firstDet=(r.data?.detections&&r.data.detections[0])||''; const reviewed=r.has_been_reviewed; const reviewThumbUrl=firstDet?this._mediaForEvent({id:firstDet,camera:r.camera},'thumbnail.jpg'):''; const thumb=firstDet?`<div class="rev-th"><img src="${reviewThumbUrl}" data-frigate-thumb="1" data-thumb-src="${reviewThumbUrl}" loading="lazy"><div class="tph thumb-fallback" style="display:none">${ICONS.reviews}</div></div>`:`<div class="rev-th"><div class="tph thumb-fallback">${ICONS.reviews}</div></div>`; const firstLabel=this._reviewLabelList(r)[0]||''; const dur=Math.max(1,Math.round(Number(r.end_time||r.start_time)-Number(r.start_time))); const playing=firstDet&&String(this._playing?.id??'')===String(firstDet); return `<div class="rev ${sev}${reviewed?' reviewed':''}${playing?' playing':''}" data-review-id="${r.id}" ${firstDet?`data-review-open="${firstDet}"`:''} style="--ev-color:${labelColor(firstLabel)}"><div class="rev-sev ${sev}"></div>${playing?thumb.replace(/<\/div>$/,'<span class="ec-now">Playing</span></div>'):thumb}<div class="rev-inf"><div class="rev-t"><i class="ec-dot" aria-hidden="true"></i><span>${title}</span></div><div class="rev-m"><span class="rev-pill ${sev}">${cap(sev)}</span><span>${this._time(r.start_time)}</span><span>${dur}s</span>${reviewed?'<span class="rev-done">✓ Reviewed</span>':''}</div></div>${reviewed?'':`<button class="ico" data-mark title="Mark as reviewed" aria-label="Mark as reviewed">${CHECK_ICON}</button>`}</div>`; }) : this._emptyState(ICONS.reviews,'No reviews match','Try changing the filters');
     } else return;
 
     // IMPORTANT: never replace the filter panel merely because clips/recordings
@@ -11276,9 +11331,9 @@ _eventCardHTML(ev,expanded,compact=false) {
     const playing=String(this._playing?.id??'')===String(ev.id);
     const kind=!ev.has_clip&&ev.has_snapshot?'<span>Snapshot</span>':'';
     return `<div class="ec${compact?' compact':''}${playing?' playing':''}" data-ev="${ev.id}" style="--ev-color:${col}">
-      <div class="et">${thumb}<div class="ed">${this._dur(ev)}s</div></div>
+      <div class="et">${thumb}<div class="ed">${this._dur(ev)}s</div>${playing?'<span class="ec-now">Playing</span>':''}</div>
       <div class="ei">
-        <div class="etop"><i class="ec-dot" aria-hidden="true"></i><span class="ec-title">${cap(ev.label)}</span>${subl}${camLabel}${playing?'<span class="ec-now">Playing</span>':''}</div>
+        <div class="etop"><i class="ec-dot" aria-hidden="true"></i><span class="ec-title">${cap(ev.label)}</span>${subl}${camLabel}</div>
         <div class="em"><span>${this._time(ev.start_time)}</span>${zone?`<span>${zone}</span>`:''}${score?`<span>${score}</span>`:''}${kind}</div>
         ${desc}
       </div>
