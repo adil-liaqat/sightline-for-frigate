@@ -121,6 +121,8 @@ export const timelinePlaybackSyncMethods = {
     if(!Number.isFinite(t)) return;
     const seq=++this._timelineSeekSeq;
     this._scrubTarget=t;
+    // Scrolling the timeline onto a clip keeps the Clips/Reviews list on it.
+    this._revealGalleryAtTime?.(t);
     const hour=this._hourStart(t);
 
     // Desktop stable-HLS session reuse.

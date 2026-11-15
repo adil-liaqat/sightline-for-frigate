@@ -112,4 +112,16 @@ assert.equal(startup._autoplayed, 'unchanged', 'startup state must not replay tw
   assert.equal(loaded,1,'the list reloads for that day');
 }
 
+// Scrolling the timeline onto a clip reveals it without changing the list date.
+{
+  const sc = new Card();
+  sc._galleryMode='clips';
+  sc._events=[{id:'a',has_clip:true,start_time:100,end_time:120},{id:'b',has_clip:true,start_time:110,end_time:130},{id:'c',has_clip:false,start_time:110,end_time:200}];
+  const seen=[]; sc._revealPlayingInGallery=(ev,opts)=>seen.push([ev.id,opts.switchDate]);
+  sc._revealGalleryAtTime(115);
+  assert.deepEqual(seen,[['b',false]],'the newest clip under the playhead, without a date switch');
+  sc._revealGalleryAtTime(170);
+  assert.equal(seen.length,1,'a time with no clip reveals nothing');
+}
+
 console.log('Smoke test passed.');

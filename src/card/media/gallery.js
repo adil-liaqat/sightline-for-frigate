@@ -42,14 +42,14 @@ _galleryRowFor(id, tab=this._galleryMode) {
  * Clips/Reviews list and scrolls the list to it. A clip outside the list's
  * date range switches the list's date filter to that clip's day first.
  */
-async _revealPlayingInGallery(ev) {
+async _revealPlayingInGallery(ev, {switchDate=true}={}) {
     const tab=this._galleryMode;
     if(!ev || (tab!=='clips' && tab!=='reviews')) return;
     const seq=this._galleryRevealSeq=(this._galleryRevealSeq||0)+1;
     const id=String(ev.id);
     let row=this._galleryRowFor(id,tab);
     const st=Number(ev.start_time);
-    if(!row && Number.isFinite(st) && this._mediaFilter && this._mediaQueryBounds) {
+    if(!row && switchDate && Number.isFinite(st) && this._mediaFilter && this._mediaQueryBounds) {
       const b=this._mediaQueryBounds();
       if(st<b.start || st>=b.end) {
         const d=new Date(st*1000);
@@ -73,6 +73,26 @@ async _revealPlayingInGallery(ev) {
     if(r.top>=g.top+header && r.bottom<=g.bottom) return;
     const top=grid.scrollTop+(r.top-g.top)-Math.max(header,(grid.clientHeight-r.height)/2);
     grid.scrollTo?.({top:Math.max(0,top),behavior:'smooth'});
+  },
+
+/**
+ * The timeline settled on a time (scroll, drag, wheel): reveal the clip under
+ * the playhead in the list. Scrubbing never changes the list's date filter.
+ */
+_revealGalleryAtTime(ts) {
+    const tab=this._galleryMode;
+    if(tab!=='clips' && tab!=='reviews') return;
+    const t=Number(ts); if(!Number.isFinite(t)) return;
+    const pad=3;
+    const source=(this._eventsMode==='all' && this._allDisplayEvents) ? this._allDisplayEvents() : (this._events||[]);
+    let best=null;
+    for(const ev of source) {
+      if(!ev?.has_clip) continue;
+      const st=Number(ev.start_time), en=Number(ev.end_time)||st;
+      if(!(st-pad<=t && t<=en+pad)) continue;
+      if(!best || st>Number(best.start_time)) best=ev;
+    }
+    if(best) this._revealPlayingInGallery(best,{switchDate:false});
   },
 
 /** Render rows newest-first with a sticky day header whenever the day changes. */
