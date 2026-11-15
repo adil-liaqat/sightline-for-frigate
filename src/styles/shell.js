@@ -2429,4 +2429,71 @@ ${STYLES}
 /* Narrow cards: let the toolbar wrap under the title rather than overflow. */
 .card .tl-head{flex-wrap:wrap !important;row-gap:8px;}
 .card .tl-tools{flex-wrap:wrap !important;}
+
+/* ─────────────────────────────────────────────────────────────
+   Camera switcher redesign: a pill group matching the media nav, clear
+   status dots, a divider before Multiview, and a rotate button that
+   matches the timeline tools. Scrolls sideways on narrow cards.
+   ───────────────────────────────────────────────────────────── */
+.card .cam-switcher{
+  gap:8px !important;padding:8px 12px !important;align-items:center !important;
+  background:transparent !important;border:0 !important;box-shadow:none !important;
+}
+.card .cam-switcher .cam-tabs{
+  flex:1 1 auto !important;min-width:0;display:flex !important;align-items:center;gap:2px !important;
+  padding:3px !important;border-radius:12px !important;border:1px solid rgba(255,255,255,.07) !important;
+  background:#1c1c1e !important;box-shadow:none !important;
+  overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);
+}
+.card .cam-switcher .cam-tabs::-webkit-scrollbar{display:none;}
+.card .cam-switcher .cam-tab{
+  flex:0 0 auto;display:inline-flex !important;align-items:center;gap:7px !important;
+  height:32px;padding:0 12px !important;border:0 !important;border-radius:9px !important;
+  background:transparent !important;box-shadow:none !important;
+  color:#c7c7cc !important;font:600 13px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif !important;
+  letter-spacing:-.01em;scroll-snap-align:start;cursor:pointer;white-space:nowrap;
+}
+.card .cam-switcher .cam-tab:hover{background:rgba(255,255,255,.07) !important;color:#f5f5f7 !important;}
+.card .cam-switcher .cam-tab.active{background:#f5f5f7 !important;color:#000 !important;}
+.card .cam-switcher .cam-tab.offline:not(.active){color:#8e8e93 !important;}
+.card .cam-switcher .cam-dot{
+  width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:currentColor;
+  font-size:0 !important;line-height:0;overflow:hidden;box-shadow:0 0 0 2px rgba(0,0,0,.25);
+}
+.card .cam-switcher .cam-tab.active .cam-dot{box-shadow:0 0 0 2px rgba(255,255,255,.6);}
+.card .cam-switcher .cam-tab svg{width:14px !important;height:14px !important;}
+.card .cam-switcher .cam-tab-divider{flex:0 0 1px;width:1px;height:18px;margin:0 4px;background:rgba(255,255,255,.12);}
+.card .cam-switcher .cam-rotate{
+  flex:0 0 auto;width:38px !important;height:38px !important;border-radius:12px !important;
+  border:1px solid rgba(255,255,255,.07) !important;background:#1c1c1e !important;color:#c7c7cc !important;box-shadow:none !important;
+}
+.card .cam-switcher .cam-rotate:hover{color:#f5f5f7 !important;background:#2c2c2e !important;}
+.card .cam-switcher .cam-rotate.on{color:#30d158 !important;background:rgba(48,209,88,.14) !important;border-color:rgba(48,209,88,.35) !important;}
+.card .cam-switcher .cam-rotate svg{width:16px !important;height:16px !important;}
+
+.card.theme-light .cam-switcher .cam-tabs{background:#f2f2f7 !important;border-color:rgba(0,0,0,.06) !important;}
+.card.theme-light .cam-switcher .cam-tab{color:#3a3a3c !important;}
+.card.theme-light .cam-switcher .cam-tab:hover{background:rgba(0,0,0,.05) !important;color:#1d1d1f !important;}
+.card.theme-light .cam-switcher .cam-tab.active{background:#1d1d1f !important;color:#fff !important;}
+.card.theme-light .cam-switcher .cam-tab.offline:not(.active){color:#8e8e93 !important;}
+.card.theme-light .cam-switcher .cam-dot{box-shadow:0 0 0 2px rgba(255,255,255,.7);}
+.card.theme-light .cam-switcher .cam-tab-divider{background:rgba(0,0,0,.12);}
+.card.theme-light .cam-switcher .cam-rotate{background:#f2f2f7 !important;border-color:rgba(0,0,0,.06) !important;color:#3a3a3c !important;}
+.card.theme-light .cam-switcher .cam-rotate.on{color:#248a3d !important;background:rgba(52,199,89,.14) !important;}
+
+/* Phone-width cards: Multiview collapses to its grid icon so it fits. */
+.card.mobile .cam-switcher .cam-tab-multi .cam-tab-label{display:none;}
+.card.mobile .cam-switcher .cam-tab-multi{padding:0 10px !important;}
+.card.mobile .cam-switcher .cam-tab{padding:0 10px !important;gap:6px !important;}
+
+/* Multiview: its own pinned button beside the camera list. */
+.card .cam-switcher > .cam-tab-multi{
+  flex:0 0 auto;height:38px !important;padding:0 12px !important;border-radius:12px !important;
+  border:1px solid rgba(255,255,255,.07) !important;background:#1c1c1e !important;
+}
+.card .cam-switcher > .cam-tab-multi.active{background:#f5f5f7 !important;color:#000 !important;border-color:transparent !important;}
+.card.theme-light .cam-switcher > .cam-tab-multi{background:#f2f2f7 !important;border-color:rgba(0,0,0,.06) !important;}
+.card.theme-light .cam-switcher > .cam-tab-multi.active{background:#1d1d1f !important;color:#fff !important;}
+.card.mobile .cam-switcher > .cam-tab-multi{width:38px !important;padding:0 !important;justify-content:center;}
 `;

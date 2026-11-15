@@ -372,10 +372,11 @@ _renderCamSwitcher() {
       const name = cap(camDisplayName(c));
       const active = this._viewMode === 'single' && i === this._activeCamIdx;
       const ok = this._hass?.states[c.entity]?.state !== 'unavailable';
-      return `<button class="cam-tab ${active?'active':''}" data-camidx="${i}"><span class="cam-dot" style="color:${ok?'var(--c-on)':'var(--c-danger)'}">●</span> ${name}</button>`;
+      return `<button class="cam-tab ${active?'active':''}${ok?'':' offline'}" data-camidx="${i}" aria-pressed="${active?'true':'false'}" title="${name}${ok?'':' · offline'}"><span class="cam-dot" style="color:${ok?'var(--c-on)':'var(--c-danger)'}">●</span> ${name}</button>`;
     }).join('');
     const gridActive = this._viewMode === 'grid';
-    el.innerHTML = `<div class="cam-tabs">${tabs}<button class="cam-tab${gridActive?' active':''}" data-viewmode="grid" title="All cameras">${ICONS.grid} Multiview</button></div>
-      <button class="cam-rotate ${this._rotateTimer?'on':''}" id="rotate-btn" title="Auto-rotate">${ICONS.rotate}</button>`;
+    // Multiview sits outside the scrolling camera list so it is always reachable.
+    el.innerHTML = `<div class="cam-tabs">${tabs}</div><button class="cam-tab cam-tab-multi${gridActive?' active':''}" data-viewmode="grid" aria-pressed="${gridActive?'true':'false'}" aria-label="Multiview (all cameras)" title="All cameras">${ICONS.grid}<span class="cam-tab-label">Multiview</span></button>
+      <button class="cam-rotate ${this._rotateTimer?'on':''}" id="rotate-btn" title="Auto-rotate cameras" aria-label="Auto-rotate cameras" aria-pressed="${this._rotateTimer?'true':'false'}">${ICONS.rotate}</button>`;
   }
 };
