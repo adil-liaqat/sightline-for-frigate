@@ -243,12 +243,15 @@ _renderTimeline(forceFull=false) {
       const durationEnd=Math.min(e,Math.max(markerTs,Number(group.endTs)||Number(cluster.end)));
       const durationPx=Math.max(3,((durationEnd-markerTs)/span)*trackPx);
       const clusterClass=group.totalDetections>1?' clustered':'';
+      // Tracked objects that never became an alert/detection have no clip and,
+      // without continuous recording, nothing to play. Draw them hollow.
+      const noFootage=group.events.every(x=>x?.has_clip===false)?' no-footage':'';
       const labelText=group.labels.map(x=>x.display).join(', ')||info.display;
       const aria=group.totalDetections>1
         ? `${labelText} detection cluster at ${this._timelineTime(markerTs)} (${group.totalDetections} detections)`
         : `${info.display} at ${this._timelineTime(markerTs)}`;
       const lane=H ? (laneIndex.get(this._timelineLaneKey(info.key))||1) : 0;
-      html+=`<button class="t-ev ${selected?'selected':''}${clusterClass}" data-tick="${ev.id}" data-ts="${markerTs}" data-start="${group.startTs}" data-end="${group.endTs}" style="${this._tlPointStyle(pct,H)};--ev-color:${labelColor(info.key)};--lane:${lane}" aria-label="${aria}"><span class="t-duration" style="${H?`width:${durationPx}px !important`:`height:${durationPx}px`}"></span><span class="t-dot"><span class="t-glyph-stack">${glyphs}</span></span><span class="t-connector"></span></button>`;
+      html+=`<button class="t-ev ${selected?'selected':''}${clusterClass}${noFootage}" data-tick="${ev.id}" data-ts="${markerTs}" data-start="${group.startTs}" data-end="${group.endTs}" style="${this._tlPointStyle(pct,H)};--ev-color:${labelColor(info.key)};--lane:${lane}" aria-label="${aria}"><span class="t-duration" style="${H?`width:${durationPx}px !important`:`height:${durationPx}px`}"></span><span class="t-dot"><span class="t-glyph-stack">${glyphs}</span></span><span class="t-connector"></span></button>`;
     });
 
     // Promote a sparse set of representative detection moments into thumbnail
@@ -294,7 +297,8 @@ _renderTimeline(forceFull=false) {
       const cardTop=y-cardH/2;
       const countBadge=group.totalDetections>1?`<em class="t-row-count">×${group.totalDetections}</em>`:'';
       const rowSelected=group.events.some(x=>String(x.id)===String(this._timelineSelected));
-      html+=`<button type="button" class="t-preview t-row${rowSelected?' selected':''}" data-event-id="${ev.id}" data-ts="${ts}" data-start="${group.startTs}" data-end="${group.endTs}" style="top:${cardTop}px;--ev-color:${labelColor(info.key)}" aria-label="Play ${label} event at ${this._timelineTime(ts)}">
+      const rowNoFootage=group.events.every(x=>x?.has_clip===false)?' no-footage':'';
+      html+=`<button type="button" class="t-preview t-row${rowSelected?' selected':''}${rowNoFootage}" data-event-id="${ev.id}" data-ts="${ts}" data-start="${group.startTs}" data-end="${group.endTs}" style="top:${cardTop}px;--ev-color:${labelColor(info.key)}" aria-label="Play ${label} event at ${this._timelineTime(ts)}">
         <span class="t-row-thumb">${thumb}<b>${dur}s</b></span>
         <span class="t-row-meta">
           <span class="t-row-title"><i class="t-row-dot"></i><span class="t-row-label">${label}</span>${countBadge}</span>

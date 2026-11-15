@@ -2373,4 +2373,15 @@ ${STYLES}
   background:repeating-linear-gradient(135deg,rgba(60,60,67,.16) 0 3px,transparent 3px 6px) !important;
 }
 .card .tl-track.vertical .tl-no-recording{border-radius:3px !important;}
+
+/* Events without footage (no clip): hollow markers, faded rows. */
+.card .tl-track.horizontal .t-ev.no-footage .t-duration{
+  background:transparent !important;box-shadow:inset 0 0 0 1.5px var(--ev-color,#8e8e93) !important;opacity:.55 !important;
+}
+.card .tl-track.vertical .t-ev.no-footage .t-dot{
+  background:#111113 !important;box-shadow:0 0 0 2px #111113,inset 0 0 0 2px var(--ev-color,#8e8e93) !important;
+}
+.card .tl-track.vertical .t-ev.no-footage .t-duration{opacity:.3 !important;}
+.card .tl-track.vertical .t-preview.t-row.no-footage{opacity:.55;}
+.card.theme-light .tl-track.vertical .t-ev.no-footage .t-dot{background:#fafafc !important;box-shadow:0 0 0 2px #fafafc,inset 0 0 0 2px var(--ev-color,#8e8e93) !important;}
 `;
