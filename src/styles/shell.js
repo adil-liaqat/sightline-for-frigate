@@ -2362,4 +2362,15 @@ ${STYLES}
 .card.theme-light .tl-track.horizontal .tl-playhead i{background:#1d1d1f !important;}
 .card.theme-light .tl-track.horizontal .tl-playhead span{background:#1d1d1f !important;color:#fff !important;}
 .card.theme-light .tl-track.horizontal .t-ev.selected .t-duration{box-shadow:0 0 0 2px #fafafc,0 0 0 3px #1d1d1f !important;}
+
+/* "No recording" gaps are normal when Frigate keeps only alert/detection
+   footage, so draw them as a faint neutral hatch rather than an alarm. */
+.card .tl-track .tl-no-recording{
+  background:repeating-linear-gradient(135deg,rgba(235,235,245,.16) 0 3px,transparent 3px 6px) !important;
+  box-shadow:none !important;opacity:1 !important;
+}
+.card.theme-light .tl-track .tl-no-recording{
+  background:repeating-linear-gradient(135deg,rgba(60,60,67,.16) 0 3px,transparent 3px 6px) !important;
+}
+.card .tl-track.vertical .tl-no-recording{border-radius:3px !important;}
 `;
