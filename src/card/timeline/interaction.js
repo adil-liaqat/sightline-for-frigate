@@ -467,6 +467,7 @@ _wireScrub() {
     },{passive:false,signal});
 
     this._wireDesktopEventTimelineDrag(track,signal);
+    this._wireTimelineHoverPreview?.(track,signal);
     this._renderTimelineZoomLabel();
   },
 
@@ -495,6 +496,58 @@ _wireScrub() {
    * once the pointer moves far enough, ownership transfers to the timeline and
    * the release commits through the same seek path used by every other scrub.
    */
+  /**
+   * Horizontal timeline (mouse only): hovering an event bar shows a preview
+   * card with its thumbnail, label, time and duration above the timeline.
+   */
+  _wireTimelineHoverPreview(track,signal) {
+    const host=track.parentElement;
+    if(!host) return;
+    let card=host.querySelector(':scope > .tl-hover-card');
+    if(!card){ card=document.createElement('div'); card.className='tl-hover-card'; card.setAttribute('role','tooltip'); host.appendChild(card); }
+    let currentId=null;
+    const hide=()=>{ currentId=null; card.classList.remove('show'); };
+    const options=signal?{signal}:undefined;
+    const esc=(v)=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const place=(target)=>{
+      const bar=target.querySelector('.t-duration')||target;
+      const b=bar.getBoundingClientRect(), h=host.getBoundingClientRect(), t=track.getBoundingClientRect();
+      const w=card.offsetWidth||232, ch=card.offsetHeight||190;
+      let left=b.left+b.width/2-h.left-w/2;
+      left=Math.max(4,Math.min(h.width-w-4,left));
+      // Float above the timeline (over the bottom of the player if needed).
+      const top=t.top-h.top-ch-8;
+      card.style.left=`${left}px`; card.style.top=`${top}px`;
+    };
+    track.addEventListener('pointermove',(event)=>{
+      if(event.pointerType!=='mouse' || !track.classList.contains('horizontal') || this._timelineInteracting || this._downloadRange){ hide(); return; }
+      const target=event.target?.closest?.('.t-ev');
+      if(!target){ hide(); return; }
+      const id=target.dataset.tick;
+      if(id!==currentId){
+        const ev=this._timelineEventCache?.get(String(id)) || this._timelineEvents().find(e=>String(e.id)===String(id));
+        if(!ev){ hide(); return; }
+        currentId=id;
+        const info=ev._tl||this._timelineLabelInfo(ev);
+        const ts=Number(target.dataset.ts)||Number(ev.start_time);
+        const zones=(Array.isArray(ev.zones)?ev.zones:[]).slice(0,2).map(z=>this._filterDisplayName?.('zone',z)||z).join(', ');
+        const hasMedia=ev.has_snapshot||ev.has_clip||ev.thumbnail;
+        const thumb=hasMedia?`<img src="${esc(this._timelineThumb(ev))}" alt="" data-frigate-thumb="1" data-thumb-src="${esc(this._timelineThumb(ev))}">`:'';
+        card.style.setProperty('--ev-color',getComputedStyle(target).getPropertyValue('--ev-color')||'#8e8e93');
+        card.innerHTML=`<div class="tl-hover-thumb">${thumb}<b>${esc(this._dur(ev))}s</b></div>
+          <div class="tl-hover-meta">
+            <span class="tl-hover-title"><i></i>${esc(info.display)}${info.sub?` · ${esc(info.sub)}`:''}</span>
+            <span class="tl-hover-sub">${esc(this._timelineTime(ts))}${zones?` · ${esc(zones)}`:''}</span>
+            ${ev.has_clip===false?'<span class="tl-hover-note">No footage saved</span>':''}
+          </div>`;
+        card.classList.add('show');
+      }
+      place(target);
+    },options);
+    track.addEventListener('pointerleave',hide,options);
+    track.addEventListener('pointerdown',hide,options);
+  },
+
   _wireDesktopEventTimelineDrag(track,signal) {
     let gesture=null;
     const options=signal?{signal}:undefined;

@@ -3622,7 +3622,6 @@ ${STYLES}
 .card .legend .lg em{font-style:normal;color:#8e8e93;font-variant-numeric:tabular-nums;}
 .card .legend .lg-rec{--ev-color:rgba(235,235,245,.55);}
 /* Away from LIVE the time pill sits in the scale gutter so it never covers rows. */
-.card .tl-track.vertical:not(.following-live) .tl-playhead{right:auto !important;width:calc(var(--tl-row-left) - 4px) !important;}
 .card .tl-track.vertical:not(.following-live) .tl-playhead span{
   left:4px !important;right:auto !important;max-width:calc(var(--tl-gutter) - 4px) !important;
   padding:0 6px !important;font-size:10px !important;
@@ -3822,6 +3821,40 @@ ${STYLES}
 .card .tl-track.vertical .t-ev.no-footage .t-duration{opacity:.3 !important;}
 .card .tl-track.vertical .t-preview.t-row.no-footage{opacity:.55;}
 .card.theme-light .tl-track.vertical .t-ev.no-footage .t-dot{background:#fafafc !important;box-shadow:0 0 0 2px #fafafc,inset 0 0 0 2px var(--ev-color,#8e8e93) !important;}
+
+/* Vertical playhead: the line runs the full width but sits behind the event
+   rows (so it never strikes through their text); knob and pill stay on top. */
+.card .tl-track.vertical .tl-playhead{z-index:auto !important;background:transparent !important;left:0 !important;right:0 !important;width:auto !important;}
+.card .tl-track.vertical .tl-playhead::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:#0a84ff;z-index:7;pointer-events:none;}
+.card .tl-track.vertical.following-live .tl-playhead::before{background:#ff453a;}
+.card .tl-track.vertical .tl-playhead i{z-index:31 !important;}
+.card .tl-track.vertical .tl-playhead span{z-index:32 !important;}
+
+/* Horizontal timeline: hover preview card above the hovered event. */
+.card.tl-horizontal #timeline-view{position:relative !important;overflow:visible !important;}
+.card.tl-horizontal .workspace-timeline,.card.tl-horizontal .tl-sec{overflow:visible !important;}
+.card.tl-horizontal .tl-sec{z-index:6;}
+.card .tl-hover-card{
+  position:absolute;z-index:60;width:232px;display:none;pointer-events:none;
+  padding:6px;border-radius:14px;background:#1f1f22;border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 12px 32px rgba(0,0,0,.45);color:#f5f5f7;
+}
+.card .tl-hover-card.show{display:block;}
+.card .tl-hover-card .tl-hover-thumb{position:relative;width:100%;aspect-ratio:16/9;border-radius:9px;overflow:hidden;background:#2a3038;}
+.card .tl-hover-card .tl-hover-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.card .tl-hover-card .tl-hover-thumb b{position:absolute;right:5px;bottom:4px;padding:1px 5px;border-radius:5px;background:rgba(0,0,0,.65);color:#fff;font-size:10px;font-weight:650;font-variant-numeric:tabular-nums;}
+.card .tl-hover-card .tl-hover-meta{display:flex;flex-direction:column;gap:2px;padding:7px 4px 2px;}
+.card .tl-hover-card .tl-hover-title{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:650;}
+.card .tl-hover-card .tl-hover-title i{width:8px;height:8px;border-radius:50%;background:var(--ev-color,#8e8e93);flex:0 0 auto;}
+.card .tl-hover-card .tl-hover-sub{font-size:11px;color:#a1a1a6;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .tl-hover-card .tl-hover-note{font-size:11px;color:#ff9f0a;}
+.card.theme-light .tl-hover-card{background:#fff;border-color:rgba(0,0,0,.1);color:#1d1d1f;box-shadow:0 12px 32px rgba(0,0,0,.18);}
+.card.theme-light .tl-hover-card .tl-hover-sub{color:#6e6e73;}
+.card.theme-light .tl-hover-card .tl-hover-thumb{background:#e5e5ea;}
+
+/* Selected row is opaque so the playhead line passes cleanly behind it. */
+.card .tl-track.vertical .t-preview.t-row.selected{background:#132a44 !important;}
+.card.theme-light .tl-track.vertical .t-preview.t-row.selected{background:#e7f1ff !important;}
 `;
 
 // ── src/utils/apply-method-groups.js ──
@@ -9307,6 +9340,7 @@ _wireScrub() {
     },{passive:false,signal});
 
     this._wireDesktopEventTimelineDrag(track,signal);
+    this._wireTimelineHoverPreview?.(track,signal);
     this._renderTimelineZoomLabel();
   },
 
@@ -9335,6 +9369,58 @@ _wireScrub() {
    * once the pointer moves far enough, ownership transfers to the timeline and
    * the release commits through the same seek path used by every other scrub.
    */
+  /**
+   * Horizontal timeline (mouse only): hovering an event bar shows a preview
+   * card with its thumbnail, label, time and duration above the timeline.
+   */
+  _wireTimelineHoverPreview(track,signal) {
+    const host=track.parentElement;
+    if(!host) return;
+    let card=host.querySelector(':scope > .tl-hover-card');
+    if(!card){ card=document.createElement('div'); card.className='tl-hover-card'; card.setAttribute('role','tooltip'); host.appendChild(card); }
+    let currentId=null;
+    const hide=()=>{ currentId=null; card.classList.remove('show'); };
+    const options=signal?{signal}:undefined;
+    const esc=(v)=>String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const place=(target)=>{
+      const bar=target.querySelector('.t-duration')||target;
+      const b=bar.getBoundingClientRect(), h=host.getBoundingClientRect(), t=track.getBoundingClientRect();
+      const w=card.offsetWidth||232, ch=card.offsetHeight||190;
+      let left=b.left+b.width/2-h.left-w/2;
+      left=Math.max(4,Math.min(h.width-w-4,left));
+      // Float above the timeline (over the bottom of the player if needed).
+      const top=t.top-h.top-ch-8;
+      card.style.left=`${left}px`; card.style.top=`${top}px`;
+    };
+    track.addEventListener('pointermove',(event)=>{
+      if(event.pointerType!=='mouse' || !track.classList.contains('horizontal') || this._timelineInteracting || this._downloadRange){ hide(); return; }
+      const target=event.target?.closest?.('.t-ev');
+      if(!target){ hide(); return; }
+      const id=target.dataset.tick;
+      if(id!==currentId){
+        const ev=this._timelineEventCache?.get(String(id)) || this._timelineEvents().find(e=>String(e.id)===String(id));
+        if(!ev){ hide(); return; }
+        currentId=id;
+        const info=ev._tl||this._timelineLabelInfo(ev);
+        const ts=Number(target.dataset.ts)||Number(ev.start_time);
+        const zones=(Array.isArray(ev.zones)?ev.zones:[]).slice(0,2).map(z=>this._filterDisplayName?.('zone',z)||z).join(', ');
+        const hasMedia=ev.has_snapshot||ev.has_clip||ev.thumbnail;
+        const thumb=hasMedia?`<img src="${esc(this._timelineThumb(ev))}" alt="" data-frigate-thumb="1" data-thumb-src="${esc(this._timelineThumb(ev))}">`:'';
+        card.style.setProperty('--ev-color',getComputedStyle(target).getPropertyValue('--ev-color')||'#8e8e93');
+        card.innerHTML=`<div class="tl-hover-thumb">${thumb}<b>${esc(this._dur(ev))}s</b></div>
+          <div class="tl-hover-meta">
+            <span class="tl-hover-title"><i></i>${esc(info.display)}${info.sub?` · ${esc(info.sub)}`:''}</span>
+            <span class="tl-hover-sub">${esc(this._timelineTime(ts))}${zones?` · ${esc(zones)}`:''}</span>
+            ${ev.has_clip===false?'<span class="tl-hover-note">No footage saved</span>':''}
+          </div>`;
+        card.classList.add('show');
+      }
+      place(target);
+    },options);
+    track.addEventListener('pointerleave',hide,options);
+    track.addEventListener('pointerdown',hide,options);
+  },
+
   _wireDesktopEventTimelineDrag(track,signal) {
     let gesture=null;
     const options=signal?{signal}:undefined;
