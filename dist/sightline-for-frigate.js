@@ -4280,6 +4280,14 @@ ${STYLES}
 
 .card .cam-switcher.cam-tight .cam-tab-multi .cam-tab-label{display:none;}
 .card .cam-switcher.cam-tight .cam-tab-multi{padding:0 !important;width:38px;justify-content:center;}
+
+/* Tighter media browser header: less dead space above the title and
+   between the title and the first day header. */
+.card .media-gallery{padding-top:6px !important;}
+.card .media-gallery .media-gallery-head{padding:4px 6px 6px 8px !important;margin:0 0 2px !important;min-height:0 !important;}
+.card .media-gallery .media-gallery-grid{padding-top:0 !important;}
+.card .media-gallery .mg-day{padding:2px 14px 6px !important;}
+.card .media-gallery .mg-day:not(:first-child){padding-top:10px !important;}
 `;
 
 // ── src/utils/apply-method-groups.js ──
