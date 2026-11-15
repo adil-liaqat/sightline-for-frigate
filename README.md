@@ -1,6 +1,12 @@
 # Sightline for Frigate
 
-![Desktop Screenshot](docs/screenshot_1.png)
+![Sightline on a wide dashboard: live view, camera toolbar, Clips list and the horizontal timeline](docs/screenshot_1.png)
+
+<p align="center">
+  <img src="docs/screenshot_mobile.png" alt="Sightline on a phone: live view, camera picker, tabs and the vertical timeline" width="320">
+</p>
+
+<sub>Screenshots use illustrated placeholder scenes instead of real camera footage.</sub>
 
 A modern, responsive Frigate NVR card for Home Assistant.
 
