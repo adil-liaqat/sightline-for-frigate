@@ -4307,6 +4307,14 @@ ${STYLES}
 .card #eng-wrap:fullscreen,
 .card #eng-wrap:-webkit-full-screen,
 .card .cam-grid:fullscreen{-webkit-mask-image:none;mask-image:none;}
+
+/* Follow Home Assistant's card theme instead of a fixed 18px radius and a
+   large drop shadow. Matching the theme radius also stops a doubled corner
+   when Sightline is embedded in another card that rounds/clips its content. */
+.card.card.card{
+  border-radius:var(--ha-card-border-radius,12px) !important;
+  box-shadow:var(--ha-card-box-shadow,none) !important;
+}
 `;
 
 // ── src/utils/apply-method-groups.js ──
