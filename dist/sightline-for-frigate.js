@@ -4189,7 +4189,7 @@ ${STYLES}
 .card #playback-back-live,
 .card #multi-recording-back-live{display:none !important;}
 .card .stream-ctrl-bar .scb-back{
-  display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 13px 0 10px;margin-right:auto;
+  display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;margin-right:auto;
   border:1px solid rgba(255,255,255,.1);border-radius:12px;background:#2c2c2e;color:#f5f5f7;cursor:pointer;
   font:600 13px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;white-space:nowrap;flex:0 0 auto;
 }
@@ -4197,9 +4197,8 @@ ${STYLES}
 .card .stream-ctrl-bar .scb-back svg{width:15px;height:15px;}
 .card.theme-light .stream-ctrl-bar .scb-back{background:#f2f2f7;border-color:rgba(0,0,0,.08);color:#1d1d1f;}
 .card.theme-light .stream-ctrl-bar .scb-back:hover{background:#e5e5ea;}
-/* Phones: icon-only so the bar keeps room for the media tabs. */
-.card.mobile .stream-ctrl-bar .scb-back span{display:none;}
-.card.mobile .stream-ctrl-bar .scb-back{width:40px;padding:0;justify-content:center;}
+/* Icon-only everywhere (the label stays in title/aria-label); a touch larger on phones. */
+.card.mobile .stream-ctrl-bar .scb-back{width:40px;height:40px;}
 
 /* ─────────────────────────────────────────────────────────────
    Media toolbar: Back · cameras (+N) · Multiview · rotate · tabs · actions
@@ -5508,7 +5507,7 @@ _renderStreamCtrl() {
     const backToGrid = this._playbackReturnViewMode==='grid' || this._playing?.multi===true;
     const backLabel = backToGrid ? 'Back to Multiview' : `Back to ${this._homeTabLabel?.() || 'Live'}`;
     const backBtn = inPlayback
-      ? `<button type="button" class="scb-back" data-playback-back title="${backLabel}" aria-label="${backLabel}">${ICONS.back}<span>${backLabel}</span></button>`
+      ? `<button type="button" class="scb-back" data-playback-back title="${backLabel}" aria-label="${backLabel}">${ICONS.back}</button>`
       : '';
     bar.innerHTML = `${backBtn}${audioBtn}${talkBtn}${fsBtn}${mediaGroup}${recDl}`;
     bar.querySelector('[data-playback-back]')?.addEventListener('click', (event) => {

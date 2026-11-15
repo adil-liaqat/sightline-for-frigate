@@ -76,4 +76,10 @@ assert.equal(startup._autoplayed, 'unchanged', 'startup state must not replay tw
   assert.equal(card._timelineScaleStep(3600,vtrack),300,'vertical gutter keeps 5-minute ticks at 1h');
 }
 
+// The playback Back button is icon-only; its label lives in title/aria-label.
+{
+  const src=fs.readFileSync(path.join(root,'src/card/live/view.js'),'utf8');
+  assert.match(src,/class="scb-back" data-playback-back title="\$\{backLabel\}" aria-label="\$\{backLabel\}">\$\{ICONS\.back\}<\/button>/,'Back button renders only its icon');
+}
+
 console.log('Smoke test passed.');

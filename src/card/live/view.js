@@ -216,7 +216,7 @@ _renderStreamCtrl() {
     const backToGrid = this._playbackReturnViewMode==='grid' || this._playing?.multi===true;
     const backLabel = backToGrid ? 'Back to Multiview' : `Back to ${this._homeTabLabel?.() || 'Live'}`;
     const backBtn = inPlayback
-      ? `<button type="button" class="scb-back" data-playback-back title="${backLabel}" aria-label="${backLabel}">${ICONS.back}<span>${backLabel}</span></button>`
+      ? `<button type="button" class="scb-back" data-playback-back title="${backLabel}" aria-label="${backLabel}">${ICONS.back}</button>`
       : '';
     bar.innerHTML = `${backBtn}${audioBtn}${talkBtn}${fsBtn}${mediaGroup}${recDl}`;
     bar.querySelector('[data-playback-back]')?.addEventListener('click', (event) => {
