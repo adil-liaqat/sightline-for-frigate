@@ -20,12 +20,13 @@ _eventCardHTML(ev,expanded,compact=false) {
     const dlSnap=ev.has_snapshot?`<button class="ico" data-dl="${ev.id}" data-dl-file="snapshot.jpg" title="Download snapshot">${ICONS.snapshot}</button>`:'';
     // show camera name in multi-cam all-events mode
     const camLabel=(this._eventsMode==='all'&&this._config.cameras.length>1)?`<span class="cam-badge">${(ev.camera||'').replace(/_/g,' ')}</span>`:'';
-    // compact: wrap everything in a tighter layout, actions horizontal
-    return `<div class="ec${compact?' compact':''}" data-ev="${ev.id}">
+    const playing=String(this._playing?.id??'')===String(ev.id);
+    const kind=!ev.has_clip&&ev.has_snapshot?'<span>Snapshot</span>':'';
+    return `<div class="ec${compact?' compact':''}${playing?' playing':''}" data-ev="${ev.id}" style="--ev-color:${col}">
       <div class="et">${thumb}<div class="ed">${this._dur(ev)}s</div></div>
       <div class="ei">
-        <div class="etop"><span class="tb" style="background:${col}33;color:${col}">${cap(ev.label)}</span>${subl}${badge}${camLabel}${score?`<span class="esc">${score}</span>`:''}</div>
-        <div class="em"><span>${ICONS.clock}${this._time(ev.start_time)}</span>${zone?`<span>${ICONS.pin}${zone}</span>`:''}</div>
+        <div class="etop"><i class="ec-dot" aria-hidden="true"></i><span class="ec-title">${cap(ev.label)}</span>${subl}${camLabel}${playing?'<span class="ec-now">Playing</span>':''}</div>
+        <div class="em"><span>${this._time(ev.start_time)}</span>${zone?`<span>${zone}</span>`:''}${score?`<span>${score}</span>`:''}${kind}</div>
         ${desc}
       </div>
       <div class="eact${compact?' h':''}">${this._favIcon(ev)}${dlClip}${dlSnap}</div>

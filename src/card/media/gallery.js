@@ -5,7 +5,10 @@
  * stable so existing card behavior and tests remain unchanged.
  */
 import { ICONS } from '../../constants.js';
-import { cap, camDisplayName } from '../../helpers.js';
+import { cap, camDisplayName, labelColor } from '../../helpers.js';
+
+const CHECK_ICON='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
+const PLAY_ICON='<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"></path></svg>';
 
 export const mediaGalleryMethods = {
 _renderGallery(force=false) {
@@ -28,10 +31,10 @@ _renderGallery(force=false) {
       content=events.length ? events.map(ev=>this._eventCardHTML(ev,false)).join('') : this._emptyState(ICONS.clips,'No clips match','Try changing the filters');
     } else if(tab==='recordings') {
       const recs=this._filterMediaRecordings(this._recordingBrowse.length ? this._recordingBrowse : this._mergeRecs(this._recordings)).sort((a,b)=>b.start_time-a.start_time); title='Recordings'; count=recs.length;
-      content=recs.length ? recs.map(r=>{ const rs=Math.floor(r.start_time), re=Math.floor(r.end_time||Date.now()/1000); const d=Math.max(1,re-rs), mm=Math.floor(d/60), ss=d%60; return `<div class="rec" data-rs="${rs}" data-re="${re}"><div class="ric">${ICONS.recordings}</div><div class="rinf"><div class="rt">${this._time(r.start_time)} – ${this._time(r.end_time||Date.now()/1000)}</div><div class="rsub">${mm?mm+'m ':''}${ss}s${r.events?' · '+r.events+' ev':''}</div></div><div class="rp">▶</div></div>`; }).join('') : this._emptyState(ICONS.recordings,'No recordings match','Try changing the filters');
+      content=recs.length ? recs.map(r=>{ const rs=Math.floor(r.start_time), re=Math.floor(r.end_time||Date.now()/1000); const d=Math.max(1,re-rs), mm=Math.floor(d/60), ss=d%60; return `<div class="rec" data-rs="${rs}" data-re="${re}"><div class="ric">${ICONS.recordings}</div><div class="rinf"><div class="rt">${this._time(r.start_time)} – ${this._time(r.end_time||Date.now()/1000)}</div><div class="rsub">${d>=3600?`${Math.floor(d/3600)}h ${Math.floor((d%3600)/60)}m`:`${mm?mm+'m ':''}${ss}s`}${r.events?' · '+r.events+(r.events===1?' event':' events'):''}</div></div><div class="rp" aria-hidden="true">${PLAY_ICON}</div></div>`; }).join('') : this._emptyState(ICONS.recordings,'No recordings match','Try changing the filters');
     } else if(tab==='reviews') {
       const revs=this._filterMediaReviews(this._reviews).sort((a,b)=>b.start_time-a.start_time); title='Reviews'; count=revs.length;
-      content=revs.length ? revs.map(r=>{ const sev=r.severity==='alert'?'alert':'detection'; const objs=this._reviewLabelList(r).map(x=>this._filterDisplayName('label',x)).join(', '); const title=r.data?.metadata?.title||objs||cap(r.severity); const firstDet=(r.data?.detections&&r.data.detections[0])||''; const reviewed=r.has_been_reviewed; const reviewThumbUrl=firstDet?this._mediaForEvent({id:firstDet,camera:r.camera},'thumbnail.jpg'):''; const thumb=firstDet?`<div class="rev-th"><img src="${reviewThumbUrl}" data-frigate-thumb="1" data-thumb-src="${reviewThumbUrl}" loading="lazy"><div class="tph thumb-fallback" style="display:none">${ICONS.reviews}</div></div>`:''; return `<div class="rev ${sev}" data-review-id="${r.id}" ${firstDet?`data-review-open="${firstDet}"`:''}><div class="rev-sev ${sev}"></div>${thumb}<div class="rev-inf"><div class="rev-t">${title}</div><div class="rev-m">${this._time(r.start_time)} · ${cap(sev)}${reviewed?' · ✓':firstDet?' · tap':''}</div></div>${reviewed?'':`<button class="ico" data-mark>${ICONS.reviews}</button>`}</div>`; }).join('') : this._emptyState(ICONS.reviews,'No reviews match','Try changing the filters');
+      content=revs.length ? revs.map(r=>{ const sev=r.severity==='alert'?'alert':'detection'; const objs=this._reviewLabelList(r).map(x=>this._filterDisplayName('label',x)).join(', '); const title=r.data?.metadata?.title||objs||cap(r.severity); const firstDet=(r.data?.detections&&r.data.detections[0])||''; const reviewed=r.has_been_reviewed; const reviewThumbUrl=firstDet?this._mediaForEvent({id:firstDet,camera:r.camera},'thumbnail.jpg'):''; const thumb=firstDet?`<div class="rev-th"><img src="${reviewThumbUrl}" data-frigate-thumb="1" data-thumb-src="${reviewThumbUrl}" loading="lazy"><div class="tph thumb-fallback" style="display:none">${ICONS.reviews}</div></div>`:`<div class="rev-th"><div class="tph thumb-fallback">${ICONS.reviews}</div></div>`; const firstLabel=this._reviewLabelList(r)[0]||''; const dur=Math.max(1,Math.round(Number(r.end_time||r.start_time)-Number(r.start_time))); const playing=firstDet&&String(this._playing?.id??'')===String(firstDet); return `<div class="rev ${sev}${reviewed?' reviewed':''}${playing?' playing':''}" data-review-id="${r.id}" ${firstDet?`data-review-open="${firstDet}"`:''} style="--ev-color:${labelColor(firstLabel)}"><div class="rev-sev ${sev}"></div>${thumb}<div class="rev-inf"><div class="rev-t"><i class="ec-dot" aria-hidden="true"></i><span>${title}</span>${playing?'<span class="ec-now">Playing</span>':''}</div><div class="rev-m"><span class="rev-pill ${sev}">${cap(sev)}</span><span>${this._time(r.start_time)}</span><span>${dur}s</span>${reviewed?'<span class="rev-done">✓ Reviewed</span>':''}</div></div>${reviewed?'':`<button class="ico" data-mark title="Mark as reviewed" aria-label="Mark as reviewed">${CHECK_ICON}</button>`}</div>`; }).join('') : this._emptyState(ICONS.reviews,'No reviews match','Try changing the filters');
     } else return;
 
     // IMPORTANT: never replace the filter panel merely because clips/recordings
@@ -49,7 +52,8 @@ _renderGallery(force=false) {
       grid=gallery.querySelector('.media-gallery-grid');
     }
     const label=head?.querySelector('.section-label'); if(label) label.textContent=title;
-    const countEl=head?.querySelector('.media-gallery-count'); if(countEl) countEl.textContent=String(count);
+    const countEl=head?.querySelector('.media-gallery-count');
+    if(countEl) { const noun={Clips:['clip','clips'],Recordings:['recording','recordings'],Reviews:['review','reviews']}[title]||['item','items']; countEl.textContent=`${count} ${count===1?noun[0]:noun[1]}`; }
     const filterBtn=head?.querySelector('#media-filter-btn'); if(filterBtn) filterBtn.classList.toggle('active',activeFilters);
     if(grid) grid.innerHTML=content;
     this._renderMediaFilter(force);
