@@ -209,7 +209,22 @@ _renderStreamCtrl() {
       ? `<button class="scb-btn rec-download-icon${this._downloadRange?' range-active':''}" data-rec-download title="${this._downloadRange?'Adjust download range':'Choose download range'}" aria-label="${this._downloadRange?'Adjust download range':'Choose download range'}" aria-pressed="${this._downloadRange?'true':'false'}">${ICONS.download}</button>`
       : '';
     const mediaGroup = `<div class="media-nav-group" role="group" aria-label="Media navigation">${liveBtn}${clipsBtn}${recordingsBtn}${reviewsBtn}</div>`;
-    bar.innerHTML = `${audioBtn}${talkBtn}${fsBtn}${mediaGroup}${recDl}`;
+    // Back from playback lives in this bar rather than on the video, where it
+    // covered cameras' burned-in date/time. The paused "home" item (Live
+    // hidden) is the resting view, so it has no Back.
+    const inPlayback = !!this._playing && !this._homeMediaActive;
+    const backToGrid = this._playbackReturnViewMode==='grid' || this._playing?.multi===true;
+    const backLabel = backToGrid ? 'Back to Multiview' : `Back to ${this._homeTabLabel?.() || 'Live'}`;
+    const backBtn = inPlayback
+      ? `<button type="button" class="scb-back" data-playback-back title="${backLabel}" aria-label="${backLabel}">${ICONS.back}<span>${backLabel}</span></button>`
+      : '';
+    bar.innerHTML = `${backBtn}${audioBtn}${talkBtn}${fsBtn}${mediaGroup}${recDl}`;
+    bar.querySelector('[data-playback-back]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!backToGrid && typeof this._returnHome === 'function') this._returnHome();
+      else this._showLive();
+    });
     bar.querySelector('#sc-audio')?.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();

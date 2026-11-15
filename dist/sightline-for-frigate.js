@@ -4184,6 +4184,22 @@ ${STYLES}
 .card .media-filter-panel .media-filter-row{position:relative;padding-left:66px !important;min-height:30px;}
 .card .media-filter-panel .media-filter-row .media-filter-label{position:absolute;left:0;top:8px;width:60px;flex:none !important;}
 .card .media-filter-panel .media-filter-row:last-child{padding-left:0 !important;justify-content:flex-end;margin-bottom:0 !important;}
+
+/* Back from playback sits in the control bar, never over the video. */
+.card #playback-back-live,
+.card #multi-recording-back-live{display:none !important;}
+.card .stream-ctrl-bar .scb-back{
+  display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 13px 0 10px;margin-right:auto;
+  border:1px solid rgba(255,255,255,.1);border-radius:12px;background:#2c2c2e;color:#f5f5f7;cursor:pointer;
+  font:600 13px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;white-space:nowrap;flex:0 0 auto;
+}
+.card .stream-ctrl-bar .scb-back:hover{background:#3a3a3c;}
+.card .stream-ctrl-bar .scb-back svg{width:15px;height:15px;}
+.card.theme-light .stream-ctrl-bar .scb-back{background:#f2f2f7;border-color:rgba(0,0,0,.08);color:#1d1d1f;}
+.card.theme-light .stream-ctrl-bar .scb-back:hover{background:#e5e5ea;}
+/* Phones: icon-only so the bar keeps room for the media tabs. */
+.card.mobile .stream-ctrl-bar .scb-back span{display:none;}
+.card.mobile .stream-ctrl-bar .scb-back{width:40px;padding:0;justify-content:center;}
 `;
 
 // ── src/utils/apply-method-groups.js ──
@@ -5370,7 +5386,22 @@ _renderStreamCtrl() {
       ? `<button class="scb-btn rec-download-icon${this._downloadRange?' range-active':''}" data-rec-download title="${this._downloadRange?'Adjust download range':'Choose download range'}" aria-label="${this._downloadRange?'Adjust download range':'Choose download range'}" aria-pressed="${this._downloadRange?'true':'false'}">${ICONS.download}</button>`
       : '';
     const mediaGroup = `<div class="media-nav-group" role="group" aria-label="Media navigation">${liveBtn}${clipsBtn}${recordingsBtn}${reviewsBtn}</div>`;
-    bar.innerHTML = `${audioBtn}${talkBtn}${fsBtn}${mediaGroup}${recDl}`;
+    // Back from playback lives in this bar rather than on the video, where it
+    // covered cameras' burned-in date/time. The paused "home" item (Live
+    // hidden) is the resting view, so it has no Back.
+    const inPlayback = !!this._playing && !this._homeMediaActive;
+    const backToGrid = this._playbackReturnViewMode==='grid' || this._playing?.multi===true;
+    const backLabel = backToGrid ? 'Back to Multiview' : `Back to ${this._homeTabLabel?.() || 'Live'}`;
+    const backBtn = inPlayback
+      ? `<button type="button" class="scb-back" data-playback-back title="${backLabel}" aria-label="${backLabel}">${ICONS.back}<span>${backLabel}</span></button>`
+      : '';
+    bar.innerHTML = `${backBtn}${audioBtn}${talkBtn}${fsBtn}${mediaGroup}${recDl}`;
+    bar.querySelector('[data-playback-back]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!backToGrid && typeof this._returnHome === 'function') this._returnHome();
+      else this._showLive();
+    });
     bar.querySelector('#sc-audio')?.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
