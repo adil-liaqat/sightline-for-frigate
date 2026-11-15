@@ -4288,6 +4288,25 @@ ${STYLES}
 .card .media-gallery .media-gallery-grid{padding-top:0 !important;}
 .card .media-gallery .mg-day{padding:2px 14px 6px !important;}
 .card .media-gallery .mg-day:not(:first-child){padding-top:10px !important;}
+
+/* Player frame: one clean rounded edge. The white hairline border, inset
+   highlight and ::after vignette drew a second ring inside the corner, and
+   hardware-accelerated <video> can ignore overflow:hidden rounding (notably
+   Safari), so clip with a mask as well. */
+.card #eng-wrap,
+.card .cam-grid{
+  border:0 !important;
+  box-shadow:0 1px 2px rgba(0,0,0,.08) !important;
+  isolation:isolate;
+  -webkit-mask-image:-webkit-radial-gradient(white,black);
+  mask-image:radial-gradient(white,black);
+}
+.card #eng-wrap::after{display:none !important;}
+.card #eng-wrap #engine,
+.card #eng-wrap #viewer{border-radius:inherit;overflow:hidden;}
+.card #eng-wrap:fullscreen,
+.card #eng-wrap:-webkit-full-screen,
+.card .cam-grid:fullscreen{-webkit-mask-image:none;mask-image:none;}
 `;
 
 // ── src/utils/apply-method-groups.js ──
