@@ -11560,11 +11560,15 @@ const multiviewTimelineMethods = {
     return result;
   },
 
-  _downloadRangeTimestampAtClientY(clientY) {
+  _downloadRangeTimestampAtClientY(clientY,clientX) {
     const track=this._$('#tl-track');
     if(!track)return NaN;
     const rect=track.getBoundingClientRect();
-    const ratio=Math.max(0,Math.min(1,(Number(clientY)-rect.top)/Math.max(1,rect.height)));
+    // Ratio measured from the newest edge: top (vertical) or right (horizontal).
+    const horizontal=track.classList?.contains?.('horizontal') && Number.isFinite(Number(clientX));
+    const ratio=horizontal
+      ? Math.max(0,Math.min(1,(rect.right-Number(clientX))/Math.max(1,rect.width)))
+      : Math.max(0,Math.min(1,(Number(clientY)-rect.top)/Math.max(1,rect.height)));
     const span=Math.max(1,Number(this._winEnd)-Number(this._winStart));
     const focus=Number.isFinite(Number(this._timelineFocusTs))
       ? Number(this._timelineFocusTs)
@@ -11572,11 +11576,11 @@ const multiviewTimelineMethods = {
     return focus+(0.5-ratio)*span;
   },
 
-  _downloadRangeKindAtClientY(clientY,preferred=null) {
+  _downloadRangeKindAtClientY(clientY,preferred=null,clientX) {
     const range=this._downloadRange;
     if(!range)return preferred||'start';
     if(preferred==='start'||preferred==='end')return preferred;
-    const ts=this._downloadRangeTimestampAtClientY(clientY);
+    const ts=this._downloadRangeTimestampAtClientY(clientY,clientX);
     return Math.abs(ts-Number(range.start))<=Math.abs(ts-Number(range.end))?'start':'end';
   },
 
@@ -11591,9 +11595,9 @@ const multiviewTimelineMethods = {
     let touchId=null;
 
     const isActionTarget=target=>!!target?.closest?.('[data-range-download],[data-range-cancel]');
-    const update=y=>{
+    const update=(y,x)=>{
       if(!kind||!this._downloadRange)return;
-      const ts=this._downloadRangeTimestampAtClientY(y);
+      const ts=this._downloadRangeTimestampAtClientY(y,x);
       const value=this._updateDownloadRangeBoundary(kind,ts);
       if(!Number.isFinite(value))return;
       this._timelineInteracting=true;
@@ -11601,11 +11605,11 @@ const multiviewTimelineMethods = {
       this._syncDownloadRangePickerDOM(kind);
       this._updateTimelineScrubLabel(value);
     };
-    const start=(target,y)=>{
+    const start=(target,y,x)=>{
       if(!this._downloadRange||isActionTarget(target))return false;
       const preferred=target?.closest?.('[data-range-handle]')?.dataset?.rangeHandle||null;
-      kind=this._downloadRangeKindAtClientY(y,preferred);
-      update(y);
+      kind=this._downloadRangeKindAtClientY(y,preferred,x);
+      update(y,x);
       return true;
     };
     const finish=()=>{
@@ -11620,7 +11624,7 @@ const multiviewTimelineMethods = {
 
     root.addEventListener('pointerdown',e=>{
       if(isActionTarget(e.target)||(e.pointerType==='mouse'&&e.button!==0))return;
-      if(!start(e.target,e.clientY))return;
+      if(!start(e.target,e.clientY,e.clientX))return;
       e.preventDefault();
       e.stopPropagation();
       pointerId=e.pointerId;
@@ -11630,7 +11634,7 @@ const multiviewTimelineMethods = {
       if(pointerId==null||e.pointerId!==pointerId||!kind)return;
       e.preventDefault();
       e.stopPropagation();
-      update(e.clientY);
+      update(e.clientY,e.clientX);
     },{capture:true,passive:false});
     const endPointer=e=>{
       if(pointerId==null||e.pointerId!==pointerId)return;
@@ -11646,7 +11650,7 @@ const multiviewTimelineMethods = {
     root.addEventListener('touchstart',e=>{
       if(pointerId!=null||kind||isActionTarget(e.target)||!e.changedTouches?.length)return;
       const touch=e.changedTouches[0];
-      if(!start(e.target,touch.clientY))return;
+      if(!start(e.target,touch.clientY,touch.clientX))return;
       touchId=touch.identifier;
       e.preventDefault();
       e.stopPropagation();
@@ -11657,7 +11661,7 @@ const multiviewTimelineMethods = {
       if(!touch)return;
       e.preventDefault();
       e.stopPropagation();
-      update(touch.clientY);
+      update(touch.clientY,touch.clientX);
     },{capture:true,passive:false});
     const endTouch=e=>{
       if(touchId==null||!kind)return;
@@ -11672,10 +11676,10 @@ const multiviewTimelineMethods = {
 
     root.addEventListener('mousedown',e=>{
       if('PointerEvent' in window||e.button!==0||isActionTarget(e.target))return;
-      if(!start(e.target,e.clientY))return;
+      if(!start(e.target,e.clientY,e.clientX))return;
       e.preventDefault();
       e.stopPropagation();
-      const move=ev=>{ev.preventDefault();update(ev.clientY);};
+      const move=ev=>{ev.preventDefault();update(ev.clientY,ev.clientX);};
       const up=()=>{window.removeEventListener('mousemove',move);window.removeEventListener('mouseup',up);finish();};
       window.addEventListener('mousemove',move,{passive:false});
       window.addEventListener('mouseup',up,{once:true});
