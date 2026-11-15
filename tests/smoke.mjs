@@ -64,4 +64,16 @@ startup._autoplayed='unchanged';
 await startup._applyInitialMediaState();
 assert.equal(startup._autoplayed, 'unchanged', 'startup state must not replay twice');
 
+// Timeline ruler: labels must not overlap on long horizontal spans.
+{
+  const track={classList:{contains:(c)=>c==='horizontal'},clientWidth:1900,clientHeight:150};
+  const step12h=card._timelineScaleStep(12*3600,track);
+  assert.ok((step12h/(12*3600))*1900>=92,`12h horizontal ticks too dense: ${step12h}s`);
+  assert.equal(step12h,3600,'12h on a 1900px timeline uses hourly labels');
+  assert.equal(card._timelineScaleStep(900,track),60,'short spans keep minute ticks');
+  assert.equal(card._timelineScaleStep(12*3600,null),1800,'without a measured track the zoom table applies');
+  const vtrack={classList:{contains:()=>false},clientWidth:300,clientHeight:600};
+  assert.equal(card._timelineScaleStep(3600,vtrack),300,'vertical gutter keeps 5-minute ticks at 1h');
+}
+
 console.log('Smoke test passed.');

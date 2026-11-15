@@ -100,10 +100,27 @@ _timelineLanes() {
 
 _timelineScaleTime(ts) { return this._timeMinute(ts); },
 
+// Pick the finest "nice" tick interval whose labels still fit along the
+// track. The fixed zoom table alone overlapped labels such as "10:30 PM" on
+// a 12h horizontal timeline; the vertical gutter keeps its original density.
+_timelineScaleStep(span, track) {
+    const base=span<=900 ? 60 : span<=1800 ? 2*60 : span<=3600 ? 5*60 : span<=7200 ? 10*60 : 30*60;
+    const horiz=!!track?.classList?.contains('horizontal');
+    const px=horiz ? (track?.clientWidth||0) : (track?.clientHeight||0);
+    if(!(px>0)) return base;
+    const minGap=horiz ? 92 : 26;
+    const steps=[60,120,300,600,900,1800,3600,7200,10800,21600,43200,86400];
+    for(const step of steps) {
+      if(step<base) continue;
+      if((step/span)*px>=minGap) return step;
+    }
+    return steps[steps.length-1];
+  },
+
 _timelineTime(ts) { return this._timeSec(ts); },
 
 _syncTimelineScaleNodes(track, s, e, span, focus, yPct) {
-    const step=span<=900 ? 60 : span<=1800 ? 2*60 : span<=3600 ? 5*60 : span<=7200 ? 10*60 : 30*60;
+    const step=this._timelineScaleStep(span,track);
     const first=Math.ceil(s/step)*step;
     const count=Math.max(0,Math.floor((e-first)/step)+1);
     let nodes=[...track.querySelectorAll('.tl-scale-mark')];
@@ -201,7 +218,7 @@ _renderTimeline(forceFull=false) {
 
     // Time scale lives in the left gutter. Keep it sparse at all zoom levels;
     // event timestamps are intentionally not repeated beside every marker.
-    const step=span<=900 ? 60 : span<=1800 ? 2*60 : span<=3600 ? 5*60 : span<=7200 ? 10*60 : 30*60;
+    const step=this._timelineScaleStep(span,track);
     for(let ts=Math.ceil(s/step)*step;ts<=e;ts+=step) {
       const pct=yPct(ts), d=new Date(ts*1000), isHour=d.getMinutes()===0;
       html+=`<div class="tl-scale-mark ${isHour?'hour':''}" data-ts="${ts}" style="${this._tlPointStyle(pct,H)}"><span>${this._timelineScaleTime(ts)}</span><i></i></div>`;
