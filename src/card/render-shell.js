@@ -30,9 +30,13 @@ _renderShell() {
               <div id="cam-grid" style="display:none"></div>
               <!-- sits below whichever of eng-wrap/cam-grid is visible, so it
                    survives the single↔grid display:none toggle without duplication -->
-              <div class="stream-ctrl-bar" id="stream-ctrl-bar"></div>
+              <!-- One toolbar under the player: playback Back, camera switcher,
+                   media tabs and actions share a single row (two on phones). -->
+              <div class="media-toolbar">
+                <div class="stream-ctrl-bar" id="stream-ctrl-bar"></div>
+                ${multiCam ? `<div class="cam-switcher" id="cam-switcher"></div>` : ''}
+              </div>
             </div>
-            ${multiCam ? `<div class="cam-switcher" id="cam-switcher"></div>` : ''}
           </div>
 
           <div class="tl-sec workspace-timeline">

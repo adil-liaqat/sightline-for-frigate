@@ -4200,6 +4200,86 @@ ${STYLES}
 /* Phones: icon-only so the bar keeps room for the media tabs. */
 .card.mobile .stream-ctrl-bar .scb-back span{display:none;}
 .card.mobile .stream-ctrl-bar .scb-back{width:40px;padding:0;justify-content:center;}
+
+/* ─────────────────────────────────────────────────────────────
+   Media toolbar: Back · cameras (+N) · Multiview · rotate · tabs · actions
+   in one row under the player (two rows on phones). The control bar's
+   children become toolbar items so Back can sit at the far left.
+   ───────────────────────────────────────────────────────────── */
+.card:not(.editor-preview) .media-toolbar{
+  display:flex;align-items:center;flex-wrap:nowrap;gap:8px;padding:10px 2px 4px;position:relative;
+}
+.card.mobile:not(.editor-preview) .media-toolbar{flex-wrap:wrap;}
+.card:not(.editor-preview) .media-toolbar .cam-switcher .cam-tabs{flex:1 1 0;min-width:0;}
+.card:not(.editor-preview) .media-toolbar > .stream-ctrl-bar{display:contents !important;}
+.card:not(.editor-preview) .media-toolbar .scb-back{order:0;margin-right:0 !important;}
+.card:not(.editor-preview) .media-toolbar > .cam-switcher{
+  order:1;flex:1 1 0;min-width:0;display:flex !important;align-items:center;gap:8px !important;
+  padding:0 !important;margin:0 !important;position:relative;
+}
+.card:not(.editor-preview) .media-toolbar .scb-btn{order:2;}
+.card:not(.editor-preview) .media-toolbar .media-nav-group{order:3;margin-left:auto;}
+.card:not(.editor-preview) .media-toolbar .rec-download-icon{order:4;}
+
+/* Camera pills + "+N". */
+.card .cam-switcher .cam-tabs{-webkit-mask-image:none !important;mask-image:none !important;overflow:hidden !important;}
+.card .cam-switcher .cam-tab.cam-overflow,
+.card .cam-switcher .cam-more.cam-overflow{display:none !important;}
+.card .cam-switcher .cam-more{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 10px;border:0;border-radius:9px;
+  background:#2c2c2e;color:#f5f5f7;font:600 13px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;cursor:pointer;
+}
+.card .cam-switcher .cam-picker{display:none;}
+.card .cam-switcher .cam-menu{
+  position:absolute;bottom:calc(100% + 8px);left:0;z-index:40;width:220px;max-height:300px;overflow:auto;
+  padding:5px;border-radius:14px;background:#1f1f22;border:1px solid rgba(255,255,255,.1);box-shadow:0 14px 34px rgba(0,0,0,.4);
+  display:flex;flex-direction:column;gap:1px;
+}
+.card .cam-switcher .cam-menu[hidden]{display:none !important;}
+.card .cam-switcher .cam-menu-item{
+  display:flex;align-items:center;gap:9px;height:38px;padding:0 10px;border:0;border-radius:9px;background:transparent;color:#f5f5f7;
+  font:600 14px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;text-align:left;cursor:pointer;
+}
+.card .cam-switcher .cam-menu-item:hover{background:rgba(255,255,255,.07);}
+.card .cam-switcher .cam-menu-item.active{background:rgba(255,255,255,.1);}
+.card .cam-switcher .cam-menu-item.offline{color:#8e8e93;}
+.card .cam-switcher .cam-menu-item .cam-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:currentColor;font-size:0;}
+.card .cam-switcher .cam-menu-name{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .cam-switcher .cam-menu-note{font-size:12px;font-weight:600;color:#8e8e93;}
+
+/* Tabs: icons only, the active one keeps its label. */
+.card:not(.editor-preview) .media-toolbar .media-nav-btn:not(.active) span{display:none !important;}
+.card:not(.editor-preview) .media-toolbar .media-nav-btn:not(.active){padding:0 !important;width:40px;min-width:40px;justify-content:center;}
+.card:not(.editor-preview) .media-toolbar .media-nav-group{flex:0 0 auto;}
+
+/* Phones: row 1 camera picker + Multiview + rotate; row 2 Back, tabs, actions. */
+.card.mobile .media-toolbar > .cam-switcher{order:-1;flex:1 1 100%;}
+.card.mobile .cam-switcher .cam-tabs{display:none !important;}
+.card.mobile .cam-switcher .cam-picker{
+  flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.07);background:#1c1c1e;color:#f5f5f7;cursor:pointer;
+  font:600 14px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+}
+.card.mobile .cam-switcher .cam-picker .cam-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:currentColor;font-size:0;}
+.card.mobile .cam-switcher .cam-picker svg:not(.cam-chevron){width:15px;height:15px;}
+.card.mobile .cam-switcher .cam-picker-name{flex:1 1 auto;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card.mobile .cam-switcher .cam-picker-count{font-size:12px;color:#8e8e93;font-weight:600;white-space:nowrap;}
+.card.mobile .cam-switcher .cam-menu{left:0 !important;right:0;width:auto;top:calc(100% + 6px);bottom:auto;}
+.card.mobile .media-toolbar .media-nav-group{flex:1 1 auto;margin-left:0;display:flex !important;}
+.card.mobile .media-toolbar .media-nav-btn{flex:1 1 0;width:auto !important;min-width:0 !important;padding:0 !important;justify-content:center;}
+.card.mobile .media-toolbar .media-nav-btn span{display:none !important;}
+
+/* Light theme. */
+.card.theme-light .cam-switcher .cam-more{background:#fff;color:#1d1d1f;box-shadow:0 0 0 1px rgba(0,0,0,.06);}
+.card.theme-light .cam-switcher .cam-menu{background:#fff;border-color:rgba(0,0,0,.08);box-shadow:0 14px 34px rgba(0,0,0,.16);}
+.card.theme-light .cam-switcher .cam-menu-item{color:#1d1d1f;}
+.card.theme-light .cam-switcher .cam-menu-item:hover{background:rgba(0,0,0,.04);}
+.card.theme-light .cam-switcher .cam-menu-item.active{background:#f2f2f7;}
+.card.theme-light .cam-switcher .cam-menu-item.offline{color:#8e8e93;}
+.card.theme-light.mobile .cam-switcher .cam-picker{background:#fff;border-color:rgba(0,0,0,.08);color:#1d1d1f;}
+
+.card .cam-switcher.cam-tight .cam-tab-multi .cam-tab-label{display:none;}
+.card .cam-switcher.cam-tight .cam-tab-multi{padding:0 !important;width:38px;justify-content:center;}
 `;
 
 // ── src/utils/apply-method-groups.js ──
@@ -6407,9 +6487,13 @@ _renderShell() {
               <div id="cam-grid" style="display:none"></div>
               <!-- sits below whichever of eng-wrap/cam-grid is visible, so it
                    survives the single↔grid display:none toggle without duplication -->
-              <div class="stream-ctrl-bar" id="stream-ctrl-bar"></div>
+              <!-- One toolbar under the player: playback Back, camera switcher,
+                   media tabs and actions share a single row (two on phones). -->
+              <div class="media-toolbar">
+                <div class="stream-ctrl-bar" id="stream-ctrl-bar"></div>
+                ${multiCam ? `<div class="cam-switcher" id="cam-switcher"></div>` : ''}
+              </div>
             </div>
-            ${multiCam ? `<div class="cam-switcher" id="cam-switcher"></div>` : ''}
           </div>
 
           <div class="tl-sec workspace-timeline">
@@ -6824,6 +6908,7 @@ _setupResizeObserver() {
       // player geometry at that exact transition; this fixes the visible
       // set-height/aspect -> flash -> 16:9/default-size regression.
       if(wasEditorPreview!==editorPreview) this._applyCardStyle();
+      this._fitCamPills?.();
       this._applyBrowse();
       this._syncResponsiveWorkspace();
       this._syncColHeight();
@@ -6875,16 +6960,88 @@ _renderCamSwitcher() {
     if (this._config.cameras.length < 2) { el.style.display='none'; return; }
     el.style.display = '';
 
-    const tabs = this._config.cameras.map((c,i) => {
-      const name = cap(camDisplayName(c));
-      const active = this._viewMode === 'single' && i === this._activeCamIdx;
-      const ok = this._hass?.states[c.entity]?.state !== 'unavailable';
-      return `<button class="cam-tab ${active?'active':''}${ok?'':' offline'}" data-camidx="${i}" aria-pressed="${active?'true':'false'}" title="${name}${ok?'':' · offline'}"><span class="cam-dot" style="color:${ok?'var(--c-on)':'var(--c-danger)'}">●</span> ${name}</button>`;
-    }).join('');
     const gridActive = this._viewMode === 'grid';
-    // Multiview sits outside the scrolling camera list so it is always reachable.
-    el.innerHTML = `<div class="cam-tabs">${tabs}</div><button class="cam-tab cam-tab-multi${gridActive?' active':''}" data-viewmode="grid" aria-pressed="${gridActive?'true':'false'}" aria-label="Multiview (all cameras)" title="All cameras">${ICONS.grid}<span class="cam-tab-label">Multiview</span></button>
+    const cams = this._config.cameras.map((c,i) => {
+      const name = cap(camDisplayName(c));
+      const active = !gridActive && i === this._activeCamIdx;
+      const ok = this._hass?.states[c.entity]?.state !== 'unavailable';
+      return { i, name, active, ok };
+    });
+    const dot = (ok) => `<span class="cam-dot" style="color:${ok?'var(--c-on)':'var(--c-danger)'}">●</span>`;
+    const tabs = cams.map(c => `<button class="cam-tab ${c.active?'active':''}${c.ok?'':' offline'}" data-camidx="${c.i}" aria-pressed="${c.active?'true':'false'}" title="${c.name}${c.ok?'':' · offline'}">${dot(c.ok)} ${c.name}</button>`).join('');
+    const items = cams.map(c => `<button class="cam-menu-item${c.active?' active':''}${c.ok?'':' offline'}" data-camidx="${c.i}" role="option" aria-selected="${c.active?'true':'false'}">${dot(c.ok)}<span class="cam-menu-name">${c.name}</span><span class="cam-menu-note">${c.active?'Viewing':(c.ok?'':'Offline')}</span></button>`).join('');
+    const current = cams.find(c => c.active);
+    const chevron = '<svg class="cam-chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>';
+    // Phones get one picker button; wider cards show pills and collapse the
+    // ones that do not fit into "+N" (see _fitCamPills). Both open one menu.
+    el.innerHTML = `<button type="button" class="cam-picker" data-cam-menu aria-haspopup="listbox" aria-expanded="false">${current?dot(current.ok):ICONS.grid}<span class="cam-picker-name">${current?current.name:'Multiview'}</span><span class="cam-picker-count">${cams.length} cameras</span>${chevron}</button>
+      <div class="cam-tabs">${tabs}<button type="button" class="cam-more" data-cam-menu aria-haspopup="listbox" aria-expanded="false"><span class="cam-more-count"></span>${chevron}</button></div>
+      <div class="cam-menu" role="listbox" aria-label="Cameras" hidden>${items}</div>
+      <button class="cam-tab cam-tab-multi${gridActive?' active':''}" data-viewmode="grid" aria-pressed="${gridActive?'true':'false'}" aria-label="Multiview (all cameras)" title="All cameras">${ICONS.grid}<span class="cam-tab-label">Multiview</span></button>
       <button class="cam-rotate ${this._rotateTimer?'on':''}" id="rotate-btn" title="Auto-rotate cameras" aria-label="Auto-rotate cameras" aria-pressed="${this._rotateTimer?'true':'false'}">${ICONS.rotate}</button>`;
+
+    const menu = el.querySelector('.cam-menu');
+    el.querySelectorAll('[data-cam-menu]').forEach(btn => btn.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation();
+      const open = menu.hidden;
+      menu.hidden = !open;
+      el.querySelectorAll('[data-cam-menu]').forEach(b => b.setAttribute('aria-expanded', String(open)));
+      if (open) {
+        // Anchor the menu under the button that opened it.
+        const host = el.getBoundingClientRect(), b = btn.getBoundingClientRect();
+        menu.style.left = `${Math.max(0, Math.min(b.left - host.left, host.width - 220))}px`;
+      }
+    }));
+    menu.addEventListener('click', () => { menu.hidden = true; });
+    if (!this._camMenuOutsideWired && this.shadowRoot?.addEventListener) {
+      this._camMenuOutsideWired = true;
+      this.shadowRoot.addEventListener('pointerdown', (event) => {
+        if (event.target?.closest?.('.cam-menu,[data-cam-menu]')) return;
+        const open = this.shadowRoot.querySelector('.cam-menu:not([hidden])');
+        if (open) { open.hidden = true; this.shadowRoot.querySelectorAll('[data-cam-menu]').forEach(b => b.setAttribute('aria-expanded','false')); }
+      }, true);
+    }
+    const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => setTimeout(fn, 0);
+    raf(() => raf(() => this._fitCamPills()));
+    setTimeout(() => this._fitCamPills(), 400);
+  },
+
+/**
+ * Show as many camera pills as fit; the rest collapse into "+N" (the active
+ * camera always stays visible). Re-run on resize.
+ */
+_fitCamPills() {
+    const el = this.shadowRoot?.querySelector?.('#cam-switcher');
+    const box = el?.querySelector?.('.cam-tabs');
+    const more = box?.querySelector?.('.cam-more');
+    if (!box || !more) return;
+    const pills = [...box.querySelectorAll('.cam-tab[data-camidx]')];
+    pills.forEach(p => p.classList.remove('cam-overflow'));
+    more.classList.add('cam-overflow');
+    el.classList.remove('cam-tight');
+    if (this.shadowRoot.querySelector('.card')?.classList.contains('mobile')) return;
+    // Not laid out yet: measure again on the next resize/render.
+    if (box.clientWidth <= 0) return;
+    if (box.scrollWidth <= box.clientWidth + 1) return;
+    // Tight: Multiview drops to its icon before any camera is hidden.
+    el.classList.add('cam-tight');
+    if (box.scrollWidth <= box.clientWidth + 1) return;
+    more.classList.remove('cam-overflow');
+    const gap = 2;
+    const avail = box.clientWidth - 8;
+    let used = more.offsetWidth + gap;
+    const active = pills.find(p => p.classList.contains('active'));
+    let hidden = 0;
+    for (const p of (active ? [active, ...pills.filter(x => x !== active)] : pills)) {
+      const w = p.offsetWidth + gap;
+      // The active camera is always shown, even when space is very tight.
+      if (p === active || used + w <= avail) used += w;
+      else { p.classList.add('cam-overflow'); hidden++; }
+    }
+    if (!hidden) { more.classList.add('cam-overflow'); return; }
+    const count = more.querySelector('.cam-more-count');
+    if (count) count.textContent = `+${hidden}`;
+    more.setAttribute('aria-label', `${hidden} more camera${hidden===1?'':'s'}`);
   }
 };
 
@@ -12223,6 +12380,7 @@ const responsiveUxMethods = {
     const orientation=this._config?.timeline?.orientation||'auto';
     const horizontal=!editorPreview && (orientation==='horizontal' || (orientation==='auto' && split));
     card.classList.toggle('tl-horizontal',horizontal);
+    this._fitCamPills?.();
     const track=this.shadowRoot.querySelector('#tl-track');
     if(track && track.classList.contains('horizontal')!==horizontal){
       track.classList.toggle('horizontal',horizontal);

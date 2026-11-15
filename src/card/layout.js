@@ -317,6 +317,7 @@ _setupResizeObserver() {
       // player geometry at that exact transition; this fixes the visible
       // set-height/aspect -> flash -> 16:9/default-size regression.
       if(wasEditorPreview!==editorPreview) this._applyCardStyle();
+      this._fitCamPills?.();
       this._applyBrowse();
       this._syncResponsiveWorkspace();
       this._syncColHeight();
@@ -368,15 +369,87 @@ _renderCamSwitcher() {
     if (this._config.cameras.length < 2) { el.style.display='none'; return; }
     el.style.display = '';
 
-    const tabs = this._config.cameras.map((c,i) => {
-      const name = cap(camDisplayName(c));
-      const active = this._viewMode === 'single' && i === this._activeCamIdx;
-      const ok = this._hass?.states[c.entity]?.state !== 'unavailable';
-      return `<button class="cam-tab ${active?'active':''}${ok?'':' offline'}" data-camidx="${i}" aria-pressed="${active?'true':'false'}" title="${name}${ok?'':' · offline'}"><span class="cam-dot" style="color:${ok?'var(--c-on)':'var(--c-danger)'}">●</span> ${name}</button>`;
-    }).join('');
     const gridActive = this._viewMode === 'grid';
-    // Multiview sits outside the scrolling camera list so it is always reachable.
-    el.innerHTML = `<div class="cam-tabs">${tabs}</div><button class="cam-tab cam-tab-multi${gridActive?' active':''}" data-viewmode="grid" aria-pressed="${gridActive?'true':'false'}" aria-label="Multiview (all cameras)" title="All cameras">${ICONS.grid}<span class="cam-tab-label">Multiview</span></button>
+    const cams = this._config.cameras.map((c,i) => {
+      const name = cap(camDisplayName(c));
+      const active = !gridActive && i === this._activeCamIdx;
+      const ok = this._hass?.states[c.entity]?.state !== 'unavailable';
+      return { i, name, active, ok };
+    });
+    const dot = (ok) => `<span class="cam-dot" style="color:${ok?'var(--c-on)':'var(--c-danger)'}">●</span>`;
+    const tabs = cams.map(c => `<button class="cam-tab ${c.active?'active':''}${c.ok?'':' offline'}" data-camidx="${c.i}" aria-pressed="${c.active?'true':'false'}" title="${c.name}${c.ok?'':' · offline'}">${dot(c.ok)} ${c.name}</button>`).join('');
+    const items = cams.map(c => `<button class="cam-menu-item${c.active?' active':''}${c.ok?'':' offline'}" data-camidx="${c.i}" role="option" aria-selected="${c.active?'true':'false'}">${dot(c.ok)}<span class="cam-menu-name">${c.name}</span><span class="cam-menu-note">${c.active?'Viewing':(c.ok?'':'Offline')}</span></button>`).join('');
+    const current = cams.find(c => c.active);
+    const chevron = '<svg class="cam-chevron" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>';
+    // Phones get one picker button; wider cards show pills and collapse the
+    // ones that do not fit into "+N" (see _fitCamPills). Both open one menu.
+    el.innerHTML = `<button type="button" class="cam-picker" data-cam-menu aria-haspopup="listbox" aria-expanded="false">${current?dot(current.ok):ICONS.grid}<span class="cam-picker-name">${current?current.name:'Multiview'}</span><span class="cam-picker-count">${cams.length} cameras</span>${chevron}</button>
+      <div class="cam-tabs">${tabs}<button type="button" class="cam-more" data-cam-menu aria-haspopup="listbox" aria-expanded="false"><span class="cam-more-count"></span>${chevron}</button></div>
+      <div class="cam-menu" role="listbox" aria-label="Cameras" hidden>${items}</div>
+      <button class="cam-tab cam-tab-multi${gridActive?' active':''}" data-viewmode="grid" aria-pressed="${gridActive?'true':'false'}" aria-label="Multiview (all cameras)" title="All cameras">${ICONS.grid}<span class="cam-tab-label">Multiview</span></button>
       <button class="cam-rotate ${this._rotateTimer?'on':''}" id="rotate-btn" title="Auto-rotate cameras" aria-label="Auto-rotate cameras" aria-pressed="${this._rotateTimer?'true':'false'}">${ICONS.rotate}</button>`;
+
+    const menu = el.querySelector('.cam-menu');
+    el.querySelectorAll('[data-cam-menu]').forEach(btn => btn.addEventListener('click', (event) => {
+      event.preventDefault(); event.stopPropagation();
+      const open = menu.hidden;
+      menu.hidden = !open;
+      el.querySelectorAll('[data-cam-menu]').forEach(b => b.setAttribute('aria-expanded', String(open)));
+      if (open) {
+        // Anchor the menu under the button that opened it.
+        const host = el.getBoundingClientRect(), b = btn.getBoundingClientRect();
+        menu.style.left = `${Math.max(0, Math.min(b.left - host.left, host.width - 220))}px`;
+      }
+    }));
+    menu.addEventListener('click', () => { menu.hidden = true; });
+    if (!this._camMenuOutsideWired && this.shadowRoot?.addEventListener) {
+      this._camMenuOutsideWired = true;
+      this.shadowRoot.addEventListener('pointerdown', (event) => {
+        if (event.target?.closest?.('.cam-menu,[data-cam-menu]')) return;
+        const open = this.shadowRoot.querySelector('.cam-menu:not([hidden])');
+        if (open) { open.hidden = true; this.shadowRoot.querySelectorAll('[data-cam-menu]').forEach(b => b.setAttribute('aria-expanded','false')); }
+      }, true);
+    }
+    const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => setTimeout(fn, 0);
+    raf(() => raf(() => this._fitCamPills()));
+    setTimeout(() => this._fitCamPills(), 400);
+  },
+
+/**
+ * Show as many camera pills as fit; the rest collapse into "+N" (the active
+ * camera always stays visible). Re-run on resize.
+ */
+_fitCamPills() {
+    const el = this.shadowRoot?.querySelector?.('#cam-switcher');
+    const box = el?.querySelector?.('.cam-tabs');
+    const more = box?.querySelector?.('.cam-more');
+    if (!box || !more) return;
+    const pills = [...box.querySelectorAll('.cam-tab[data-camidx]')];
+    pills.forEach(p => p.classList.remove('cam-overflow'));
+    more.classList.add('cam-overflow');
+    el.classList.remove('cam-tight');
+    if (this.shadowRoot.querySelector('.card')?.classList.contains('mobile')) return;
+    // Not laid out yet: measure again on the next resize/render.
+    if (box.clientWidth <= 0) return;
+    if (box.scrollWidth <= box.clientWidth + 1) return;
+    // Tight: Multiview drops to its icon before any camera is hidden.
+    el.classList.add('cam-tight');
+    if (box.scrollWidth <= box.clientWidth + 1) return;
+    more.classList.remove('cam-overflow');
+    const gap = 2;
+    const avail = box.clientWidth - 8;
+    let used = more.offsetWidth + gap;
+    const active = pills.find(p => p.classList.contains('active'));
+    let hidden = 0;
+    for (const p of (active ? [active, ...pills.filter(x => x !== active)] : pills)) {
+      const w = p.offsetWidth + gap;
+      // The active camera is always shown, even when space is very tight.
+      if (p === active || used + w <= avail) used += w;
+      else { p.classList.add('cam-overflow'); hidden++; }
+    }
+    if (!hidden) { more.classList.add('cam-overflow'); return; }
+    const count = more.querySelector('.cam-more-count');
+    if (count) count.textContent = `+${hidden}`;
+    more.setAttribute('aria-label', `${hidden} more camera${hidden===1?'':'s'}`);
   }
 };

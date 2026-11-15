@@ -59,6 +59,7 @@ export const responsiveUxMethods = {
     const orientation=this._config?.timeline?.orientation||'auto';
     const horizontal=!editorPreview && (orientation==='horizontal' || (orientation==='auto' && split));
     card.classList.toggle('tl-horizontal',horizontal);
+    this._fitCamPills?.();
     const track=this.shadowRoot.querySelector('#tl-track');
     if(track && track.classList.contains('horizontal')!==horizontal){
       track.classList.toggle('horizontal',horizontal);

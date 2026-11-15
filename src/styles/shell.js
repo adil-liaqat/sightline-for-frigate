@@ -2762,4 +2762,84 @@ ${STYLES}
 /* Phones: icon-only so the bar keeps room for the media tabs. */
 .card.mobile .stream-ctrl-bar .scb-back span{display:none;}
 .card.mobile .stream-ctrl-bar .scb-back{width:40px;padding:0;justify-content:center;}
+
+/* ─────────────────────────────────────────────────────────────
+   Media toolbar: Back · cameras (+N) · Multiview · rotate · tabs · actions
+   in one row under the player (two rows on phones). The control bar's
+   children become toolbar items so Back can sit at the far left.
+   ───────────────────────────────────────────────────────────── */
+.card:not(.editor-preview) .media-toolbar{
+  display:flex;align-items:center;flex-wrap:nowrap;gap:8px;padding:10px 2px 4px;position:relative;
+}
+.card.mobile:not(.editor-preview) .media-toolbar{flex-wrap:wrap;}
+.card:not(.editor-preview) .media-toolbar .cam-switcher .cam-tabs{flex:1 1 0;min-width:0;}
+.card:not(.editor-preview) .media-toolbar > .stream-ctrl-bar{display:contents !important;}
+.card:not(.editor-preview) .media-toolbar .scb-back{order:0;margin-right:0 !important;}
+.card:not(.editor-preview) .media-toolbar > .cam-switcher{
+  order:1;flex:1 1 0;min-width:0;display:flex !important;align-items:center;gap:8px !important;
+  padding:0 !important;margin:0 !important;position:relative;
+}
+.card:not(.editor-preview) .media-toolbar .scb-btn{order:2;}
+.card:not(.editor-preview) .media-toolbar .media-nav-group{order:3;margin-left:auto;}
+.card:not(.editor-preview) .media-toolbar .rec-download-icon{order:4;}
+
+/* Camera pills + "+N". */
+.card .cam-switcher .cam-tabs{-webkit-mask-image:none !important;mask-image:none !important;overflow:hidden !important;}
+.card .cam-switcher .cam-tab.cam-overflow,
+.card .cam-switcher .cam-more.cam-overflow{display:none !important;}
+.card .cam-switcher .cam-more{
+  flex:0 0 auto;display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 10px;border:0;border-radius:9px;
+  background:#2c2c2e;color:#f5f5f7;font:600 13px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;cursor:pointer;
+}
+.card .cam-switcher .cam-picker{display:none;}
+.card .cam-switcher .cam-menu{
+  position:absolute;bottom:calc(100% + 8px);left:0;z-index:40;width:220px;max-height:300px;overflow:auto;
+  padding:5px;border-radius:14px;background:#1f1f22;border:1px solid rgba(255,255,255,.1);box-shadow:0 14px 34px rgba(0,0,0,.4);
+  display:flex;flex-direction:column;gap:1px;
+}
+.card .cam-switcher .cam-menu[hidden]{display:none !important;}
+.card .cam-switcher .cam-menu-item{
+  display:flex;align-items:center;gap:9px;height:38px;padding:0 10px;border:0;border-radius:9px;background:transparent;color:#f5f5f7;
+  font:600 14px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;text-align:left;cursor:pointer;
+}
+.card .cam-switcher .cam-menu-item:hover{background:rgba(255,255,255,.07);}
+.card .cam-switcher .cam-menu-item.active{background:rgba(255,255,255,.1);}
+.card .cam-switcher .cam-menu-item.offline{color:#8e8e93;}
+.card .cam-switcher .cam-menu-item .cam-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:currentColor;font-size:0;}
+.card .cam-switcher .cam-menu-name{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .cam-switcher .cam-menu-note{font-size:12px;font-weight:600;color:#8e8e93;}
+
+/* Tabs: icons only, the active one keeps its label. */
+.card:not(.editor-preview) .media-toolbar .media-nav-btn:not(.active) span{display:none !important;}
+.card:not(.editor-preview) .media-toolbar .media-nav-btn:not(.active){padding:0 !important;width:40px;min-width:40px;justify-content:center;}
+.card:not(.editor-preview) .media-toolbar .media-nav-group{flex:0 0 auto;}
+
+/* Phones: row 1 camera picker + Multiview + rotate; row 2 Back, tabs, actions. */
+.card.mobile .media-toolbar > .cam-switcher{order:-1;flex:1 1 100%;}
+.card.mobile .cam-switcher .cam-tabs{display:none !important;}
+.card.mobile .cam-switcher .cam-picker{
+  flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.07);background:#1c1c1e;color:#f5f5f7;cursor:pointer;
+  font:600 14px/1 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;
+}
+.card.mobile .cam-switcher .cam-picker .cam-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:currentColor;font-size:0;}
+.card.mobile .cam-switcher .cam-picker svg:not(.cam-chevron){width:15px;height:15px;}
+.card.mobile .cam-switcher .cam-picker-name{flex:1 1 auto;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card.mobile .cam-switcher .cam-picker-count{font-size:12px;color:#8e8e93;font-weight:600;white-space:nowrap;}
+.card.mobile .cam-switcher .cam-menu{left:0 !important;right:0;width:auto;top:calc(100% + 6px);bottom:auto;}
+.card.mobile .media-toolbar .media-nav-group{flex:1 1 auto;margin-left:0;display:flex !important;}
+.card.mobile .media-toolbar .media-nav-btn{flex:1 1 0;width:auto !important;min-width:0 !important;padding:0 !important;justify-content:center;}
+.card.mobile .media-toolbar .media-nav-btn span{display:none !important;}
+
+/* Light theme. */
+.card.theme-light .cam-switcher .cam-more{background:#fff;color:#1d1d1f;box-shadow:0 0 0 1px rgba(0,0,0,.06);}
+.card.theme-light .cam-switcher .cam-menu{background:#fff;border-color:rgba(0,0,0,.08);box-shadow:0 14px 34px rgba(0,0,0,.16);}
+.card.theme-light .cam-switcher .cam-menu-item{color:#1d1d1f;}
+.card.theme-light .cam-switcher .cam-menu-item:hover{background:rgba(0,0,0,.04);}
+.card.theme-light .cam-switcher .cam-menu-item.active{background:#f2f2f7;}
+.card.theme-light .cam-switcher .cam-menu-item.offline{color:#8e8e93;}
+.card.theme-light.mobile .cam-switcher .cam-picker{background:#fff;border-color:rgba(0,0,0,.08);color:#1d1d1f;}
+
+.card .cam-switcher.cam-tight .cam-tab-multi .cam-tab-label{display:none;}
+.card .cam-switcher.cam-tight .cam-tab-multi{padding:0 !important;width:38px;justify-content:center;}
 `;
