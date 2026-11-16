@@ -124,4 +124,7 @@ assert.equal(startup._autoplayed, 'unchanged', 'startup state must not replay tw
   assert.equal(seen.length,1,'a time with no clip reveals nothing');
 }
 
+// The toast never intercepts presses meant for the download-range handles.
+assert.match(bundle, /#toast\{pointer-events:none !important;\}/);
+
 console.log('Smoke test passed.');

@@ -4314,6 +4314,10 @@ ${STYLES}
   border-radius:var(--ha-card-border-radius,12px) !important;
   box-shadow:var(--ha-card-box-shadow,none) !important;
 }
+/* Toasts are text only. Let presses pass through so a toast never blocks the
+   download-range handles or the timeline underneath it (on the horizontal
+   timeline it sits right over them for its first few seconds). */
+.card.card #toast{pointer-events:none !important;}
 `;
 
 // ── src/utils/apply-method-groups.js ──
