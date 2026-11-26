@@ -2021,4 +2021,11 @@ ${STYLES}
 .card #eng-wrap:-webkit-full-screen,
 .card #eng-wrap.live-pseudo-fullscreen{height:100vh !important;height:100dvh !important;max-height:none !important;}
 
+.card .media-gallery-head-right{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+.card .media-gallery-head .media-mark-all{padding:0 10px !important;}
+.card .media-gallery-head .media-mark-all[hidden]{display:none !important;}
+.card .media-gallery-head .media-mark-all span{display:inline !important;white-space:nowrap;font-weight:600;}
+.card .media-gallery-head .media-mark-all.armed{background:var(--c-acc-bg) !important;border-color:var(--c-acc-bdr) !important;color:var(--c-acc-text) !important;}
+@media(max-width:360px){.card .media-gallery-head .media-mark-all svg{display:none;}}
+
 `;

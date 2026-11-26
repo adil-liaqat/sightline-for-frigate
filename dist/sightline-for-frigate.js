@@ -1,9 +1,9 @@
-// Sightline for Frigate v1.1.6
+// Sightline for Frigate v1.2.0
 // Generated from src/ by scripts/build.mjs. Do not edit dist directly.
 
 // ── src/constants.js ──
 // Shared constants and icon definitions.
-const VERSION = '1.1.6';
+const VERSION = '1.2.0';
 
 const CARD_TAG = 'sightline-card';
 
@@ -12,6 +12,7 @@ const DAY = 86400;
 const DEFAULT_ROTATE_S = 30;
 
 const ICONS = {
+  checkAll:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12.5l4.5 4.5L15 8.5"/><path d="M10 16.5l1 1L22 7"/></svg>',
   live:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z"/></svg>',
   recordings:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>',
   clips:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/></svg>',
@@ -3477,6 +3478,13 @@ ${STYLES}
 .card #eng-wrap:-webkit-full-screen,
 .card #eng-wrap.live-pseudo-fullscreen{height:100vh !important;height:100dvh !important;max-height:none !important;}
 
+.card .media-gallery-head-right{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+.card .media-gallery-head .media-mark-all{padding:0 10px !important;}
+.card .media-gallery-head .media-mark-all[hidden]{display:none !important;}
+.card .media-gallery-head .media-mark-all span{display:inline !important;white-space:nowrap;font-weight:600;}
+.card .media-gallery-head .media-mark-all.armed{background:var(--c-acc-bg) !important;border-color:var(--c-acc-bdr) !important;color:var(--c-acc-text) !important;}
+@media(max-width:360px){.card .media-gallery-head .media-mark-all svg{display:none;}}
+
 `;
 
 // ── src/utils/apply-method-groups.js ──
@@ -6338,6 +6346,7 @@ _click(e) {
     if (e.target.closest('#media-filter-btn')) return this._toggleMediaFilter();
     const mf=e.target.closest('[data-mf]'); if (mf) { this._setMediaFilter(mf.dataset.mf, mf.dataset.mv); return; }
     if (e.target.closest('#media-filter-reset')) { this._resetMediaFilter(); return; }
+    if (e.target.closest('#media-mark-all')) { this._onMarkAllVisible(); return; }
     if (e.target.closest('#filter-btn')) return this._toggleFilter();
     if (e.target.closest('#cal-btn')) return this._toggleCal();
     if (e.target.closest('#now-btn')) return this._goNow();
@@ -6446,7 +6455,7 @@ async _setGalleryMode(tab) {
     this._syncResponsiveWorkspace();
     if (gallery) {
       gallery.classList.add('open');
-      gallery.innerHTML = `<div class="media-gallery-head"><div class="media-gallery-head-left"><span class="section-label">${tab==='clips'?'Clips':tab==='recordings'?'Recordings':'Reviews'}</span><button id="media-filter-btn" class="media-gallery-filter-btn" title="Filter" aria-label="Filter">${ICONS.filter}<span>Filter</span></button></div><span class="media-gallery-count">…</span></div><div id="media-filter-panel" class="media-filter-panel"></div><div class="media-gallery-grid"><div class="empty-state">Loading…</div></div>`;
+      gallery.innerHTML = `${this._mediaGalleryHeadHtml(tab==='clips'?'Clips':tab==='recordings'?'Recordings':'Reviews','…')}<div id="media-filter-panel" class="media-filter-panel"></div><div class="media-gallery-grid"><div class="empty-state">Loading…</div></div>`;
     }
     // Update navigation before async work so the selected state is stable on
     // the very first tap.
@@ -6562,7 +6571,7 @@ _renderGallery(force=false) {
     let panel=gallery.querySelector('#media-filter-panel');
     let grid=gallery.querySelector('.media-gallery-grid');
     if(!head || !panel || !grid) {
-      gallery.innerHTML=`<div class="media-gallery-head"><div class="media-gallery-head-left"><span class="section-label"></span><button id="media-filter-btn" class="media-gallery-filter-btn" title="Filter" aria-label="Filter">${ICONS.filter}<span>Filter</span></button></div><span class="media-gallery-count"></span></div><div id="media-filter-panel" class="media-filter-panel"></div><div class="media-gallery-grid"></div>`;
+      gallery.innerHTML=`${this._mediaGalleryHeadHtml('','')}<div id="media-filter-panel" class="media-filter-panel"></div><div class="media-gallery-grid"></div>`;
       head=gallery.querySelector('.media-gallery-head');
       panel=gallery.querySelector('#media-filter-panel');
       grid=gallery.querySelector('.media-gallery-grid');
@@ -6571,7 +6580,13 @@ _renderGallery(force=false) {
     const countEl=head?.querySelector('.media-gallery-count'); if(countEl) countEl.textContent=String(count);
     const filterBtn=head?.querySelector('#media-filter-btn'); if(filterBtn) filterBtn.classList.toggle('active',activeFilters);
     if(grid) grid.innerHTML=content;
+    this._syncMarkAllButton?.();
     this._renderMediaFilter(force);
+  },
+
+// The gallery header: title and Filter on the left, result count and (Reviews only) Mark all on the right.
+_mediaGalleryHeadHtml(title,count) {
+    return `<div class="media-gallery-head"><div class="media-gallery-head-left"><span class="section-label">${title}</span><button id="media-filter-btn" class="media-gallery-filter-btn" title="Filter" aria-label="Filter">${ICONS.filter}<span>Filter</span></button></div><div class="media-gallery-head-right"><span class="media-gallery-count">${count}</span><button id="media-mark-all" class="media-gallery-filter-btn media-mark-all" type="button" hidden>${ICONS.checkAll}<span class="mark-all-label"></span></button></div></div>`;
   },
 
 _mediaCameraDisplay(camera) {
@@ -8270,6 +8285,45 @@ async _markAll() {
     const {clientId}=this._cc();
     try { await this._hass.callWS({type:'frigate/reviews/viewed',instance_id:clientId,ids,viewed:true}); this._reviews.forEach(r=>r.has_been_reviewed=true); this._renderList(); }
     catch(e) { console.warn(e); }
+  },
+
+// Reviews tab: mark every unreviewed review the current filters show as reviewed. Reviews hidden by the filters are left alone.
+// The first tap arms the button ("Confirm"), the second tap within 4 seconds does it, so a stray tap cannot clear the list.
+_visibleUnreviewed() {
+    return this._filterMediaReviews(this._reviews||[]).filter(r=>!r.has_been_reviewed);
+  },
+
+_onMarkAllVisible() {
+    if(this._galleryMode!=='reviews' || !this._visibleUnreviewed().length) return;
+    const n=this._visibleUnreviewed().length;
+    // armed for this many reviews: if the filters changed in between, it asks again instead of marking a different set
+    if(this._markAllArmed && this._markAllArmN===n) { clearTimeout(this._markAllArmT); this._markAllArmed=false; return this._markVisibleReviewed(); }
+    this._markAllArmed=true; this._markAllArmN=n;
+    this._syncMarkAllButton();
+    clearTimeout(this._markAllArmT);
+    this._markAllArmT=setTimeout(()=>{ this._markAllArmed=false; this._syncMarkAllButton(); },4000);
+  },
+
+_syncMarkAllButton() {
+    const btn=this.shadowRoot?.querySelector('#media-mark-all'); if(!btn) return;
+    const n=this._galleryMode==='reviews' ? this._visibleUnreviewed().length : 0;
+    if(!n || (this._markAllArmed && this._markAllArmN!==n)) this._markAllArmed=false;
+    btn.hidden=!n;
+    btn.classList.toggle('armed',!!this._markAllArmed);
+    const label=btn.querySelector('.mark-all-label');
+    if(label) label.textContent=this._markAllArmed ? `Confirm · ${n}` : `Mark all (${n})`;
+    btn.setAttribute('aria-label',this._markAllArmed ? `Confirm marking ${n} reviews as reviewed` : `Mark ${n} reviews as reviewed`);
+  },
+
+async _markVisibleReviewed() {
+    const ids=this._visibleUnreviewed().map(r=>r.id); if(!ids.length) return;
+    const {clientId}=this._cc();
+    try {
+      for(let i=0;i<ids.length;i+=100) await this._hass.callWS({type:'frigate/reviews/viewed',instance_id:clientId,ids:ids.slice(i,i+100),viewed:true});
+      const done=new Set(ids); this._reviews.forEach(r=>{ if(done.has(r.id)) r.has_been_reviewed=true; });
+      this._toast(`Marked ${ids.length} review${ids.length===1?'':'s'} as reviewed`);
+    } catch(e) { console.warn(e); this._toast('Could not mark the reviews as reviewed'); }
+    this._renderList();
   },
 
 async _markReviewed(id) {

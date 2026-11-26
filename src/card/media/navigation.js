@@ -18,6 +18,7 @@ _click(e) {
     if (e.target.closest('#media-filter-btn')) return this._toggleMediaFilter();
     const mf=e.target.closest('[data-mf]'); if (mf) { this._setMediaFilter(mf.dataset.mf, mf.dataset.mv); return; }
     if (e.target.closest('#media-filter-reset')) { this._resetMediaFilter(); return; }
+    if (e.target.closest('#media-mark-all')) { this._onMarkAllVisible(); return; }
     if (e.target.closest('#filter-btn')) return this._toggleFilter();
     if (e.target.closest('#cal-btn')) return this._toggleCal();
     if (e.target.closest('#now-btn')) return this._goNow();
@@ -126,7 +127,7 @@ async _setGalleryMode(tab) {
     this._syncResponsiveWorkspace();
     if (gallery) {
       gallery.classList.add('open');
-      gallery.innerHTML = `<div class="media-gallery-head"><div class="media-gallery-head-left"><span class="section-label">${tab==='clips'?'Clips':tab==='recordings'?'Recordings':'Reviews'}</span><button id="media-filter-btn" class="media-gallery-filter-btn" title="Filter" aria-label="Filter">${ICONS.filter}<span>Filter</span></button></div><span class="media-gallery-count">…</span></div><div id="media-filter-panel" class="media-filter-panel"></div><div class="media-gallery-grid"><div class="empty-state">Loading…</div></div>`;
+      gallery.innerHTML = `${this._mediaGalleryHeadHtml(tab==='clips'?'Clips':tab==='recordings'?'Recordings':'Reviews','…')}<div id="media-filter-panel" class="media-filter-panel"></div><div class="media-gallery-grid"><div class="empty-state">Loading…</div></div>`;
     }
     // Update navigation before async work so the selected state is stable on
     // the very first tap.
