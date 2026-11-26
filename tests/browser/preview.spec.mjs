@@ -186,6 +186,11 @@ test('overlapping clips group into one card and play together on one clock',asyn
   await expect(together.locator('.tg-player')).toHaveCount(3);
   await together.locator('[data-tg-mode="focus"]').click();
   await expect(together.locator('.tg-stage')).toHaveClass(/focus/);
+  // wide Focus: every tile keeps a 16:9 box (a tall one would stretch the picture) and the small tiles do not run into each other
+  const shapes=await page.evaluate(()=>[...document.querySelector('sightline-card').shadowRoot.querySelectorAll('#together .tg-tile')].map(t=>{const b=t.getBoundingClientRect();return {ratio:b.width/b.height,top:b.top,bottom:b.bottom,sel:t.classList.contains('sel')};}));
+  for(const t of shapes) expect(Math.abs(t.ratio-16/9)).toBeLessThan(0.05);
+  const small=shapes.filter(t=>!t.sel);
+  for(let i=1;i<small.length;i++) expect(small[i].top).toBeGreaterThanOrEqual(small[i-1].bottom);
   await together.locator('.tg-tile').nth(1).click();
   await expect(together.locator('.tg-tile.sel')).toHaveCount(1);
   // tapping a camera above asked for its sound, so the speaker is now on; it toggles

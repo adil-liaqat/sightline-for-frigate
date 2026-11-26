@@ -404,7 +404,16 @@ export const togetherMethods = {
     const root = tg.root; if (!root) return;
     // a few pixels of rounding must not turn the tile area into a scroller that traps the mouse wheel
     const stage = root.querySelector('#tg-stage');
-    if (stage) stage.classList.toggle('scrolls', stage.scrollHeight - stage.clientHeight > 12);
+    if (stage) {
+      // wide Focus: every tile gets its own 16:9 height (a third and two thirds of the width, minus the gap)
+      const unit = (stage.clientWidth - 8) / 3;
+      if (unit > 0) {
+        const small = `${(unit * 9 / 16).toFixed(1)}px`, big = `${(unit * 2 * 9 / 16).toFixed(1)}px`;
+        if (stage.style.getPropertyValue('--tg-small-h') !== small) stage.style.setProperty('--tg-small-h', small);
+        if (stage.style.getPropertyValue('--tg-big-h') !== big) stage.style.setProperty('--tg-big-h', big);
+      }
+      stage.classList.toggle('scrolls', stage.scrollHeight - stage.clientHeight > 12);
+    }
     root.querySelector('#tg-time').textContent = `${tgMmss(tg.t - tg.start)} / ${tgMmss(tg.end - tg.start)}`;
     const range = root.querySelector('#tg-range');
     if (range && root.getRootNode().activeElement !== range) range.value = String(tg.t);
@@ -450,5 +459,6 @@ export const togetherMethods = {
     this._togetherPaintPlay();
     this._togetherPaintMute();
     this._togetherSync(false);
+    this._togetherPaintTime();
   },
 };

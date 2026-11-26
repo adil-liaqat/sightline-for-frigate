@@ -1507,9 +1507,13 @@ const TOGETHER_STYLES = `
 .card .tg-stage.grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));}
 .card .tg-stage.focus{grid-template-columns:repeat(var(--others,1),minmax(0,1fr));}
 .card .tg-stage.focus .tg-tile.sel{grid-column:1/-1;order:-1;}
-.card .tg-stage.focus.wide{grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-rows:repeat(var(--others,1),minmax(0,1fr));align-content:stretch;overflow:hidden;}
-.card .tg-stage.focus.wide .tg-tile{aspect-ratio:auto;height:100%;min-height:0;}
-.card .tg-stage.focus.wide .tg-tile.sel{grid-column:1;grid-row:1/span var(--others,1);order:0;}
+.card .tg-stage.focus.wide{grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-rows:repeat(var(--others,1),auto);align-content:start;}
+/* every tile keeps its own 16:9 box (a tall box would stretch the picture); the small ones stack at the top of the right column */
+/* Grid rows measure 16:9 boxes (aspect-ratio or padding) too short and the tiles run into each other, so the script sets each height
+   (--tg-small-h and --tg-big-h, in pixels, from the stage width): the small tiles are one third wide, the chosen one two thirds. */
+.card .tg-stage.focus.wide .tg-tile{aspect-ratio:auto;height:var(--tg-small-h,auto);min-height:0;align-self:start;}
+.card .tg-stage.focus.wide .tg-tile.sel{height:var(--tg-big-h,auto);}
+.card .tg-stage.focus.wide .tg-tile.sel{grid-column:1;grid-row:1/-1;order:0;}
 .card .tg-stage.focus.wide .tg-tile:not(.sel){grid-column:2;}
 .card .tg-tile{position:relative;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/9;cursor:pointer;border:2px solid transparent;min-width:0;}
 .card .tg-tile.sel{border-color:#0a84ff;}
@@ -8521,7 +8525,16 @@ const togetherMethods = {
     const root = tg.root; if (!root) return;
     // a few pixels of rounding must not turn the tile area into a scroller that traps the mouse wheel
     const stage = root.querySelector('#tg-stage');
-    if (stage) stage.classList.toggle('scrolls', stage.scrollHeight - stage.clientHeight > 12);
+    if (stage) {
+      // wide Focus: every tile gets its own 16:9 height (a third and two thirds of the width, minus the gap)
+      const unit = (stage.clientWidth - 8) / 3;
+      if (unit > 0) {
+        const small = `${(unit * 9 / 16).toFixed(1)}px`, big = `${(unit * 2 * 9 / 16).toFixed(1)}px`;
+        if (stage.style.getPropertyValue('--tg-small-h') !== small) stage.style.setProperty('--tg-small-h', small);
+        if (stage.style.getPropertyValue('--tg-big-h') !== big) stage.style.setProperty('--tg-big-h', big);
+      }
+      stage.classList.toggle('scrolls', stage.scrollHeight - stage.clientHeight > 12);
+    }
     root.querySelector('#tg-time').textContent = `${tgMmss(tg.t - tg.start)} / ${tgMmss(tg.end - tg.start)}`;
     const range = root.querySelector('#tg-range');
     if (range && root.getRootNode().activeElement !== range) range.value = String(tg.t);
@@ -8567,6 +8580,7 @@ const togetherMethods = {
     this._togetherPaintPlay();
     this._togetherPaintMute();
     this._togetherSync(false);
+    this._togetherPaintTime();
   },
 };
 
