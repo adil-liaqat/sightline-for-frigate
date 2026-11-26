@@ -400,7 +400,7 @@ If `bg_color` is set, that color becomes the tint for the translucent card surfa
 | `autoplay_latest_clip` | `false` | When starting on Clips, automatically open the newest retained clip once. |
 | `rotate_on_load` | `false` | Begin automatic camera rotation. |
 | `rotate_seconds` | `0` | Rotation interval; `0` uses Sightline's 30-second default. |
-| `hidden_tabs` | `[]` | Hide `clips`, `recordings`, and/or `reviews`. Live is always available. |
+| `hidden_tabs` | `[]` | Hide any of `live`, `clips`, `recordings`, and `reviews`. At least one tab always stays visible. When `live` is hidden, the card starts on `default_tab` (or the first visible tab), and Back buttons and reaching LIVE on the timeline return to the last visible tab instead of Live. Reviews and Clips then rest on their newest item, loaded paused with the timeline on it, instead of a live stream (Multiview keeps its live grid). |
 | `stream_type` | `webrtc` | `webrtc` or `hls`. |
 | `aspect_ratio` | `auto` | Automatic, preset, or custom `W:H` player ratio. |
 | `stream_height` | unset | Explicit player height in `vh`; overrides aspect-ratio height. |
@@ -545,3 +545,14 @@ If you find a bug, include as much of the following as possible when opening a G
 - Browser console error, if one is present
 
 For Frigate installation or Frigate integration problems that also occur outside Sightline, use the Frigate documentation/support channels. For behavior specific to this card, open an issue in the Sightline repository.
+
+## Development
+
+Run the card locally with synthetic cameras and real video playback, without Home Assistant or Frigate:
+
+```sh
+npm ci
+npm run dev
+```
+
+Open http://127.0.0.1:5173. See [Standalone development](docs/DEVELOPMENT.md) for scenarios, browser tests, and mock boundaries.

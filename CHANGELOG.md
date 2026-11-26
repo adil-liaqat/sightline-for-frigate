@@ -16,6 +16,10 @@
 - Horizontal timeline: hovering an event shows a preview card (thumbnail, label, time, zone, duration) above the timeline. Vertical timeline: the playhead line runs the full width behind the event rows.
 - Added a horizontal timeline for wide cards (`timeline.orientation: auto`, the default): on cards 820px and wider the timeline spans the full width under the player, newest time on the right, with a time ruler, a Recording lane and one lane per detection class (Person, Vehicle, Animal, Other) showing each event as a bar as long as it lasted, a centred playhead and a hatched future region. Clips/Recordings/Reviews sit beside the player. Drag, wheel/trackpad pan, Ctrl+wheel and pinch zoom, the scrubber knob and download-range handles all work along the horizontal axis. `timeline.orientation: vertical` or `horizontal` forces one layout; the visual editor has an Orientation setting.
 
+## 1.2.0
+
+- `hidden_tabs` now accepts `live`, and the visual editor has a matching **Live** checkbox. With Live hidden, the card starts on `default_tab` (or the first visible tab), and "Back" buttons and reaching LIVE on the timeline return to the last visible media tab (for example **Back to Clips**) instead of a Live view with no navigation button. At least one tab always remains visible; hiding every tab keeps Live. With Live hidden, Reviews and Clips rest on their newest item instead of a live stream: on first load, page refresh, switching tabs and after **Back**, the newest review or retained clip is loaded paused in the player (without a Back button) and the timeline is centered on it. The timeline's **Jump to now** button becomes **Jump to latest** and returns to that newest item. Multiview keeps its live grid.
+
 ## 1.1.6
 
 - Restored the dedicated fullscreen button on desktop single-camera Live. It fullscreens the existing `#eng-wrap` WebRTC wrapper without replacing the stream, remains available in Multiview, stays hidden for iOS live MediaStreams, and avoids duplicating the native fullscreen control on single-camera recorded playback.
