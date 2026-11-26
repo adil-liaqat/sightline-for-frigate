@@ -40,7 +40,7 @@ _renderShell() {
           </div>
 
           <div class="tl-sec workspace-timeline">
-            <div id="timeline-view" style="${this._config.timeline.enabled?'':'display:none'}">
+            <div id="timeline-view" style="${this._timelineOn()?'':'display:none'}">
               <div class="tl-head">
                 <div class="tl-tools">
                   <button class="tool" id="now-btn" title="${this._config.hidden_tabs?.includes('live')?'Jump to latest':'Jump to now'}" aria-label="${this._config.hidden_tabs?.includes('live')?'Jump to latest':'Jump to now'}"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v5l3 2"></path><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"></path><path d="M21 4v4h-4"></path></svg></button>

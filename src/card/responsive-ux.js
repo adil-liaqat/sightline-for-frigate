@@ -14,6 +14,17 @@ function setImportant(el, prop, value) {
 }
 
 export const responsiveUxMethods = {
+// Is the timeline shown at all? timeline.enabled turns it off everywhere; timeline.show_on_mobile: false turns it off on phone-width cards only.
+_timelineOn() {
+    const t=this._config?.timeline;
+    if(!t || t.enabled===false) return false;
+    if(t.show_on_mobile===false) {
+      const w=this._cardWidth>0 ? this._cardWidth : (this._measureResponsiveCardWidth?.()||0);
+      if(w>0 && w<420) return false;
+    }
+    return true;
+  },
+
   _measureResponsiveCardWidth() {
     const rect=Number(this.getBoundingClientRect?.().width||0);
     const client=Number(this.clientWidth||0);
@@ -50,7 +61,7 @@ export const responsiveUxMethods = {
     card.classList.toggle('workstation',workstation);
 
     const galleryOpen=!!this._galleryMode;
-    const timelineEnabled=this._config?.timeline?.enabled!==false;
+    const timelineEnabled=this._timelineOn();
     const playbackFull=card.classList.contains('playback-fullcard');
 
     // Timeline orientation. Wide cards get a full-width horizontal timeline
@@ -188,7 +199,7 @@ export const responsiveUxMethods = {
     const grid=this.shadowRoot?.querySelector?.('.media-gallery-grid');
     if(!card||!media||!gallery||!grid) return;
 
-    const timelineEnabled=this._config?.timeline?.enabled!==false;
+    const timelineEnabled=this._timelineOn();
     const split=card.classList.contains('dashboard-split');
     const workstation=card.classList.contains('workstation');
     // Horizontal timeline: the media list sits beside the player.

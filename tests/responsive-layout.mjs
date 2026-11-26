@@ -72,6 +72,7 @@ function workspace(width,{timeline=true,gallery='clips',orientation='vertical'}=
     shadowRoot:{querySelector:sel=>map.get(sel)||null},
     _ensureTimelineNativeDateInput:()=>null,
     _measureResponsiveCardWidth:responsiveUxMethods._measureResponsiveCardWidth,
+    _timelineOn:responsiveUxMethods._timelineOn,
     _syncMediaGalleryScroll:responsiveUxMethods._syncMediaGalleryScroll
   };
   return {ctx,card,layout,feed,timelineWrap,timelineView,media,engWrap,camGrid,galleryEl,mediaGrid};
