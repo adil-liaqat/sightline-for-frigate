@@ -213,7 +213,8 @@ _render() {
       <details class="config-group" open>
         <summary>Timeline</summary>
         <div class="adv-grid">
-          <label class="chk-lbl"><input type="checkbox" id="timeline_enabled" ${tl.enabled!==false?'checked':''}> Show timeline on Live</label>
+          <label class="chk-lbl"><input type="checkbox" id="timeline_enabled" ${tl.enabled!==false?'checked':''}> Show timeline</label>
+          <label class="chk-lbl"><input type="checkbox" id="timeline_show_on_mobile" ${tl.show_on_mobile!==false?'checked':''}> Show timeline on phones</label>
           <label><span class="field-label">Default zoom (minutes)</span><input class="tf" id="timeline_default_minutes" type="number" min="5" max="60" value="${tl.default_minutes??10}"></label>
           <label class="chk-lbl"><input type="checkbox" id="timeline_show_thumbnails" ${tl.show_thumbnails!==false?'checked':''}> Event thumbnails</label>
           <label class="chk-lbl"><input type="checkbox" id="timeline_show_glyphs" ${tl.show_glyphs!==false?'checked':''}> Detection glyphs</label>

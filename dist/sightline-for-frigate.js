@@ -1,9 +1,9 @@
-// Sightline for Frigate v1.1.6
+// Sightline for Frigate v1.2.0
 // Generated from src/ by scripts/build.mjs. Do not edit dist directly.
 
 // ── src/constants.js ──
 // Shared constants and icon definitions.
-const VERSION = '1.1.6';
+const VERSION = '1.2.0';
 
 const CARD_TAG = 'sightline-card';
 
@@ -3728,6 +3728,8 @@ setConfig(config) {
     const num = (v, fallback, lo, hi) => { const n=Number(v); return Number.isFinite(n) ? Math.max(lo,Math.min(hi,n)) : fallback; };
     const timeline = {
       enabled: timelineIn.enabled !== false,
+      // false: hide the timeline on phone-width cards (narrower than 420 px) and keep it on wider ones
+      show_on_mobile: timelineIn.show_on_mobile !== false,
       default_minutes: num(timelineIn.default_minutes,10,5,60),
       show_thumbnails: timelineIn.show_thumbnails !== false,
       show_glyphs: timelineIn.show_glyphs !== false,
@@ -5760,7 +5762,7 @@ _renderShell() {
           </div>
 
           <div class="tl-sec workspace-timeline">
-            <div id="timeline-view" style="${this._config.timeline.enabled?'':'display:none'}">
+            <div id="timeline-view" style="${this._timelineOn()?'':'display:none'}">
               <div class="tl-head">
                 <div class="tl-tools">
                   <button class="tool" id="now-btn" title="${this._config.hidden_tabs?.includes('live')?'Jump to latest':'Jump to now'}">⟳</button>
@@ -6212,7 +6214,7 @@ _syncResponsiveWorkspace() {
     const galleryOpen=!!this._galleryMode;
     card.classList.toggle('gallery-active',galleryOpen);
     const timeline=this.shadowRoot.querySelector('#timeline-view');
-    if(timeline) timeline.style.display=(this._config?.timeline?.enabled && (!galleryOpen || split))?'':'none';
+    if(timeline) timeline.style.display=(this._timelineOn() && (!galleryOpen || split))?'':'none';
     const media=this.shadowRoot.querySelector('.workspace-media');
     if(media) media.setAttribute('aria-hidden',galleryOpen?'false':'true');
   },
@@ -6506,7 +6508,7 @@ _resetTimelineToNow10m() {
 _setTab(tab) {
     this._galleryMode = '';
     const gallery=this.shadowRoot.querySelector('#media-gallery'); if(gallery) { gallery.classList.remove('open'); gallery.innerHTML=''; }
-    const timeline=this.shadowRoot.querySelector('#timeline-view'); if(timeline) timeline.style.display=this._config.timeline.enabled?'':'none';
+    const timeline=this.shadowRoot.querySelector('#timeline-view'); if(timeline) timeline.style.display=this._timelineOn()?'':'none';
     this._syncResponsiveWorkspace();
     this._tab = tab;
     this.shadowRoot.querySelectorAll('[data-tab]').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab));
@@ -11355,6 +11357,17 @@ function setImportant(el, prop, value) {
 }
 
 const responsiveUxMethods = {
+// Is the timeline shown at all? timeline.enabled turns it off everywhere; timeline.show_on_mobile: false turns it off on phone-width cards only.
+_timelineOn() {
+    const t=this._config?.timeline;
+    if(!t || t.enabled===false) return false;
+    if(t.show_on_mobile===false) {
+      const w=this._cardWidth>0 ? this._cardWidth : (this._measureResponsiveCardWidth?.()||0);
+      if(w>0 && w<420) return false;
+    }
+    return true;
+  },
+
   _measureResponsiveCardWidth() {
     const rect=Number(this.getBoundingClientRect?.().width||0);
     const client=Number(this.clientWidth||0);
@@ -11391,7 +11404,7 @@ const responsiveUxMethods = {
     card.classList.toggle('workstation',workstation);
 
     const galleryOpen=!!this._galleryMode;
-    const timelineEnabled=this._config?.timeline?.enabled!==false;
+    const timelineEnabled=this._timelineOn();
     const playbackFull=card.classList.contains('playback-fullcard');
     card.classList.toggle('gallery-active',galleryOpen);
 
@@ -11498,7 +11511,7 @@ const responsiveUxMethods = {
     const grid=this.shadowRoot?.querySelector?.('.media-gallery-grid');
     if(!card||!media||!gallery||!grid) return;
 
-    const timelineEnabled=this._config?.timeline?.enabled!==false;
+    const timelineEnabled=this._timelineOn();
     const split=card.classList.contains('dashboard-split');
     const workstation=card.classList.contains('workstation');
     const sideBySide=workstation || (split && !timelineEnabled);
@@ -12181,7 +12194,8 @@ _render() {
       <details class="config-group" open>
         <summary>Timeline</summary>
         <div class="adv-grid">
-          <label class="chk-lbl"><input type="checkbox" id="timeline_enabled" ${tl.enabled!==false?'checked':''}> Show timeline on Live</label>
+          <label class="chk-lbl"><input type="checkbox" id="timeline_enabled" ${tl.enabled!==false?'checked':''}> Show timeline</label>
+          <label class="chk-lbl"><input type="checkbox" id="timeline_show_on_mobile" ${tl.show_on_mobile!==false?'checked':''}> Show timeline on phones</label>
           <label><span class="field-label">Default zoom (minutes)</span><input class="tf" id="timeline_default_minutes" type="number" min="5" max="60" value="${tl.default_minutes??10}"></label>
           <label class="chk-lbl"><input type="checkbox" id="timeline_show_thumbnails" ${tl.show_thumbnails!==false?'checked':''}> Event thumbnails</label>
           <label class="chk-lbl"><input type="checkbox" id="timeline_show_glyphs" ${tl.show_glyphs!==false?'checked':''}> Detection glyphs</label>
@@ -12359,6 +12373,7 @@ _u() {
     // advanced timeline / download / media settings
     c.timeline = { ...(this._config?.timeline || {}),
       enabled: this.querySelector('#timeline_enabled')?.checked !== false,
+      show_on_mobile: this.querySelector('#timeline_show_on_mobile')?.checked !== false,
       default_minutes: Math.max(5,Math.min(60,Number(g('timeline_default_minutes')||10))),
       show_thumbnails: this.querySelector('#timeline_show_thumbnails')?.checked !== false,
       show_glyphs: this.querySelector('#timeline_show_glyphs')?.checked !== false,

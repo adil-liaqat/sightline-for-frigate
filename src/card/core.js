@@ -36,6 +36,8 @@ setConfig(config) {
     const num = (v, fallback, lo, hi) => { const n=Number(v); return Number.isFinite(n) ? Math.max(lo,Math.min(hi,n)) : fallback; };
     const timeline = {
       enabled: timelineIn.enabled !== false,
+      // false: hide the timeline on phone-width cards (narrower than 420 px) and keep it on wider ones
+      show_on_mobile: timelineIn.show_on_mobile !== false,
       default_minutes: num(timelineIn.default_minutes,10,5,60),
       show_thumbnails: timelineIn.show_thumbnails !== false,
       show_glyphs: timelineIn.show_glyphs !== false,

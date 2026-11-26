@@ -61,3 +61,15 @@ assert.match(controller,/if\(ev\.has_clip\) return this\._showClip\(ev\)/,'Timel
 assert.match(layout,/isMultiviewPlaybackContext\(this,workspace\)/,'Full playback must derive its return target from the rendered Multiview context');
 
 console.log('Media browser and desktop playback regression test passed.');
+
+// timeline.show_on_mobile hides the timeline on phone-width cards only; timeline.enabled hides it everywhere.
+{
+  const { responsiveUxMethods } = await import('../src/card/responsive-ux.js');
+  const on = (timeline, width) => responsiveUxMethods._timelineOn.call({ _config: { timeline }, _cardWidth: width });
+  assert.equal(on({ enabled: true, show_on_mobile: true }, 390), true, 'Timeline shows on a phone by default');
+  assert.equal(on({ enabled: true, show_on_mobile: false }, 390), false, 'show_on_mobile:false hides it on a phone');
+  assert.equal(on({ enabled: true, show_on_mobile: false }, 419), false, 'Phone width ends below 420px');
+  assert.equal(on({ enabled: true, show_on_mobile: false }, 420), true, 'A 420px card is not a phone');
+  assert.equal(on({ enabled: true, show_on_mobile: false }, 1200), true, 'show_on_mobile:false keeps the timeline on desktop');
+  assert.equal(on({ enabled: false, show_on_mobile: true }, 1200), false, 'enabled:false hides it everywhere');
+}

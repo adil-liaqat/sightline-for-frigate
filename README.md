@@ -235,7 +235,8 @@ timeline:
 
 | Option | Default | Description |
 | --- | ---: | --- |
-| `enabled` | `true` | Show the timeline on Live. |
+| `enabled` | `true` | Show the timeline. `false` hides it everywhere. |
+| `show_on_mobile` | `true` | `false` hides the timeline on phone-width cards (narrower than 420 px) and keeps it on wider ones. |
 | `default_minutes` | `10` | Initial timeline window in minutes. |
 | `show_thumbnails` | `true` | Show event/review thumbnails. |
 | `thumbnail_size` | `84` | Timeline thumbnail height in pixels. Valid range: 48–140. |

@@ -186,7 +186,7 @@ _resetTimelineToNow10m() {
 _setTab(tab) {
     this._galleryMode = '';
     const gallery=this.shadowRoot.querySelector('#media-gallery'); if(gallery) { gallery.classList.remove('open'); gallery.innerHTML=''; }
-    const timeline=this.shadowRoot.querySelector('#timeline-view'); if(timeline) timeline.style.display=this._config.timeline.enabled?'':'none';
+    const timeline=this.shadowRoot.querySelector('#timeline-view'); if(timeline) timeline.style.display=this._timelineOn()?'':'none';
     this._syncResponsiveWorkspace();
     this._tab = tab;
     this.shadowRoot.querySelectorAll('[data-tab]').forEach(p=>p.classList.toggle('active',p.dataset.tab===tab));

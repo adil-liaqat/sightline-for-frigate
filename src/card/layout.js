@@ -358,7 +358,7 @@ _syncResponsiveWorkspace() {
     const galleryOpen=!!this._galleryMode;
     card.classList.toggle('gallery-active',galleryOpen);
     const timeline=this.shadowRoot.querySelector('#timeline-view');
-    if(timeline) timeline.style.display=(this._config?.timeline?.enabled && (!galleryOpen || split))?'':'none';
+    if(timeline) timeline.style.display=(this._timelineOn() && (!galleryOpen || split))?'':'none';
     const media=this.shadowRoot.querySelector('.workspace-media');
     if(media) media.setAttribute('aria-hidden',galleryOpen?'false':'true');
   },

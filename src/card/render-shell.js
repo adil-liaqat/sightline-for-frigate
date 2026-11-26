@@ -36,7 +36,7 @@ _renderShell() {
           </div>
 
           <div class="tl-sec workspace-timeline">
-            <div id="timeline-view" style="${this._config.timeline.enabled?'':'display:none'}">
+            <div id="timeline-view" style="${this._timelineOn()?'':'display:none'}">
               <div class="tl-head">
                 <div class="tl-tools">
                   <button class="tool" id="now-btn" title="${this._config.hidden_tabs?.includes('live')?'Jump to latest':'Jump to now'}">⟳</button>

@@ -61,6 +61,7 @@ _u() {
     // advanced timeline / download / media settings
     c.timeline = { ...(this._config?.timeline || {}),
       enabled: this.querySelector('#timeline_enabled')?.checked !== false,
+      show_on_mobile: this.querySelector('#timeline_show_on_mobile')?.checked !== false,
       default_minutes: Math.max(5,Math.min(60,Number(g('timeline_default_minutes')||10))),
       show_thumbnails: this.querySelector('#timeline_show_thumbnails')?.checked !== false,
       show_glyphs: this.querySelector('#timeline_show_glyphs')?.checked !== false,

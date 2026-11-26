@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added `timeline.show_on_mobile` (default `true`). Set it to `false` to hide the timeline on phone-width cards (under 420 px) while keeping it on tablets and desktops. `timeline.enabled: false` still hides it everywhere. The visual editor has a matching **Show timeline on phones** checkbox, and its main checkbox now reads **Show timeline** because it hides the timeline on every screen, not just Live.
+
 ## 1.2.0
 
 - `hidden_tabs` now accepts `live`, and the visual editor has a matching **Live** checkbox. With Live hidden, the card starts on `default_tab` (or the first visible tab), and "Back" buttons and reaching LIVE on the timeline return to the last visible media tab (for example **Back to Clips**) instead of a Live view with no navigation button. At least one tab always remains visible; hiding every tab keeps Live. With Live hidden, Reviews and Clips rest on their newest item instead of a live stream: on first load, page refresh, switching tabs and after **Back**, the newest review or retained clip is loaded paused in the player (without a Back button) and the timeline is centered on it. The timeline's **Jump to now** button becomes **Jump to latest** and returns to that newest item. Multiview keeps its live grid.
