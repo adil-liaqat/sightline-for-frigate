@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added `video_fit` (`contain` by default, `cover` or `fill`) to choose what a clip, review or recording does when its shape is not the player box's. `contain` keeps the whole picture with black bars, `cover` fills the box and crops the edges, `fill` fills the box and stretches the picture. It applies to the clip, review and recording player and to the Together player, not to live view, and has a matching selector in the visual editor.
+
 ## 1.2.0
 
 - `hidden_tabs` now accepts `live`, and the visual editor has a matching **Live** checkbox. With Live hidden, the card starts on `default_tab` (or the first visible tab), and "Back" buttons and reaching LIVE on the timeline return to the last visible media tab (for example **Back to Clips**) instead of a Live view with no navigation button. At least one tab always remains visible; hiding every tab keeps Live. With Live hidden, Reviews and Clips rest on their newest item instead of a live stream: on first load, page refresh, switching tabs and after **Back**, the newest review or retained clip is loaded paused in the player (without a Back button) and the timeline is centered on it. The timeline's **Jump to now** button becomes **Jump to latest** and returns to that newest item. Multiview keeps its live grid.

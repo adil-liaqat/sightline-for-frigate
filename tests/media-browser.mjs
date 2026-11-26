@@ -61,3 +61,20 @@ assert.match(controller,/if\(ev\.has_clip\) return this\._showClip\(ev\)/,'Timel
 assert.match(layout,/isMultiviewPlaybackContext\(this,workspace\)/,'Full playback must derive its return target from the rendered Multiview context');
 
 console.log('Media browser and desktop playback regression test passed.');
+
+// video_fit: a clip's picture fills the player box the way the configuration says.
+{
+  const { mediaSourceMethods } = await import('../src/card/playback/media-source.js');
+  const makeEl = () => ({ setAttribute() {} });
+  globalThis.document = globalThis.document || {};
+  const prevCreate = globalThis.document.createElement;
+  globalThis.document.createElement = makeEl;
+  const mk = (fit) => ({ _hass: {}, _config: { video_fit: fit }, _absoluteHaMediaUrl: (u) => u });
+  const player = (fit) => mediaSourceMethods._createHlsPlayer.call(mk(fit), '/api/x.m3u8');
+  assert.equal(player('fill').fitMode, 'fill', 'fill stretches the clip to the player box');
+  assert.equal(player('cover').fitMode, 'cover', 'cover crops the clip to the player box');
+  assert.equal(player('contain').fitMode, undefined, 'contain is the player\'s own default');
+  assert.equal(player(undefined).fitMode, undefined, 'Without video_fit nothing changes');
+  globalThis.document.createElement = prevCreate;
+}
+

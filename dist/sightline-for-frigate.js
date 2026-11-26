@@ -1,9 +1,9 @@
-// Sightline for Frigate v1.1.6
+// Sightline for Frigate v1.2.0
 // Generated from src/ by scripts/build.mjs. Do not edit dist directly.
 
 // ── src/constants.js ──
 // Shared constants and icon definitions.
-const VERSION = '1.1.6';
+const VERSION = '1.2.0';
 
 const CARD_TAG = 'sightline-card';
 
@@ -271,12 +271,12 @@ const STYLES = `
   #engine{position:absolute;inset:0;}
   #engine ha-camera-stream,#engine ha-hls-player{width:100%;height:100%;display:block;}
   .viewer{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:var(--z-controls);}
-  .viewer video,.viewer img.snap{width:100%;height:100%;object-fit:contain;background:#000;}
+  .viewer video,.viewer img.snap{width:100%;height:100%;object-fit:var(--video-fit,contain);background:#000;}
   .viewer .rec-player{position:absolute;inset:0;display:block;background:#000;z-index:1;min-width:0;min-height:0;overflow:hidden;}
   .viewer .playback-loading{position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;gap:9px;background:rgba(8,8,10,.28);color:rgba(255,255,255,.82);font:600 12px/-apple-system,BlinkMacSystemFont,sans-serif;pointer-events:none;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
   .viewer .playback-loading .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.22);border-top-color:rgba(255,255,255,.9);border-radius:50%;animation:frigate-spin .8s linear infinite;}
   @keyframes frigate-spin{to{transform:rotate(360deg)}}
-  .viewer .recording-video{width:100%;height:100%;object-fit:contain;background:#000;display:block;}
+  .viewer .recording-video{width:100%;height:100%;object-fit:var(--video-fit,contain);background:#000;display:block;}
   .viewer .rec-player video::-webkit-media-controls{z-index:20;}
   .viewer .ld{color:var(--c-text2);font-size:13px;}
   .ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--c-text4);background:linear-gradient(160deg,#1c1c1e,#000);}
@@ -3767,6 +3767,8 @@ setConfig(config) {
       stream_height: Number.isFinite(streamHeightNum) && streamHeightNum>0 ? Math.max(20,Math.min(100,streamHeightNum)) : null,
       stream_type: config.stream_type === 'hls' ? 'hls' : 'webrtc',
       aspect_ratio: aspectValid ? rawAspect : 'auto',
+      // how a clip, review or recording fills the player box when its shape differs from the box: contain (bars, the default), cover (crop) or fill (stretch)
+      video_fit: ['contain','cover','fill'].includes(config.video_fit) ? config.video_fit : 'contain',
       stream_resizable: config.stream_resizable === true,
       theme: ['light','dark','auto'].includes(config.theme) ? config.theme : 'dark',
       accent_color: config.accent_color || null,
@@ -5942,6 +5944,7 @@ _applyCardStyle() {
       ? (this._currentMediaAspectRatio() || this._aspectRatioFromEntity() || '16/9')
       : (this._parseAspectRatio(this._config.aspect_ratio) || '16/9');
     card.style.setProperty('--stream-ar', arCss);
+    card.style.setProperty('--video-fit', this._config.video_fit || 'contain');
     const arParts=String(arCss).split('/').map(Number);
     const arNum=arParts.length===2 && arParts[0]>0 && arParts[1]>0 ? arParts[0]/arParts[1] : Number(arCss);
     card.style.setProperty('--stream-ar-num', String(Number.isFinite(arNum)&&arNum>0 ? arNum : 16/9));
@@ -7263,6 +7266,8 @@ _createHlsPlayer(url, options={}) {
     // Home Assistant's property is `autoPlay` (capital P), not `autoplay`.
     player.autoPlay = options.autoplay !== false;
     player.playsInline = true;
+    // Home Assistant's player passes this on to its <video> as object-fit
+    if (this._config?.video_fit && this._config.video_fit !== 'contain') player.fitMode = this._config.video_fit;
     if (player.controls) player.setAttribute('controls','');
     player.setAttribute('playsinline','');
     player.setAttribute('allow-exoplayer','');
@@ -12167,6 +12172,13 @@ _render() {
             value="${(this._config?.aspect_ratio && !['16:9','4:3','1:1','21:9','9:16','auto'].includes(this._config.aspect_ratio)) ? this._config.aspect_ratio : ''}"
             style="margin-top:6px;display:${(this._config?.aspect_ratio && !['16:9','4:3','1:1','21:9','9:16','auto'].includes(this._config.aspect_ratio)) ? 'block' : 'none'}">
         </div>
+        <div style="margin-top:10px">
+          <span style="font-size:11px;color:#6b7280;display:block;margin-bottom:3px">Clip and review video fit</span>
+          <select class="tf" id="video_fit">
+            ${[['contain','Whole picture, black bars if the shape differs'],['cover','Fill the box, crop the edges'],['fill','Fill the box, stretch the picture']].map(([v,l]) => `<option value="${v}" ${((this._config?.video_fit)||'contain')===v?'selected':''}>${l}</option>`).join('')}
+          </select>
+          <small class="mini-help">What a clip, review or recording does when its shape is not the player's. Live view is not affected.</small>
+        </div>
       </div>
 
       <div class="section">
@@ -12356,6 +12368,7 @@ _u() {
     } else {
       c.aspect_ratio = arPreset;
     }
+    c.video_fit = this.querySelector('#video_fit')?.value || 'contain';
     // advanced timeline / download / media settings
     c.timeline = { ...(this._config?.timeline || {}),
       enabled: this.querySelector('#timeline_enabled')?.checked !== false,

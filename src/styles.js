@@ -163,12 +163,12 @@ export const STYLES = `
   #engine{position:absolute;inset:0;}
   #engine ha-camera-stream,#engine ha-hls-player{width:100%;height:100%;display:block;}
   .viewer{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;z-index:var(--z-controls);}
-  .viewer video,.viewer img.snap{width:100%;height:100%;object-fit:contain;background:#000;}
+  .viewer video,.viewer img.snap{width:100%;height:100%;object-fit:var(--video-fit,contain);background:#000;}
   .viewer .rec-player{position:absolute;inset:0;display:block;background:#000;z-index:1;min-width:0;min-height:0;overflow:hidden;}
   .viewer .playback-loading{position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;gap:9px;background:rgba(8,8,10,.28);color:rgba(255,255,255,.82);font:600 12px/-apple-system,BlinkMacSystemFont,sans-serif;pointer-events:none;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
   .viewer .playback-loading .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.22);border-top-color:rgba(255,255,255,.9);border-radius:50%;animation:frigate-spin .8s linear infinite;}
   @keyframes frigate-spin{to{transform:rotate(360deg)}}
-  .viewer .recording-video{width:100%;height:100%;object-fit:contain;background:#000;display:block;}
+  .viewer .recording-video{width:100%;height:100%;object-fit:var(--video-fit,contain);background:#000;display:block;}
   .viewer .rec-player video::-webkit-media-controls{z-index:20;}
   .viewer .ld{color:var(--c-text2);font-size:13px;}
   .ph{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--c-text4);background:linear-gradient(160deg,#1c1c1e,#000);}

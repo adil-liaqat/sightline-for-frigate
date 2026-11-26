@@ -97,3 +97,16 @@ test('media range requests and recording gaps have real server contracts',async(
   const duration=[...playlist.matchAll(/#EXTINF:([\d.]+)/g)].reduce((sum,m)=>sum+Number(m[1]),0);
   expect(duration).toBe(3540);
 });
+test('video_fit fills the player box with a clip and is left alone for live',async({page})=>{
+  await ready(page);
+  await page.evaluate(async()=>{
+    const mock=window.preview.mock, host=document.querySelector('sightline-card').parentElement, el=document.createElement('sightline-card');
+    el.setConfig({type:'custom:sightline-card',cameras:[{entity:'camera.front_door',name:'Front Door'}],default_tab:'clips',stream_type:'hls',aspect_ratio:'16:9',video_fit:'fill'});
+    host.replaceChildren(el);el.hass=mock.hass;window.__fit=el;
+  });
+  await expect.poll(()=>page.evaluate(()=>!!window.__fit.shadowRoot.querySelector('.media-gallery-grid [data-ev]'))).toBe(true);
+  expect(await page.evaluate(()=>window.__fit.shadowRoot.querySelector('.card').style.getPropertyValue('--video-fit'))).toBe('fill');
+  await page.evaluate(()=>window.__fit.shadowRoot.querySelector('.media-gallery-grid [data-ev]').click());
+  await expect.poll(()=>page.evaluate(()=>{const p=window.__fit.shadowRoot.querySelector('#viewer ha-hls-player');return p?p.fitMode:null;})).toBe('fill');
+});
+

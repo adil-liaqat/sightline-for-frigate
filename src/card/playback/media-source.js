@@ -140,6 +140,8 @@ _createHlsPlayer(url, options={}) {
     // Home Assistant's property is `autoPlay` (capital P), not `autoplay`.
     player.autoPlay = options.autoplay !== false;
     player.playsInline = true;
+    // Home Assistant's player passes this on to its <video> as object-fit
+    if (this._config?.video_fit && this._config.video_fit !== 'contain') player.fitMode = this._config.video_fit;
     if (player.controls) player.setAttribute('controls','');
     player.setAttribute('playsinline','');
     player.setAttribute('allow-exoplayer','');

@@ -199,6 +199,13 @@ _render() {
             value="${(this._config?.aspect_ratio && !['16:9','4:3','1:1','21:9','9:16','auto'].includes(this._config.aspect_ratio)) ? this._config.aspect_ratio : ''}"
             style="margin-top:6px;display:${(this._config?.aspect_ratio && !['16:9','4:3','1:1','21:9','9:16','auto'].includes(this._config.aspect_ratio)) ? 'block' : 'none'}">
         </div>
+        <div style="margin-top:10px">
+          <span style="font-size:11px;color:#6b7280;display:block;margin-bottom:3px">Clip and review video fit</span>
+          <select class="tf" id="video_fit">
+            ${[['contain','Whole picture, black bars if the shape differs'],['cover','Fill the box, crop the edges'],['fill','Fill the box, stretch the picture']].map(([v,l]) => `<option value="${v}" ${((this._config?.video_fit)||'contain')===v?'selected':''}>${l}</option>`).join('')}
+          </select>
+          <small class="mini-help">What a clip, review or recording does when its shape is not the player's. Live view is not affected.</small>
+        </div>
       </div>
 
       <div class="section">

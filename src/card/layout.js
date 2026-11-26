@@ -88,6 +88,7 @@ _applyCardStyle() {
       ? (this._currentMediaAspectRatio() || this._aspectRatioFromEntity() || '16/9')
       : (this._parseAspectRatio(this._config.aspect_ratio) || '16/9');
     card.style.setProperty('--stream-ar', arCss);
+    card.style.setProperty('--video-fit', this._config.video_fit || 'contain');
     const arParts=String(arCss).split('/').map(Number);
     const arNum=arParts.length===2 && arParts[0]>0 && arParts[1]>0 ? arParts[0]/arParts[1] : Number(arCss);
     card.style.setProperty('--stream-ar-num', String(Number.isFinite(arNum)&&arNum>0 ? arNum : 16/9));
