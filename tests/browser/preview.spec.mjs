@@ -273,3 +273,25 @@ test('on a phone the Together player is a full-screen sheet with its close butto
   await expect(page.locator('[data-sightline-together]')).toHaveCount(0);
   expect(await page.evaluate(()=>document.body.style.overflow)).not.toBe('hidden');
 });
+test('in wide Focus with more clips than fit, the chosen clip stays in place and only the others scroll',async({page})=>{
+  await page.setViewportSize({width:1400,height:700});
+  await ready(page);
+  await page.evaluate(async()=>{
+    const fx=window.preview.mock.fixtures, mock=window.preview.mock;
+    fx.events.filter(e=>/-[12]$/.test(e.id)).forEach(e=>{const c=['front_door','driveway','garden'].indexOf(e.camera);e.start_time=fx.now-240-c*8;e.end_time=e.start_time+20;});
+    const host=document.querySelector('sightline-card').parentElement, el=document.createElement('sightline-card');
+    el.setConfig({type:'custom:sightline-card',cameras:['front_door','driveway','garden'].map(c=>({entity:'camera.'+c,name:c})),default_tab:'clips',default_view:'single'});
+    host.replaceChildren(el);el.hass=mock.hass;window.__sticky=el;
+  });
+  await expect.poll(()=>page.evaluate(()=>!!window.__sticky.shadowRoot.querySelector('[data-together]'))).toBe(true);
+  await page.evaluate(()=>window.__sticky.shadowRoot.querySelector('[data-together]').click());
+  await expect.poll(()=>page.evaluate(()=>window.__sticky.shadowRoot.querySelectorAll('#together .tg-tile').length)).toBeGreaterThan(3);
+  await page.evaluate(()=>window.__sticky.shadowRoot.querySelector('#together [data-tg-mode="focus"]').click());
+  await expect.poll(()=>page.evaluate(()=>window.__sticky.shadowRoot.querySelector('#tg-stage').classList.contains('scrolls'))).toBe(true);
+  const before=await page.evaluate(()=>{const r=window.__sticky.shadowRoot,st=r.querySelector('#tg-stage'),sel=r.querySelector('.tg-tile.sel'),other=r.querySelector('.tg-tile:not(.sel)');st.scrollTop=0;return {sel:sel.getBoundingClientRect().top,other:other.getBoundingClientRect().top};});
+  const after=await page.evaluate(()=>{const r=window.__sticky.shadowRoot,st=r.querySelector('#tg-stage'),sel=r.querySelector('.tg-tile.sel'),other=r.querySelector('.tg-tile:not(.sel)');st.scrollTop=150;return {sel:sel.getBoundingClientRect().top,other:other.getBoundingClientRect().top,scrolled:st.scrollTop};});
+  expect(after.scrolled).toBeGreaterThan(0);
+  expect(Math.abs(after.sel-before.sel)).toBeLessThan(2);
+  expect(before.other-after.other).toBeGreaterThan(50);
+});
+

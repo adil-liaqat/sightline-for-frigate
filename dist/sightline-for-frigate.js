@@ -1507,6 +1507,8 @@ const TOGETHER_STYLES = `
 .card .tg-stage.grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));}
 .card .tg-stage.focus{grid-template-columns:repeat(var(--others,1),minmax(0,1fr));}
 .card .tg-stage.focus .tg-tile.sel{grid-column:1/-1;order:-1;}
+/* when there are more clips than fit, the chosen clip stays in view and only the others scroll under it */
+.card .tg-stage.focus .tg-tile.sel{position:sticky;top:0;z-index:2;}
 .card .tg-stage.focus.wide{grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-rows:repeat(var(--others,1),auto);align-content:start;}
 /* every tile keeps its own 16:9 box (a tall box would stretch the picture); the small ones stack at the top of the right column */
 /* Grid rows measure 16:9 boxes (aspect-ratio or padding) too short and the tiles run into each other, so the script sets each height
