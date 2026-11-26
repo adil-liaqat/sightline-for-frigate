@@ -17,6 +17,8 @@ _click(e) {
     }
     if (e.target.closest('#media-filter-btn')) return this._toggleMediaFilter();
     const mf=e.target.closest('[data-mf]'); if (mf) { this._setMediaFilter(mf.dataset.mf, mf.dataset.mv); return; }
+    const togetherBtn = e.target.closest('[data-together]'); if (togetherBtn) { e.stopPropagation(); this._openTogether(togetherBtn.dataset.together); return; }
+    const ovgToggle = e.target.closest('[data-ovg-toggle]'); if (ovgToggle) { e.stopPropagation(); this._toggleOverlapGroup(ovgToggle.dataset.ovgToggle); return; }
     if (e.target.closest('#media-filter-reset')) { this._resetMediaFilter(); return; }
     if (e.target.closest('#filter-btn')) return this._toggleFilter();
     if (e.target.closest('#cal-btn')) return this._toggleCal();

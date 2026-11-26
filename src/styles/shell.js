@@ -1,3 +1,5 @@
+import { TOGETHER_STYLES } from './together.js';
+
 /**
  * Shell-level CSS that complements the reusable base card stylesheet.
  *
@@ -2020,5 +2022,7 @@ ${STYLES}
 .card #eng-wrap:fullscreen,
 .card #eng-wrap:-webkit-full-screen,
 .card #eng-wrap.live-pseudo-fullscreen{height:100vh !important;height:100dvh !important;max-height:none !important;}
+
+${TOGETHER_STYLES}
 
 `;

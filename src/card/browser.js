@@ -9,10 +9,12 @@ import { mediaPickerMethods } from './media/picker.js';
 import { mediaNavigationMethods } from './media/navigation.js';
 import { mediaGalleryMethods } from './media/gallery.js';
 import { mediaFilterMethods } from './media/filters.js';
+import { togetherMethods } from './media/together.js';
 
 export const browserMethods = mergeMethodGroups(
   mediaPickerMethods,
   mediaNavigationMethods,
   mediaGalleryMethods,
   mediaFilterMethods,
+  togetherMethods,
 );

@@ -207,6 +207,7 @@ _render() {
           <label><span class="field-label">Browser history window (hours)</span><input class="tf" id="window_hours" type="number" min="1" max="720" value="${this._config?.window_hours||24}"><small class="mini-help">Initial events/reviews history loaded for browsing.</small></label>
           <label><span class="field-label">Refresh interval (seconds)</span><input class="tf" id="refresh_seconds" type="number" min="15" max="3600" value="${this._config?.refresh_seconds||45}"><small class="mini-help">Background Frigate metadata/event refresh.</small></label>
           <label><span class="field-label">Reviews default</span><select class="tf" id="reviewed_default"><option value="all" ${(med.reviewed_default||'all')==='all'?'selected':''}>All</option><option value="unreviewed" ${med.reviewed_default==='unreviewed'?'selected':''}>Unreviewed</option><option value="reviewed" ${med.reviewed_default==='reviewed'?'selected':''}>Reviewed</option></select></label>
+          <label class="chk-lbl"><input type="checkbox" id="group_overlapping_clips" ${med.group_overlapping_clips!==false?'checked':''}> Group overlapping clips<small class="mini-help">Clips from different cameras at the same time become one card you can watch together.</small></label>
         </div>
       </div>
 
