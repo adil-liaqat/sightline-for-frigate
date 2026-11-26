@@ -235,7 +235,7 @@ getCardSize() { return 10; },
 getGridSize() { return { columns: 2, rows: 3 }; },
 
 disconnectedCallback() {
-    this._stopRotate(); this._cancelActivePlayback(); this._stopTalk();
+    this._stopRotate(); this._cancelActivePlayback(); this._stopTalk(); this._stopPlaybackAspectWatch();
     if (this._refresh) clearInterval(this._refresh);
     if (this._timelineClockTimer) clearInterval(this._timelineClockTimer);
     clearTimeout(this._timelineDataTimer); clearTimeout(this._timelineDynamicTimer); this._timelineDynamicTimer=null; this._timelineDynamicPending=false;
@@ -255,6 +255,7 @@ disconnectedCallback() {
 async _start() {
     if (this._configError || !this._activeCam?.entity) { this._renderAll(); return; }
     await this._discoverAll();
+    this._startPlaybackAspectWatch();
     this._setupMicrophoneDetection();
     this._loadFrigateFilterMetadata();
     const now = Math.floor(Date.now()/1000);

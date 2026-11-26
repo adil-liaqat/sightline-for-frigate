@@ -1,9 +1,9 @@
-// Sightline for Frigate v1.1.6
+// Sightline for Frigate v1.2.0
 // Generated from src/ by scripts/build.mjs. Do not edit dist directly.
 
 // ── src/constants.js ──
 // Shared constants and icon definitions.
-const VERSION = '1.1.6';
+const VERSION = '1.2.0';
 
 const CARD_TAG = 'sightline-card';
 
@@ -3927,7 +3927,7 @@ getCardSize() { return 10; },
 getGridSize() { return { columns: 2, rows: 3 }; },
 
 disconnectedCallback() {
-    this._stopRotate(); this._cancelActivePlayback(); this._stopTalk();
+    this._stopRotate(); this._cancelActivePlayback(); this._stopTalk(); this._stopPlaybackAspectWatch();
     if (this._refresh) clearInterval(this._refresh);
     if (this._timelineClockTimer) clearInterval(this._timelineClockTimer);
     clearTimeout(this._timelineDataTimer); clearTimeout(this._timelineDynamicTimer); this._timelineDynamicTimer=null; this._timelineDynamicPending=false;
@@ -3947,6 +3947,7 @@ disconnectedCallback() {
 async _start() {
     if (this._configError || !this._activeCam?.entity) { this._renderAll(); return; }
     await this._discoverAll();
+    this._startPlaybackAspectWatch();
     this._setupMicrophoneDetection();
     this._loadFrigateFilterMetadata();
     const now = Math.floor(Date.now()/1000);
@@ -5894,11 +5895,48 @@ _currentMediaAspectRatio() {
     return (w>0 && h>0) ? `${w}/${h}` : null;
   },
 
+/**
+ * A clip, review or recording is played in the same box as the live stream, whose shape is the live camera's. A clip can
+ * have another shape (the recording stream often differs from the live one, and cameras differ from each other), which
+ * leaves black bars. While one plays, with aspect_ratio: auto, the box follows the playing video's own shape and goes back
+ * to the live shape when playback ends.
+ */
+_playbackMediaAspect() {
+    const viewer=this.shadowRoot?.querySelector('#viewer');
+    if(!viewer || viewer.style.display==='none') return null;
+    const media=this._findVideo(viewer) || viewer.querySelector('img.snap');
+    const w=Number(media?.videoWidth||media?.naturalWidth||0);
+    const h=Number(media?.videoHeight||media?.naturalHeight||0);
+    if(media && media.tagName==='VIDEO' && !media._frigatePlaybackAspectBound) {
+      media._frigatePlaybackAspectBound=true;
+      ['loadedmetadata','resize'].forEach(name=>{ try { media.addEventListener(name,()=>this._syncPlaybackAspect(),{passive:true}); } catch(_) {} });
+    }
+    return (w>0 && h>0) ? `${w}/${h}` : null;
+  },
+
+_syncPlaybackAspect() {
+    if(this._config?.aspect_ratio!=='auto') { if(this._playbackAspect) { this._playbackAspect=null; this._applyCardStyle?.(); } return; }
+    const next=this._playbackMediaAspect();
+    if(next===(this._playbackAspect||null)) return;
+    this._playbackAspect=next;
+    this._applyCardStyle?.();
+  },
+
+_startPlaybackAspectWatch() {
+    if(this._playbackAspectTimer) return;
+    this._playbackAspectTimer=setInterval(()=>{ try { this._syncPlaybackAspect(); } catch(_) {} },500);
+  },
+
+_stopPlaybackAspectWatch() {
+    if(this._playbackAspectTimer) clearInterval(this._playbackAspectTimer);
+    this._playbackAspectTimer=null; this._playbackAspect=null;
+  },
+
 _watchAutoAspectMedia(media) {
     if(!media || media._frigateAutoAspectBound) return;
     media._frigateAutoAspectBound=true;
     const update=()=>{
-      if(this._config?.aspect_ratio!=='auto') return;
+      if(this._config?.aspect_ratio!=='auto' || this._playbackAspect) return; // a playing clip's shape wins while it plays
       const w=Number(media.videoWidth||media.naturalWidth||0);
       const h=Number(media.videoHeight||media.naturalHeight||0);
       if(w>0 && h>0) {
@@ -5939,7 +5977,7 @@ _applyCardStyle() {
     // arrives. Use 16:9 only as the brief pre-metadata fallback.
     const autoAspect=this._config.aspect_ratio==='auto';
     const arCss = autoAspect
-      ? (this._currentMediaAspectRatio() || this._aspectRatioFromEntity() || '16/9')
+      ? (this._playbackAspect || this._currentMediaAspectRatio() || this._aspectRatioFromEntity() || '16/9')
       : (this._parseAspectRatio(this._config.aspect_ratio) || '16/9');
     card.style.setProperty('--stream-ar', arCss);
     const arParts=String(arCss).split('/').map(Number);
