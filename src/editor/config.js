@@ -58,6 +58,7 @@ _u() {
     } else {
       c.aspect_ratio = arPreset;
     }
+    c.video_fit = this.querySelector('#video_fit')?.value || 'contain';
     // advanced timeline / download / media settings
     c.timeline = { ...(this._config?.timeline || {}),
       enabled: this.querySelector('#timeline_enabled')?.checked !== false,

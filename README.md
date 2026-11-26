@@ -176,6 +176,12 @@ stream_resizable: true
 
 `aspect_ratio` controls the player size when `stream_height` is not set. `auto` uses the selected camera/video dimensions when available. With `auto`, a clip, review or recording that is playing also resizes the player to its own video's shape (a camera's recording stream often differs from its live stream), and the player goes back to the live shape when playback ends. A fixed ratio such as `"16:9"` is never changed.
 
+`video_fit` says what a clip, review or recording does when its shape differs from the player box (for example a nearly square camera in a 16:9 box). Live view is not affected.
+
+```yaml
+video_fit: contain   # contain (default): whole picture, black bars | cover: fill the box and crop | fill: fill the box and stretch
+```
+
 ```yaml
 aspect_ratio: auto
 ```

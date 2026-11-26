@@ -79,6 +79,8 @@ setConfig(config) {
       stream_height: Number.isFinite(streamHeightNum) && streamHeightNum>0 ? Math.max(20,Math.min(100,streamHeightNum)) : null,
       stream_type: config.stream_type === 'hls' ? 'hls' : 'webrtc',
       aspect_ratio: aspectValid ? rawAspect : 'auto',
+      // how a clip, review or recording fills the player box when its shape differs from the box: contain (bars, the default), cover (crop) or fill (stretch)
+      video_fit: ['contain','cover','fill'].includes(config.video_fit) ? config.video_fit : 'contain',
       stream_resizable: config.stream_resizable === true,
       theme: ['light','dark','auto'].includes(config.theme) ? config.theme : 'dark',
       accent_color: config.accent_color || null,
