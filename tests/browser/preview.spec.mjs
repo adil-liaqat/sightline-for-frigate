@@ -97,3 +97,21 @@ test('media range requests and recording gaps have real server contracts',async(
   const duration=[...playlist.matchAll(/#EXTINF:([\d.]+)/g)].reduce((sum,m)=>sum+Number(m[1]),0);
   expect(duration).toBe(3540);
 });
+test('Reviews Mark all asks for confirmation and marks only what the filters show',async({page})=>{
+  await ready(page);
+  await card(page).locator('[data-gallery-tab="reviews"]').click();
+  const btn=card(page).locator('#media-mark-all');
+  await expect(btn).toBeVisible();
+  const unreviewed=()=>page.evaluate(()=>window.preview.mock.fixtures.reviews.filter(r=>!r.has_been_reviewed).length);
+  const total=await unreviewed();
+  const shown=await card(page).locator('.media-gallery-grid [data-mark]').count();
+  expect(shown).toBeGreaterThan(0);
+  await expect(btn).toContainText(`Mark all (${shown})`);
+  await btn.click();
+  await expect(btn).toContainText(`Confirm · ${shown}`);
+  expect(await unreviewed()).toBe(total);
+  await btn.click();
+  await expect.poll(unreviewed).toBe(total-shown);
+  await expect(btn).toBeHidden();
+  await expect(card(page).locator('.media-gallery-grid [data-mark]')).toHaveCount(0);
+});

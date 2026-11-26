@@ -141,7 +141,7 @@ _renderGallery(force=false) {
     let panel=gallery.querySelector('#media-filter-panel');
     let grid=gallery.querySelector('.media-gallery-grid');
     if(!head || !panel || !grid) {
-      gallery.innerHTML=`<div class="media-gallery-head"><div class="media-gallery-head-left"><span class="section-label"></span><button id="media-filter-btn" class="media-gallery-filter-btn" title="Filter" aria-label="Filter">${ICONS.filter}<span>Filter</span></button></div><span class="media-gallery-count"></span></div><div id="media-filter-panel" class="media-filter-panel"></div><div class="media-gallery-grid"></div>`;
+      gallery.innerHTML=`${this._mediaGalleryHeadHtml('','')}<div id="media-filter-panel" class="media-filter-panel"></div><div class="media-gallery-grid"></div>`;
       head=gallery.querySelector('.media-gallery-head');
       panel=gallery.querySelector('#media-filter-panel');
       grid=gallery.querySelector('.media-gallery-grid');
@@ -151,7 +151,13 @@ _renderGallery(force=false) {
     if(countEl) { const noun={Clips:['clip','clips'],Recordings:['recording','recordings'],Reviews:['review','reviews']}[title]||['item','items']; countEl.textContent=`${count} ${count===1?noun[0]:noun[1]}`; }
     const filterBtn=head?.querySelector('#media-filter-btn'); if(filterBtn) filterBtn.classList.toggle('active',activeFilters);
     if(grid) grid.innerHTML=content;
+    this._syncMarkAllButton?.();
     this._renderMediaFilter(force);
+  },
+
+// The gallery header: title and Filter on the left, result count and (Reviews only) Mark all on the right.
+_mediaGalleryHeadHtml(title,count) {
+    return `<div class="media-gallery-head"><div class="media-gallery-head-left"><span class="section-label">${title}</span><button id="media-filter-btn" class="media-gallery-filter-btn" title="Filter" aria-label="Filter">${ICONS.filter}<span>Filter</span></button></div><div class="media-gallery-head-right"><span class="media-gallery-count">${count}</span><button id="media-mark-all" class="media-gallery-filter-btn media-mark-all" type="button" hidden>${ICONS.checkAll}<span class="mark-all-label"></span></button></div></div>`;
   },
 
 _mediaCameraDisplay(camera) {

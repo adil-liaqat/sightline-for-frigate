@@ -54,6 +54,45 @@ async _markAll() {
     catch(e) { console.warn(e); }
   },
 
+// Reviews tab: mark every unreviewed review the current filters show as reviewed. Reviews hidden by the filters are left alone.
+// The first tap arms the button ("Confirm"), the second tap within 4 seconds does it, so a stray tap cannot clear the list.
+_visibleUnreviewed() {
+    return this._filterMediaReviews(this._reviews||[]).filter(r=>!r.has_been_reviewed);
+  },
+
+_onMarkAllVisible() {
+    if(this._galleryMode!=='reviews' || !this._visibleUnreviewed().length) return;
+    const n=this._visibleUnreviewed().length;
+    // armed for this many reviews: if the filters changed in between, it asks again instead of marking a different set
+    if(this._markAllArmed && this._markAllArmN===n) { clearTimeout(this._markAllArmT); this._markAllArmed=false; return this._markVisibleReviewed(); }
+    this._markAllArmed=true; this._markAllArmN=n;
+    this._syncMarkAllButton();
+    clearTimeout(this._markAllArmT);
+    this._markAllArmT=setTimeout(()=>{ this._markAllArmed=false; this._syncMarkAllButton(); },4000);
+  },
+
+_syncMarkAllButton() {
+    const btn=this.shadowRoot?.querySelector('#media-mark-all'); if(!btn) return;
+    const n=this._galleryMode==='reviews' ? this._visibleUnreviewed().length : 0;
+    if(!n || (this._markAllArmed && this._markAllArmN!==n)) this._markAllArmed=false;
+    btn.hidden=!n;
+    btn.classList.toggle('armed',!!this._markAllArmed);
+    const label=btn.querySelector('.mark-all-label');
+    if(label) label.textContent=this._markAllArmed ? `Confirm · ${n}` : `Mark all (${n})`;
+    btn.setAttribute('aria-label',this._markAllArmed ? `Confirm marking ${n} reviews as reviewed` : `Mark ${n} reviews as reviewed`);
+  },
+
+async _markVisibleReviewed() {
+    const ids=this._visibleUnreviewed().map(r=>r.id); if(!ids.length) return;
+    const {clientId}=this._cc();
+    try {
+      for(let i=0;i<ids.length;i+=100) await this._hass.callWS({type:'frigate/reviews/viewed',instance_id:clientId,ids:ids.slice(i,i+100),viewed:true});
+      const done=new Set(ids); this._reviews.forEach(r=>{ if(done.has(r.id)) r.has_been_reviewed=true; });
+      this._toast(`Marked ${ids.length} review${ids.length===1?'':'s'} as reviewed`);
+    } catch(e) { console.warn(e); this._toast('Could not mark the reviews as reviewed'); }
+    this._renderList();
+  },
+
 async _markReviewed(id) {
     const {clientId}=this._cc();
     try { await this._hass.callWS({type:'frigate/reviews/viewed',instance_id:clientId,ids:[id],viewed:true}); const r=this._reviews.find(x=>x.id===id); if(r) r.has_been_reviewed=true; this._renderList(); }

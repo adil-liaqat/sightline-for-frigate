@@ -15,6 +15,7 @@
 - The Back to Clips/Reviews/Live/Multiview button moved from the top-left of the video (where it covered cameras' burned-in date and time) into the control bar under the player as an icon-only button (its label, such as "Back to Clips", is the tooltip and accessible name).
 - Horizontal timeline: hovering an event shows a preview card (thumbnail, label, time, zone, duration) above the timeline. Vertical timeline: the playhead line runs the full width behind the event rows.
 - Added a horizontal timeline for wide cards (`timeline.orientation: auto`, the default): on cards 820px and wider the timeline spans the full width under the player, newest time on the right, with a time ruler, a Recording lane and one lane per detection class (Person, Vehicle, Animal, Other) showing each event as a bar as long as it lasted, a centred playhead and a hatched future region. Clips/Recordings/Reviews sit beside the player. Drag, wheel/trackpad pan, Ctrl+wheel and pinch zoom, the scrubber knob and download-range handles all work along the horizontal axis. `timeline.orientation: vertical` or `horizontal` forces one layout; the visual editor has an Orientation setting.
+- Reviews: added a **Mark all** button to the Reviews header in the media browser. It marks every unreviewed review that the current filters show as reviewed (reviews hidden by a filter are left alone). Tap once to arm it (the button reads **Confirm · N**), tap again within four seconds to mark them; a toast reports how many were marked.
 
 ## 1.2.0
 

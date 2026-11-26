@@ -61,3 +61,40 @@ assert.match(controller,/if\(ev\.has_clip\) return this\._showClip\(ev\)/,'Timel
 assert.match(layout,/isMultiviewPlaybackContext\(this,workspace\)/,'Full playback must derive its return target from the rendered Multiview context');
 
 console.log('Media browser and desktop playback regression test passed.');
+
+// Reviews tab: "Mark all" marks only what the filters show, after a confirming second tap.
+{
+  const { actionMethods } = await import('../src/card/actions.js');
+  const calls = [], toasts = [], rendered = [];
+  const label = { textContent: '' };
+  const btn = { hidden: true, attrs: {}, classes: new Set(), querySelector: () => label, setAttribute(k, v) { this.attrs[k] = v; }, classList: { toggle: (c, on) => (on ? btn.classes.add(c) : btn.classes.delete(c)) } };
+  const reviews = [
+    { id: 'a', camera: 'gate', has_been_reviewed: false }, { id: 'b', camera: 'gate', has_been_reviewed: false },
+    { id: 'c', camera: 'gate', has_been_reviewed: true }, { id: 'd', camera: 'garage', has_been_reviewed: false },
+  ];
+  const card = {
+    ...Object.fromEntries(['_visibleUnreviewed', '_onMarkAllVisible', '_syncMarkAllButton', '_markVisibleReviewed'].map(k => [k, actionMethods[k]])),
+    _galleryMode: 'reviews', _reviews: reviews, _filterMediaReviews: list => list.filter(r => r.camera === 'gate'),
+    shadowRoot: { querySelector: () => btn }, _cc: () => ({ clientId: 'frigate' }),
+    _hass: { callWS: async m => { calls.push(m); } }, _toast: m => toasts.push(m), _renderList() { rendered.push(1); card._syncMarkAllButton(); },
+  };
+  card._syncMarkAllButton();
+  assert.equal(btn.hidden, false, 'Mark all is shown while the filtered Reviews list has unreviewed items');
+  assert.equal(label.textContent, 'Mark all (2)', 'The button counts only the reviews the filters show');
+  card._onMarkAllVisible();
+  assert.equal(calls.length, 0, 'The first tap only arms the button');
+  assert.equal(label.textContent, 'Confirm · 2', 'The armed button asks for confirmation with the count');
+  assert.ok(btn.classes.has('armed'), 'The armed button is styled as armed');
+  await card._onMarkAllVisible();
+  assert.equal(calls.length, 1, 'The second tap marks the reviews');
+  assert.deepEqual(calls[0], { type: 'frigate/reviews/viewed', instance_id: 'frigate', ids: ['a', 'b'], viewed: true }, 'Only unreviewed reviews shown by the filters are sent');
+  assert.deepEqual(reviews.map(r => r.has_been_reviewed), [true, true, true, false], 'Reviews hidden by a filter stay unreviewed');
+  assert.match(toasts[0], /Marked 2 reviews as reviewed/, 'A toast reports how many were marked');
+  assert.equal(btn.hidden, true, 'The button disappears once nothing is left to mark');
+  // a filter change between the two taps asks again instead of marking another set
+  const more = [{ id: 'x', camera: 'gate', has_been_reviewed: false }, { id: 'y', camera: 'gate', has_been_reviewed: false }];
+  card._reviews = more; card._markAllArmed = false; card._onMarkAllVisible();
+  card._reviews = more.concat([{ id: 'z', camera: 'gate', has_been_reviewed: false }]); card._onMarkAllVisible();
+  assert.equal(calls.length, 1, 'Changing what is shown between taps re-arms instead of marking');
+  clearTimeout(card._markAllArmT);
+}
