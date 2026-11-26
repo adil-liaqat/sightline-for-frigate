@@ -10,6 +10,7 @@ export const BUNDLE_MODULES = [
   'src/constants.js',
   'src/helpers.js',
   'src/styles.js',
+  'src/styles/together.js',
   'src/styles/shell.js',
   'src/utils/apply-method-groups.js',
   'src/utils/date.js',
@@ -46,6 +47,8 @@ export const BUNDLE_MODULES = [
   'src/card/media/navigation.js',
   'src/card/media/gallery.js',
   'src/card/media/filters.js',
+  'src/card/media/overlap.js',
+  'src/card/media/together.js',
   'src/card/browser.js',
 
   // Event and continuous-recording playback.

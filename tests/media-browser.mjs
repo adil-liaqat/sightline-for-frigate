@@ -158,3 +158,129 @@ console.log('Media browser and desktop playback regression test passed.');
   globalThis.document.createElement = prevCreate;
 }
 
+// Overlapping clips: groups, chains, and the clock a group plays on.
+{
+  const { groupOverlappingClips, togetherClipState } = await import('../src/card/media/overlap.js');
+  const clip = (id, camera, start, end, extra = {}) => ({ id, camera, start_time: start, end_time: end, has_clip: true, label: 'person', ...extra });
+  const ids = items => items.map(x => x.group ? 'G[' + x.events.map(e => e.id).join(',') + ']' : x.ev.id);
+  // newest first, like the Clips list
+  const list = [clip('d', 'garden', 1500, 1520), clip('c', 'garden', 1018, 1032), clip('b', 'driveway', 1010, 1040), clip('a', 'front', 1000, 1025), clip('z', 'front', 100, 120)];
+  const out = groupOverlappingClips(list, { now: 2000 });
+  assert.deepEqual(ids(out), ['d', 'G[a,b,c]', 'z'], 'Overlapping clips of different cameras become one group at the place of the newest member; the rest stay single');
+  const g = out[1];
+  assert.equal(g.start, 1000, 'A group starts with its earliest clip');
+  assert.equal(g.end, 1040, 'A group ends with its latest clip');
+  assert.deepEqual(ids(groupOverlappingClips([clip('a', 'front', 1000, 1010), clip('b', 'front', 1005, 1020)], { now: 2000 })), ['a', 'b'], 'Two clips of the same camera are not grouped');
+  assert.deepEqual(ids(groupOverlappingClips([clip('b', 'driveway', 1008, 1030), clip('a', 'front', 1000, 1010)], { now: 2000 })), ['b', 'a'], 'Two seconds in common is not an overlap (the minimum is three)');
+  assert.deepEqual(ids(groupOverlappingClips([clip('b', 'driveway', 1007, 1030), clip('a', 'front', 1000, 1010)], { now: 2000 })), ['G[a,b]'], 'Three seconds in common is an overlap');
+  // a chain: A overlaps B, B overlaps C, A and C do not overlap each other
+  const chain = groupOverlappingClips([clip('c', 'garden', 1030, 1060), clip('b', 'driveway', 1010, 1040), clip('a', 'front', 1000, 1015)], { now: 2000 });
+  assert.deepEqual(ids(chain), ['G[a,b,c]'], 'Overlap chains into one group');
+  assert.deepEqual(ids(groupOverlappingClips([clip('a', 'front', 1000, 1025, { has_clip: false }), clip('b', 'driveway', 1010, 1040)], { now: 2000 })), ['a', 'b'], 'A snapshot-only event has no video and is never grouped');
+  assert.deepEqual(ids(groupOverlappingClips([clip('a', 'front', 1000, null), clip('b', 'driveway', 1500, 1520)], { now: 1600 })), ['G[a,b]'], 'A clip that is still running lasts until now');
+  assert.deepEqual(groupOverlappingClips([], {}), [], 'No clips, no items');
+  // the shared clock
+  const e = clip('a', 'front', 1000, 1025);
+  assert.equal(togetherClipState(990, e).state, 'before', 'Before its start a clip waits');
+  assert.equal(togetherClipState(1010, e).rel, 10, 'During a clip the position is the time since its start');
+  assert.equal(togetherClipState(1030, e).state, 'after', 'After its end a clip is finished');
+  assert.equal(togetherClipState(1030, e, 40).state, 'playing', 'The loaded video length wins over the event times');
+}
+
+// Together player: every clip follows the shared clock (seek, play, pause, sound, buffering, lazy loading).
+{
+  const { togetherMethods } = await import('../src/card/media/together.js');
+  const node = () => ({ hidden: false, textContent: '', innerHTML: '', style: {}, classList: { toggle() {} } });
+  const mkVideo = (duration) => ({ readyState: 4, duration, currentTime: 0, paused: true, muted: true, playbackRate: 1, seeking: false, play() { this.paused = false; return Promise.resolve(); }, pause() { this.paused = true; } });
+  const ev = (id, start, end) => ({ id, camera: id, start_time: start, end_time: end });
+  const tile = (e, video, load = 'ready') => ({ ev: e, video, load, lastSeek: 0, key: '', el: { classList: { toggle() {} }, querySelector: () => node() } });
+  const front = tile(ev('front', 1000, 1025), mkVideo(25)), drive = tile(ev('drive', 1010, 1040), mkVideo(30)), garden = tile(ev('garden', 1018, 1032), mkVideo(14));
+  const tg = { t: 1020, playing: true, waiting: false, waitMs: 0, muted: false, blocked: false, sel: 'drive', events: [front.ev, drive.ev, garden.ev], tiles: new Map([['front', front], ['drive', drive], ['garden', garden]]) };
+  const card = { _tg: tg, _time: (t) => String(t), _togetherPaintTile: togetherMethods._togetherPaintTile, _mediaCameraDisplay: (c) => c, shadowRoot: { querySelector: () => null } };
+  const sync = (force, ms) => togetherMethods._togetherSync.call(card, force, ms);
+  sync(true);
+  assert.equal(front.video.currentTime, 20, 'A clip is seeked to the shared time minus its own start');
+  assert.equal(drive.video.currentTime, 10, 'Every clip is seeked against the same clock');
+  assert.equal(garden.video.currentTime, 2, 'A clip that started later is seeked to its own position');
+  assert.ok(!front.video.paused && !drive.video.paused && !garden.video.paused, 'All clips play while the clock runs');
+  assert.deepEqual([front.video.muted, drive.video.muted, garden.video.muted], [true, false, true], 'Only the chosen camera has sound');
+  // the mute button silences every clip, and unmuting brings the chosen camera's sound back
+  tg.muted = true; sync(false);
+  assert.deepEqual([front.video.muted, drive.video.muted, garden.video.muted], [true, true, true], 'Muted: no clip has sound');
+  tg.muted = false; sync(false);
+  assert.deepEqual([front.video.muted, drive.video.muted, garden.video.muted], [true, false, true], 'Unmuted: only the chosen camera has sound again');
+  // a small gap is closed with the playback speed, never with a seek
+  front.video.currentTime = 19.5; front.lastSeek = 0; sync(false);
+  assert.equal(front.video.currentTime, 19.5, 'A half-second gap is not seeked');
+  assert.equal(front.video.playbackRate, 1.08, 'A stream a little behind speeds up');
+  front.video.currentTime = 20.6; sync(false);
+  assert.equal(front.video.playbackRate, 0.92, 'A stream a little ahead slows down');
+  front.video.currentTime = 20.1; sync(false);
+  assert.equal(front.video.playbackRate, 1, 'Back in step, the speed returns to normal');
+  // a big gap is fixed with one seek, and not again within the cooldown
+  front.video.currentTime = 15; front.lastSeek = 0; sync(false);
+  assert.equal(front.video.currentTime, 20, 'A gap over 1.5 s is fixed with a seek');
+  front.video.currentTime = 15; sync(false);
+  assert.equal(front.video.currentTime, 15, 'It does not seek again straight away (a seek on HLS has to fetch segments)');
+  front.lastSeek = 0;
+  // a clip that has not started yet waits, one that has ended stops
+  tg.t = 1005; sync(true);
+  assert.ok(drive.video.paused && garden.video.paused, 'Clips that have not started stay paused');
+  assert.ok(!front.video.paused, 'A running clip keeps playing');
+  tg.t = 1036; sync(true);
+  assert.ok(front.video.paused && garden.video.paused, 'Clips that have ended are paused');
+  assert.ok(!drive.video.paused, 'A clip still running keeps playing');
+  // buffering: the clock waits for a stream that is not ready, and pauses the others meanwhile
+  tg.t = 1020; drive.video.readyState = 1; sync(true, 250);
+  assert.equal(tg.waiting, true, 'The clock waits while a clip whose turn it is has not buffered');
+  assert.ok(front.video.paused, 'The other clips hold while the clock waits');
+  assert.ok(!drive.video.paused, 'The stream that is not ready is asked to play, which is what makes it load');
+  drive.video.readyState = 4; sync(false, 250);
+  assert.equal(tg.waiting, false, 'The clock goes on once the stream is ready');
+  assert.ok(!front.video.paused, 'Clips play again when the wait is over');
+  drive.video.readyState = 1; tg.waitMs = 0; for (let i = 0; i < 40; i++) sync(false, 250);
+  assert.equal(tg.waiting, false, 'The clock never waits for a stuck stream longer than eight seconds');
+  drive.video.readyState = 4; sync(false, 250);
+  // a browser that refuses to start the video asks for a tap instead of waiting forever
+  const refused = tile(ev('r', 1000, 1030), mkVideo(30));
+  refused.video.play = () => Promise.reject(Object.assign(new Error('blocked'), { name: 'NotAllowedError' }));
+  const tgR = { t: 1010, playing: true, waiting: false, waitMs: 0, muted: true, blocked: false, sel: 'r', events: [refused.ev], tiles: new Map([['r', refused]]) };
+  togetherMethods._togetherSync.call({ _tg: tgR, _time: card._time, _togetherPaintTile: card._togetherPaintTile, _mediaCameraDisplay: card._mediaCameraDisplay, _togetherPaintPlay() {}, shadowRoot: card.shadowRoot }, true);
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(tgR.blocked, true, 'A refused autoplay is noticed');
+  assert.equal(tgR.playing, false, 'The clock stops and waits for the person to press play');
+  // paused clock pauses everything
+  tg.t = 1020; tg.playing = false; sync(true);
+  assert.ok(front.video.paused && drive.video.paused && garden.video.paused, 'Pausing the clock pauses every clip');
+  // streams are opened lazily, shortly before a clip's turn
+  const opened = [];
+  const lazy = { _tg: null, _time: card._time, _togetherPaintTile: card._togetherPaintTile, _mediaCameraDisplay: card._mediaCameraDisplay, shadowRoot: card.shadowRoot, _togetherLoadTile: (_, t) => opened.push(t.ev.id) };
+  const a = tile(ev('a', 1000, 1030), null, 'idle'), b = tile(ev('b', 1020, 1050), null, 'idle'), c = tile(ev('c', 1040, 1070), null, 'idle');
+  lazy._tg = { t: 1000, playing: true, waiting: false, waitMs: 0, sel: 'a', events: [a.ev, b.ev, c.ev], tiles: new Map([['a', a], ['b', b], ['c', c]]) };
+  togetherMethods._togetherSync.call(lazy, false);
+  assert.deepEqual(opened, ['a'], 'At the start only the clip in play is opened');
+  lazy._tg.t = 1016; opened.length = 0; a.load = 'ready'; togetherMethods._togetherSync.call(lazy, false);
+  assert.deepEqual(opened, ['b'], 'A clip is opened five seconds before its turn');
+}
+
+// Together player on a phone: the player's requests for Home Assistant's settings are handed on from the card.
+{
+  const { togetherBridgeContext } = await import('../src/card/media/together.js');
+  const listeners = [];
+  const host = { addEventListener: (name, fn) => listeners.push([name, fn]) };
+  const received = [];
+  const source = { dispatchEvent: (e) => { received.push(e); e.callback('VALUE', () => {}); return true; } };
+  globalThis.Event = globalThis.Event || class { constructor(type, init) { this.type = type; Object.assign(this, init); } };
+  togetherBridgeContext(host, source);
+  assert.equal(listeners.length, 1, 'The bridge listens for context requests on the player host');
+  assert.equal(listeners[0][0], 'context-request');
+  let stopped = false, answer = null;
+  listeners[0][1]({ context: 'config', callback: (v) => { answer = v; }, subscribe: true, stopPropagation() { stopped = true; } });
+  assert.equal(stopped, true, 'The original request stops at the host (nothing above it can answer)');
+  assert.equal(received.length, 1, 'It is handed on from the card');
+  assert.equal(received[0].context, 'config', 'The same context is asked for');
+  assert.equal(received[0].subscribe, true, 'Subscriptions are kept');
+  assert.equal(answer, 'VALUE', 'The answer goes straight back to the player');
+  listeners[0][1]({ callback: () => {}, stopPropagation() { stopped = 'bad'; } });
+  assert.equal(received.length, 1, 'Anything that is not a context request is ignored');
+}

@@ -60,7 +60,8 @@ setConfig(config) {
     const downloadMaxMinutes=num(downloadIn.max_range_minutes,120,1,720);
     const download = { default_range_seconds: Math.min(Math.round(downloadMaxMinutes*60),Math.round(num(downloadIn.default_range_seconds,60,2,1800))), max_range_minutes: downloadMaxMinutes };
     const reviewedDefault=['all','unreviewed','reviewed'].includes(mediaIn.reviewed_default) ? mediaIn.reviewed_default : 'all';
-    const media = { reviewed_default: reviewedDefault };
+    // group_overlapping_clips: false keeps the Clips list as a plain list (no groups of overlapping clips)
+    const media = { reviewed_default: reviewedDefault, group_overlapping_clips: mediaIn.group_overlapping_clips !== false };
     const rawAspect=config.aspect_ratio==null || String(config.aspect_ratio).trim()==='' ? 'auto' : String(config.aspect_ratio).trim();
     const aspectValid = rawAspect==='auto' || /^(\d+(?:\.\d+)?)\s*[:/]\s*(\d+(?:\.\d+)?)$/.test(rawAspect) || (Number.isFinite(Number(rawAspect)) && Number(rawAspect)>0);
     const streamHeightNum=Number(config.stream_height);

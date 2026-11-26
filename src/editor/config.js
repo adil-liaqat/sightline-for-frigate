@@ -86,7 +86,7 @@ _u() {
       default_range_seconds: Math.min(Math.round(dlMax*60),Math.max(2,Math.min(1800,Math.round(Number(g('download_default_range_seconds')||60))))),
       max_range_minutes: dlMax,
     };
-    c.media = { reviewed_default: this.querySelector('#reviewed_default')?.value || 'all' };
+    c.media = { reviewed_default: this.querySelector('#reviewed_default')?.value || 'all', group_overlapping_clips: this.querySelector('#group_overlapping_clips')?.checked !== false };
 
     // Startup behavior. Hidden tabs cannot be selected as the initial view, and
     // at least one tab always remains visible.

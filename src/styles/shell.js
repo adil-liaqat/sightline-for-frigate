@@ -1,3 +1,5 @@
+import { TOGETHER_STYLES } from './together.js';
+
 /**
  * Shell-level CSS that complements the reusable base card stylesheet.
  *
@@ -2886,5 +2888,6 @@ ${STYLES}
 .card .media-gallery-head .media-mark-all span{display:inline !important;white-space:nowrap;font-weight:600;}
 .card .media-gallery-head .media-mark-all.armed{background:var(--c-acc-bg) !important;border-color:var(--c-acc-bdr) !important;color:var(--c-acc-text) !important;}
 @media(max-width:360px){.card .media-gallery-head .media-mark-all svg{display:none;}}
+${TOGETHER_STYLES}
 
 `;

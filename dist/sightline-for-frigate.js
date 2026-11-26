@@ -1456,6 +1456,118 @@ const STYLES = `
 
 `;
 
+// ── src/styles/together.js ──
+/**
+ * CSS of the grouped Clips card and the Together player.
+ *
+ * Kept in its own module because it is used twice: inside the card's shadow root (the Clips list card, and the
+ * player on wide cards) and inside the player's own root on phones, where the player is mounted on document.body so
+ * that it is a real full-screen sheet (no ancestor of the card can move or clip it, or scroll the page behind it).
+ */
+const TOGETHER_STYLES = `
+/* ─────────────────────────────────────────────────────────────
+   Overlapping clips: the grouped Clips card and the Together player.
+   ───────────────────────────────────────────────────────────── */
+.card .ovg{display:flex;flex-direction:column;gap:10px;margin:0 0 8px;padding:10px;border-radius:14px;background:#1c1c1e;border:1px solid rgba(10,132,255,.45);color:#f5f5f7;}
+.card .ovg-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.card .ovg-top b{display:block;font-size:14px;font-weight:650;}
+.card .ovg-top small{color:#a1a1a6;font-size:12px;}
+.card .ovg-badge{font-size:11px;font-weight:600;color:#0a84ff;background:rgba(10,132,255,.16);border-radius:999px;padding:2px 9px;white-space:nowrap;}
+.card .ovg-strip{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:6px;}
+.card .ovg-t{position:relative;aspect-ratio:16/10;border-radius:8px;overflow:hidden;background:#000;}
+.card .ovg-t img{width:100%;height:100%;object-fit:cover;display:block;}
+.card .ovg-t span{position:absolute;left:4px;bottom:4px;max-width:calc(100% - 8px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;background:rgba(0,0,0,.7);border-radius:5px;padding:0 6px;color:#fff;}
+.card .ovg-acts{display:flex;gap:8px;align-items:center;}
+.card .ovg-watch{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 14px;border-radius:10px;border:0;background:#0a84ff;color:#fff;font:inherit;font-size:13px;font-weight:600;cursor:pointer;}
+.card .ovg-watch svg{width:14px;height:14px;}
+.card .ovg-more{margin-left:auto;display:inline-flex;align-items:center;gap:4px;background:none;border:0;color:#a1a1a6;font:inherit;font-size:12px;cursor:pointer;padding:4px;}
+.card .ovg-more svg{width:14px;height:14px;transition:transform .15s;}
+.card .ovg.open .ovg-more svg{transform:rotate(180deg);}
+.card .ovg-inner{display:none;flex-direction:column;gap:6px;}
+.card .ovg.open .ovg-inner{display:flex;}
+.card .ovg-watch:focus-visible,.card .ovg-more:focus-visible,.card .tg-close:focus-visible,.card .tg-modes button:focus-visible,.card .tg-play:focus-visible,.card .tg-tile:focus-visible{outline:2px solid #0a84ff;outline-offset:2px;}
+
+.card.together-open{position:relative;}
+.card .together{position:absolute;inset:0;max-height:100vh;max-height:100dvh;z-index:40;display:flex;flex-direction:column;gap:10px;padding:12px;background:#0b0b0d;color:#f5f5f7;overflow:hidden;box-sizing:border-box;}
+.card .tg-head{display:flex;align-items:center;gap:10px;}
+.card .tg-title{flex:1;min-width:0;}
+.card .tg-title b{display:block;font-size:15px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card .tg-title span{font-size:12px;color:#a1a1a6;}
+.card .tg-modes{display:flex;gap:6px;}
+.card .tg-modes button{height:28px;padding:0 12px;border-radius:14px;border:0;background:#2c2c2e;color:#f5f5f7;font:inherit;font-size:12px;cursor:pointer;}
+.card .tg-modes button.on{background:#0a84ff;color:#fff;}
+.card .tg-close{width:34px;height:34px;flex:0 0 auto;border-radius:50%;border:0;background:#2c2c2e;color:#f5f5f7;display:grid;place-items:center;cursor:pointer;}
+.card .tg-close svg{width:16px;height:16px;}
+/* the stage takes the room left above the controls and scrolls inside itself, so it can never run over the timeline bar */
+.card .tg-stage{display:grid;gap:8px;align-content:start;flex:1 1 0;min-height:0;overflow:hidden;}
+/* the tile area scrolls only when the tiles really do not fit (set from the script); otherwise the mouse wheel goes on to the page */
+.card .tg-stage.scrolls{overflow-x:hidden;overflow-y:auto;}
+/* the phone sheet has no card around it to set this: borders and padding must count inside the width */
+.card .together,.card .together *{box-sizing:border-box;}
+.card .tg-stage.grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));}
+.card .tg-stage.focus{grid-template-columns:repeat(var(--others,1),minmax(0,1fr));}
+.card .tg-stage.focus .tg-tile.sel{grid-column:1/-1;order:-1;}
+.card .tg-stage.focus.wide{grid-template-columns:minmax(0,2fr) minmax(0,1fr);grid-template-rows:repeat(var(--others,1),minmax(0,1fr));align-content:stretch;overflow:hidden;}
+.card .tg-stage.focus.wide .tg-tile{aspect-ratio:auto;height:100%;min-height:0;}
+.card .tg-stage.focus.wide .tg-tile.sel{grid-column:1;grid-row:1/span var(--others,1);order:0;}
+.card .tg-stage.focus.wide .tg-tile:not(.sel){grid-column:2;}
+.card .tg-tile{position:relative;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:16/9;cursor:pointer;border:2px solid transparent;min-width:0;}
+.card .tg-tile.sel{border-color:#0a84ff;}
+.card .tg-media,.card .tg-player{position:absolute;inset:0;display:block;width:100%;height:100%;}
+.card .tg-nm{position:absolute;left:6px;top:6px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:600;background:rgba(0,0,0,.65);border-radius:7px;padding:2px 8px;z-index:2;}
+.card .tg-lb{position:absolute;right:6px;top:6px;font-size:11px;font-weight:600;background:rgba(10,132,255,.9);border-radius:7px;padding:2px 8px;z-index:2;}
+.card .tg-snd{position:absolute;right:6px;bottom:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.65);display:none;place-items:center;z-index:2;}
+.card .tg-tile.sel .tg-snd{display:grid;}
+.card .tg-snd svg{width:13px;height:13px;}
+.card .tg-off{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px;text-align:center;font-size:12px;color:#a1a1a6;background:rgba(8,8,10,.82);}
+.card .tg-off[hidden]{display:none;}
+.card .tg-off b{color:#f5f5f7;font-size:13px;}
+.card .tg-ld{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;font-size:12px;color:#a1a1a6;background:#000;}
+.card .tg-ld[hidden]{display:none;}
+.card .tg-ctl{flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding:10px 12px;border-radius:12px;background:#161618;border:1px solid rgba(255,255,255,.08);}
+.card .tg-row{display:flex;align-items:center;gap:10px;}
+.card .tg-play{width:36px;height:36px;flex:0 0 auto;border-radius:50%;border:0;background:#f5f5f7;color:#000;display:grid;place-items:center;cursor:pointer;}
+.card .tg-play svg{width:16px;height:16px;}
+.card .tg-mute{width:36px;height:36px;flex:0 0 auto;border-radius:50%;border:0;background:#2c2c2e;color:#f5f5f7;display:grid;place-items:center;cursor:pointer;}
+.card .tg-mute.on{background:#ff453a;color:#fff;}
+.card .tg-mute svg{width:17px;height:17px;}
+.card .tg-mute:focus-visible{outline:2px solid #0a84ff;outline-offset:2px;}
+.card.theme-light .tg-mute{background:#e5e5ea;color:#1d1d1f;}
+.card .tg-time{font-variant-numeric:tabular-nums;font-size:12px;color:#a1a1a6;white-space:nowrap;}
+.card .tg-scrub{position:relative;flex:1 1 auto;height:34px;min-width:80px;}
+.card .tg-segs{position:absolute;left:0;right:0;top:4px;display:flex;flex-direction:column;gap:3px;pointer-events:none;}
+.card .tg-seg{height:5px;position:relative;border-radius:3px;background:rgba(255,255,255,.07);}
+.card .tg-seg i{position:absolute;top:0;bottom:0;border-radius:3px;background:#0a84ff;}
+.card .tg-head-line{position:absolute;top:0;bottom:0;width:2px;background:#fff;border-radius:1px;pointer-events:none;transition:left .25s linear;box-shadow:0 0 0 2px rgba(0,0,0,.5);}
+.card .tg-scrub input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;}
+.card .tg-sound{font-size:11px;color:#a1a1a6;}
+/* Phones: a full-screen sheet over the page (the same way live fullscreen works on iPhone), tiles centred between the header and the controls. */
+.card.mobile.together-open .together{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-height:none;z-index:2147483000;border-radius:0;overflow:hidden;
+  padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));}
+.card.mobile .tg-stage{align-content:center;overscroll-behavior:contain;}
+/* Focus on a phone: the small tiles are about 95px wide, so their note is cut down to one short line and the label chips make room for the camera name. */
+.card.mobile .tg-stage.focus .tg-tile:not(.sel) .tg-off{padding:4px;gap:0;font-size:10px;line-height:1.2;}
+.card.mobile .tg-stage.focus .tg-tile:not(.sel) .tg-off b{font-size:11px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card.mobile .tg-stage.focus .tg-tile:not(.sel) .tg-off span{display:none;}
+.card.mobile .tg-stage.focus .tg-tile:not(.sel) .tg-lb,.card.mobile .tg-stage.focus .tg-tile:not(.sel) .tg-snd{display:none;}
+.card.mobile .tg-stage.focus .tg-tile:not(.sel) .tg-nm{max-width:calc(100% - 12px);font-size:10px;padding:1px 6px;}
+.card.mobile .tg-stage.focus .tg-tile:not(.sel) .tg-ld{font-size:10px;}
+/* Safari squeezes the rows of a grid with a fixed height and lets 16:9 tiles run into each other; stacking the tiles in a column cannot do that.
+   The first and last tile's auto margins centre the stack when it fits and let it scroll from the top when it does not. */
+.card.mobile .tg-stage.grid{display:flex;flex-direction:column;align-content:normal;}
+.card.mobile .tg-stage.grid .tg-tile{flex:0 0 auto;width:100%;}
+.card.mobile .tg-stage.grid .tg-tile:first-child{margin-top:auto;}
+.card.mobile .tg-stage.grid .tg-tile:last-child{margin-bottom:auto;}
+.card.theme-light .together{background:#f2f2f7;color:#1d1d1f;}
+.card.theme-light .tg-title span,.card.theme-light .tg-sound,.card.theme-light .tg-time{color:#6e6e73;}
+.card.theme-light .tg-modes button,.card.theme-light .tg-close{background:#e5e5ea;color:#1d1d1f;}
+.card.theme-light .tg-modes button.on{background:#0a84ff;color:#fff;}
+.card.theme-light .tg-ctl{background:#fff;border-color:rgba(0,0,0,.08);}
+.card.theme-light .tg-play{background:#1d1d1f;color:#fff;}
+.card.theme-light .ovg{background:#fff;color:#1d1d1f;}
+.card.theme-light .ovg-top small,.card.theme-light .ovg-more{color:#6e6e73;}
+`;
+
 // ── src/styles/shell.js ──
 /**
  * Shell-level CSS that complements the reusable base card stylesheet.
@@ -4343,6 +4455,7 @@ ${STYLES}
 .card .media-gallery-head .media-mark-all span{display:inline !important;white-space:nowrap;font-weight:600;}
 .card .media-gallery-head .media-mark-all.armed{background:var(--c-acc-bg) !important;border-color:var(--c-acc-bdr) !important;color:var(--c-acc-text) !important;}
 @media(max-width:360px){.card .media-gallery-head .media-mark-all svg{display:none;}}
+${TOGETHER_STYLES}
 
 `;
 
@@ -4619,7 +4732,8 @@ setConfig(config) {
     const downloadMaxMinutes=num(downloadIn.max_range_minutes,120,1,720);
     const download = { default_range_seconds: Math.min(Math.round(downloadMaxMinutes*60),Math.round(num(downloadIn.default_range_seconds,60,2,1800))), max_range_minutes: downloadMaxMinutes };
     const reviewedDefault=['all','unreviewed','reviewed'].includes(mediaIn.reviewed_default) ? mediaIn.reviewed_default : 'all';
-    const media = { reviewed_default: reviewedDefault };
+    // group_overlapping_clips: false keeps the Clips list as a plain list (no groups of overlapping clips)
+    const media = { reviewed_default: reviewedDefault, group_overlapping_clips: mediaIn.group_overlapping_clips !== false };
     const rawAspect=config.aspect_ratio==null || String(config.aspect_ratio).trim()==='' ? 'auto' : String(config.aspect_ratio).trim();
     const aspectValid = rawAspect==='auto' || /^(\d+(?:\.\d+)?)\s*[:/]\s*(\d+(?:\.\d+)?)$/.test(rawAspect) || (Number.isFinite(Number(rawAspect)) && Number(rawAspect)>0);
     const streamHeightNum=Number(config.stream_height);
@@ -7342,6 +7456,8 @@ _click(e) {
     }
     if (e.target.closest('#media-filter-btn')) return this._toggleMediaFilter();
     const mf=e.target.closest('[data-mf]'); if (mf) { this._setMediaFilter(mf.dataset.mf, mf.dataset.mv); return; }
+    const togetherBtn = e.target.closest('[data-together]'); if (togetherBtn) { e.stopPropagation(); this._openTogether(togetherBtn.dataset.together); return; }
+    const ovgToggle = e.target.closest('[data-ovg-toggle]'); if (ovgToggle) { e.stopPropagation(); this._toggleOverlapGroup(ovgToggle.dataset.ovgToggle); return; }
     if (e.target.closest('#media-filter-reset')) { this._resetMediaFilter(); return; }
     if (e.target.closest('#media-mark-all')) { this._onMarkAllVisible(); return; }
     if (e.target.closest('#filter-btn')) return this._toggleFilter();
@@ -7648,7 +7764,7 @@ _renderGallery(force=false) {
     const activeFilters=this._mediaFilterActive();
     if(tab==='clips') {
       const events=[...this._filterMediaEvents(this._eventsMode==='all'?this._allDisplayEvents():this._events)].sort((a,b)=>Number(b.start_time)-Number(a.start_time)); title='Clips'; count=events.length;
-      content=events.length ? this._galleryGroupByDay(events,ev=>ev.start_time,ev=>this._eventCardHTML(ev,false)) : this._emptyState(ICONS.clips,'No clips match','Try changing the filters');
+      content=events.length ? this._clipsListHTML(events) : this._emptyState(ICONS.clips,'No clips match','Try changing the filters');
     } else if(tab==='recordings') {
       const recs=this._filterMediaRecordings(this._recordingBrowse.length ? this._recordingBrowse : this._mergeRecs(this._recordings)).sort((a,b)=>b.start_time-a.start_time); title='Recordings'; count=recs.length;
       content=recs.length ? this._galleryGroupByDay(recs,r=>r.start_time,r=>{ const rs=Math.floor(r.start_time), re=Math.floor(r.end_time||Date.now()/1000); const d=Math.max(1,re-rs), mm=Math.floor(d/60), ss=d%60; return `<div class="rec" data-rs="${rs}" data-re="${re}"><div class="ric">${ICONS.recordings}</div><div class="rinf"><div class="rt">${this._time(r.start_time)} – ${this._time(r.end_time||Date.now()/1000)}</div><div class="rsub">${d>=3600?`${Math.floor(d/3600)}h ${Math.floor((d%3600)/60)}m`:`${mm?mm+'m ':''}${ss}s`}${r.events?' · '+r.events+(r.events===1?' event':' events'):''}</div></div><div class="rp" aria-hidden="true">${PLAY_ICON}</div></div>`; }) : this._emptyState(ICONS.recordings,'No recordings match','Try changing the filters');
@@ -7918,6 +8034,542 @@ _renderMediaFilter(force=false) {
   }
 };
 
+// ── src/card/media/overlap.js ──
+/**
+ * Overlapping clips: find clips from different cameras that happened at the same time.
+ *
+ * Pure functions with no card state, so the rules are easy to test.
+ *
+ * Two clips overlap when they come from different cameras and share at least
+ * `minOverlap` seconds. Overlap chains: A overlaps B and B overlaps C is one
+ * group of three. Clips of one camera are never grouped with each other on
+ * their own (the timeline already merges those), but they can join a group
+ * through a clip of another camera.
+ */
+
+/** End of a clip in unix seconds; an event without an end (still running) lasts until `now`. */
+function overlapClipEnd(ev, now = Date.now() / 1000) {
+  const start = Number(ev?.start_time);
+  const end = Number(ev?.end_time);
+  if (Number.isFinite(end) && end > start) return end;
+  return Math.max(start + 1, now);
+}
+
+/**
+ * @param {Array} events        clips in display order (newest first)
+ * @param {object} [options]    { minOverlap: seconds (default 3), now: unix seconds }
+ * @returns {Array} the same clips in the same order, where each group of overlapping clips
+ *   is replaced (at the place of its first member) by { group: true, id, events, start, end }
+ *   and every other clip stays { group: false, ev }.
+ */
+function groupOverlappingClips(events, options = {}) {
+  const minOverlap = Number.isFinite(options.minOverlap) ? options.minOverlap : 3;
+  const now = Number.isFinite(options.now) ? options.now : Date.now() / 1000;
+  const list = Array.isArray(events) ? events : [];
+  // Only clips that can be played together: they need a video and a camera.
+  const items = list
+    .map((ev, index) => ({ ev, index, start: Number(ev?.start_time), end: overlapClipEnd(ev, now) }))
+    .filter((x) => x.ev && x.ev.has_clip && x.ev.camera && Number.isFinite(x.start));
+  const byStart = items.slice().sort((a, b) => a.start - b.start);
+  const parent = new Map(byStart.map((x) => [x, x]));
+  const find = (x) => { while (parent.get(x) !== x) { parent.set(x, parent.get(parent.get(x))); x = parent.get(x); } return x; };
+  for (let i = 0; i < byStart.length; i++) {
+    for (let j = i + 1; j < byStart.length; j++) {
+      const a = byStart[i], b = byStart[j];
+      if (b.start > a.end - minOverlap) break; // sorted by start: no later clip can overlap `a` enough
+      if (a.ev.camera === b.ev.camera) continue;
+      if (Math.min(a.end, b.end) - b.start >= minOverlap) parent.set(find(a), find(b));
+    }
+  }
+  const comps = new Map();
+  for (const x of items) { const r = find(x); if (!comps.has(r)) comps.set(r, []); comps.get(r).push(x); }
+  const groupOf = new Map(); // clip -> group
+  for (const members of comps.values()) {
+    if (members.length < 2 || new Set(members.map((m) => m.ev.camera)).size < 2) continue;
+    members.sort((a, b) => a.start - b.start);
+    const id = 'ovg-' + members.map((m) => String(m.ev.id)).sort().join('|');
+    const g = { group: true, id, events: members.map((m) => m.ev), start: members[0].start, end: Math.max(...members.map((m) => m.end)) };
+    for (const m of members) groupOf.set(m.ev, g);
+  }
+  const out = [];
+  const placed = new Set();
+  for (const ev of list) {
+    const g = groupOf.get(ev);
+    if (!g) { out.push({ group: false, ev }); continue; }
+    if (placed.has(g)) continue; // the group already stands where its first member was
+    placed.add(g);
+    out.push(g);
+  }
+  return out;
+}
+
+/**
+ * Where a clip stands against the shared clock.
+ * @param {number} t shared time (unix seconds), @param {object} ev the clip,
+ * @param {number} [videoDuration] the loaded video's real length, when known
+ * @returns {{state:'before'|'playing'|'after', rel:number, end:number}} rel = seconds into the clip
+ */
+function togetherClipState(t, ev, videoDuration, now = Date.now() / 1000) {
+  const start = Number(ev.start_time);
+  const end = Number.isFinite(videoDuration) && videoDuration > 0 ? start + videoDuration : overlapClipEnd(ev, now);
+  const rel = t - start;
+  if (rel < 0) return { state: 'before', rel, end };
+  if (t > end) return { state: 'after', rel, end };
+  return { state: 'playing', rel, end };
+}
+
+// ── src/card/media/together.js ──
+/**
+ * Overlapping clips, part 2: the grouped card in the Clips list and the
+ * "Together" player that plays every clip of a group against one shared clock.
+ *
+ * The grouping rules live in overlap.js (pure). This module owns the DOM:
+ * the group card, the full-card player, the shared clock and the per-clip
+ * video elements. Methods are composed onto SightlineCard.prototype.
+ */
+const TOGETHER_MAX_TILES = 4;
+// A stream that is only a little behind is nudged with the playback speed; a big gap is fixed with one seek, and never
+// more often than every few seconds (a seek on HLS has to fetch segments, so seeking again and again makes it worse).
+const TOGETHER_NUDGE_SECONDS = 0.35;
+const TOGETHER_SEEK_SECONDS = 1.5;
+const TOGETHER_SEEK_COOLDOWN_MS = 3000;
+const TOGETHER_PRELOAD_SECONDS = 5; // a clip's stream is opened this long before its turn, not at the start
+const TOGETHER_SYNC_MS = 250;
+const TOGETHER_MAX_WAIT_MS = 8000; // the clock never waits for a stuck stream longer than this
+
+const TG_ICON_PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z"/></svg>';
+const TG_ICON_PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+const TG_ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const TG_ICON_SOUND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg>';
+const TG_ICON_MUTED = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
+const TG_ICON_CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+
+/**
+ * Home Assistant's video player gets its settings (config, API, connection) from Home Assistant's root element through
+ * Lit "context" requests, which travel up the DOM. A player mounted on document.body is outside that tree, so its requests
+ * never arrive and it fails after fetching the playlist. This hands each request on from the card, which is inside it.
+ */
+function togetherBridgeContext(host, source) {
+  host.addEventListener('context-request', (e) => {
+    if (!e || !e.context || typeof e.callback !== 'function') return;
+    e.stopPropagation();
+    const forwarded = new Event('context-request', { bubbles: true, composed: true });
+    forwarded.context = e.context;
+    forwarded.callback = e.callback;
+    forwarded.subscribe = e.subscribe;
+    if (e.contextTarget) forwarded.contextTarget = e.contextTarget;
+    source.dispatchEvent(forwarded);
+  });
+}
+
+const tgEsc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const tgMmss = (s) => { s = Math.max(0, Math.round(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+
+const togetherMethods = {
+  // ---------- the Clips list ----------
+
+  /** Overlapping clips off (media.group_overlapping_clips: false) keeps the plain list. */
+  _groupOverlapsEnabled() {
+    return this._config?.media?.group_overlapping_clips !== false;
+  },
+
+  /**
+   * In a single-camera view the Clips list holds only that camera's clips, so the other cameras' clips are fetched
+   * (once a minute at most) to find overlaps. They are shown only inside a group, never as a card of their own.
+   */
+  _ensureOverlapCandidates() {
+    const cameras = this._config?.cameras || [];
+    if (cameras.length < 2 || typeof this._mediaQueryBounds !== 'function') return;
+    const now = Math.floor(Date.now() / 1000);
+    const bounds = this._mediaQueryBounds(now);
+    const after = Math.max(0, Math.floor(Number(bounds?.start) || 0));
+    const before = Math.max(after + 1, Math.floor(Number(bounds?.end) || now));
+    const key = `${this._activeCam?.entity}:${after}:${before}`;
+    const cache = this._ovCache;
+    if (cache && cache.key === key && Date.now() - cache.at < 60000) return;
+    if (this._ovLoading === key) return;
+    this._ovLoading = key;
+    const others = cameras.filter((c) => {
+      const cc = this._camCache?.[c.entity];
+      return c.entity !== this._activeCam?.entity && cc?.discovered && cc.clientId && cc.cam;
+    });
+    Promise.all(others.map(async (c) => {
+      const cc = this._camCache[c.entity];
+      try {
+        const ev = await this._ws({ type: 'frigate/events/get', instance_id: cc.clientId, cameras: [cc.cam], after, before, limit: 500, has_clip: true });
+        return Array.isArray(ev) ? ev : [];
+      } catch (_) { return []; }
+    })).then((lists) => {
+      if (this._ovLoading !== key) return;
+      this._ovLoading = '';
+      this._ovCache = { key, at: Date.now(), events: lists.flat() };
+      if (this._galleryMode === 'clips' && this._eventsMode !== 'all') this._renderGallery();
+    });
+  },
+
+  /** The cards of the Clips list: a group card for each set of overlapping clips, a normal card for every other clip. */
+  _clipsListHTML(events) {
+    this._tgGroups = new Map();
+    const row = (ev) => this._eventCardHTML(ev, false);
+    // newer cards group the list by day; keep that when it is there
+    const byDay = (items, ts, html) => (typeof this._galleryGroupByDay === 'function' ? this._galleryGroupByDay(items, ts, html) : items.map(html).join(''));
+    if (!this._groupOverlapsEnabled()) return byDay(events, (ev) => ev.start_time, row);
+    // one camera in view: look at the other cameras' clips too
+    let candidates = events;
+    const shown = new Set(events);
+    if (this._eventsMode !== 'all' && (this._config?.cameras?.length || 0) > 1) {
+      this._ensureOverlapCandidates();
+      const known = new Set(events.map((ev) => String(ev.id)));
+      const others = this._filterMediaEvents((this._ovCache?.events || []).filter((ev) => !known.has(String(ev.id))));
+      candidates = events.concat(others).sort((a, b) => Number(b.start_time) - Number(a.start_time));
+    }
+    // a group needs at least one clip the list is showing; clips of other cameras appear only inside a group
+    const items = groupOverlappingClips(candidates).filter((item) => (item.group ? item.events.some((ev) => shown.has(ev)) : shown.has(item.ev)));
+    for (const item of items) if (item.group) this._tgGroups.set(item.id, item);
+    // a group sits at the day and place of its newest clip
+    return byDay(items, (item) => (item.group ? Math.max(...item.events.map((ev) => Number(ev.start_time))) : item.ev.start_time),
+      (item) => (item.group ? this._overlapGroupHTML(item) : row(item.ev)));
+  },
+
+  _overlapGroupHTML(g) {
+    const open = this._tgOpenGroups?.has(g.id);
+    const labels = [...new Set(g.events.map((ev) => cap(ev.label || '')))].filter(Boolean);
+    const people = [...new Set(g.events.map((ev) => ev.sub_label).filter(Boolean))];
+    const title = labels.join(' · ') + (people.length ? ` · ${people.join(', ')}` : '');
+    const cameras = new Set(g.events.map((ev) => ev.camera));
+    const seconds = Math.max(1, Math.round(g.end - g.start));
+    const firstPerCamera = [];
+    const seen = new Set();
+    for (const ev of g.events) if (!seen.has(ev.camera)) { seen.add(ev.camera); firstPerCamera.push(ev); }
+    const strip = firstPerCamera.slice(0, TOGETHER_MAX_TILES).map((ev) => {
+      const url = this._mediaForEvent(ev, 'thumbnail.jpg');
+      return `<div class="ovg-t"><img src="${tgEsc(url)}" data-frigate-thumb="1" data-thumb-src="${tgEsc(url)}" loading="lazy" alt=""><span>${tgEsc(this._mediaCameraDisplay(ev.camera))}</span></div>`;
+    }).join('');
+    return `<div class="ovg${open ? ' open' : ''}" data-ovg="${tgEsc(g.id)}">
+      <div class="ovg-top"><div><b>${tgEsc(title)}</b><small>${cameras.size} cameras · ${this._time(g.start)} – ${this._time(g.end)} · ${seconds} s</small></div><span class="ovg-badge">Together</span></div>
+      <div class="ovg-strip" style="--n:${Math.min(firstPerCamera.length, TOGETHER_MAX_TILES)}">${strip}</div>
+      <div class="ovg-acts"><button type="button" class="ovg-watch" data-together="${tgEsc(g.id)}">${TG_ICON_PLAY}<span>Watch together</span></button><button type="button" class="ovg-more" data-ovg-toggle="${tgEsc(g.id)}" aria-expanded="${open ? 'true' : 'false'}">${g.events.length} clips ${TG_ICON_CHEVRON}</button></div>
+      <div class="ovg-inner">${g.events.slice().sort((a, b) => b.start_time - a.start_time).map((ev) => this._eventCardHTML(ev, false)).join('')}</div>
+    </div>`;
+  },
+
+  _toggleOverlapGroup(id) {
+    this._tgOpenGroups = this._tgOpenGroups || new Set();
+    if (this._tgOpenGroups.has(id)) this._tgOpenGroups.delete(id); else this._tgOpenGroups.add(id);
+    const card = [...this.shadowRoot.querySelectorAll('.ovg')].find((el) => el.dataset.ovg === id);
+    if (!card) return;
+    card.classList.toggle('open', this._tgOpenGroups.has(id));
+    card.querySelector('.ovg-more')?.setAttribute('aria-expanded', this._tgOpenGroups.has(id) ? 'true' : 'false');
+  },
+
+  // ---------- the Together player ----------
+
+  async _openTogether(id) {
+    const g = this._tgGroups?.get(id);
+    const card = this.shadowRoot.querySelector('.card');
+    if (!g || !card) return;
+    this._closeTogether();
+    // At most four players at once: phones decode only a few streams. Keep the longest clips.
+    const longest = g.events.slice().sort((a, b) => (overlapClipEnd(b) - b.start_time) - (overlapClipEnd(a) - a.start_time));
+    const events = longest.slice(0, TOGETHER_MAX_TILES).sort((a, b) => a.start_time - b.start_time);
+    const start = Math.min(...events.map((ev) => Number(ev.start_time)));
+    const end = Math.max(...events.map((ev) => overlapClipEnd(ev)));
+    const narrow = card.classList.contains('mobile');
+    const tg = this._tg = {
+      id, events, total: g.events.length, start, end, t: start, playing: true, last: performance.now(), lastSync: 0, waiting: false, waitMs: 0, raf: 0,
+      mode: narrow ? 'focus' : 'grid', narrow, muted: true, blocked: false, sel: events[0].id, tiles: new Map(), seq: (this._tgSeq = (this._tgSeq || 0) + 1),
+    };
+    const cameras = new Set(events.map((ev) => ev.camera)).size;
+    const labels = [...new Set(events.map((ev) => cap(ev.label || '')))].filter(Boolean).join(' · ');
+    const root = document.createElement('div');
+    root.className = 'together';
+    root.id = 'together';
+    root.setAttribute('role', 'dialog');
+    root.setAttribute('aria-label', 'Clips from several cameras, played together');
+    root.tabIndex = -1;
+    root.innerHTML = `<div class="tg-head"><div class="tg-title"><b>${tgEsc(labels)}</b><span>${cameras} cameras · ${this._time(start)} – ${this._time(end)}${g.events.length > events.length ? ` · showing ${events.length} of ${g.events.length}` : ''}</span></div>
+        <div class="tg-modes" role="group" aria-label="Layout"><button type="button" data-tg-mode="grid">Grid</button><button type="button" data-tg-mode="focus">Focus</button></div>
+        <button type="button" class="tg-close" data-tg-close aria-label="Close">${TG_ICON_CLOSE}</button></div>
+      <div class="tg-stage" id="tg-stage">${events.map((ev) => `<div class="tg-tile" data-tg-tile="${tgEsc(ev.id)}" tabindex="0" role="button" aria-label="${tgEsc(this._mediaCameraDisplay(ev.camera))}: play sound from this camera">
+          <div class="tg-media"></div><span class="tg-nm">${tgEsc(this._mediaCameraDisplay(ev.camera))}</span><span class="tg-lb">${tgEsc(cap(ev.label || ''))}</span><span class="tg-snd">${TG_ICON_SOUND}</span>
+          <div class="tg-off" hidden></div><div class="tg-ld">Loading…</div></div>`).join('')}</div>
+      <div class="tg-ctl"><div class="tg-row"><button type="button" class="tg-play" data-tg-play aria-label="Pause">${TG_ICON_PAUSE}</button><span class="tg-time" id="tg-time"></span>
+        <div class="tg-scrub"><div class="tg-segs">${events.map((ev) => { const a = (Number(ev.start_time) - start) / (end - start) * 100, w = (overlapClipEnd(ev) - Number(ev.start_time)) / (end - start) * 100; return `<div class="tg-seg"><i style="left:${a.toFixed(2)}%;width:${Math.max(1, w).toFixed(2)}%"></i></div>`; }).join('')}</div>
+          <div class="tg-head-line" id="tg-headline"></div><input type="range" id="tg-range" min="${start}" max="${end}" step="0.1" value="${start}" aria-label="Shared position"></div>
+        <button type="button" class="tg-mute" data-tg-mute aria-label="Mute" aria-pressed="false">${TG_ICON_SOUND}</button></div>
+        <div class="tg-sound" id="tg-sound"></div></div>`;
+    tg.root = root;
+    if (narrow) {
+      // Phones: mount the player on document.body in a root of its own. Inside the card, a transformed or clipped ancestor
+      // can move a "fixed" sheet, hide its close button, and let the page behind keep scrolling.
+      const host = document.createElement('div');
+      host.setAttribute('data-sightline-together', '');
+      togetherBridgeContext(host, this); // before any player is added: a player asks for its settings when it is connected
+      const scope = host.attachShadow({ mode: 'open' });
+      const style = document.createElement('style');
+      style.textContent = `:host{all:initial}.card{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}${TOGETHER_STYLES}`;
+      const wrap = document.createElement('div');
+      wrap.className = `card mobile together-open${card.classList.contains('theme-light') ? ' theme-light' : ''}`;
+      wrap.appendChild(root);
+      scope.append(style, wrap);
+      document.body.appendChild(host);
+      tg.host = host;
+      tg.bodyOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+    } else {
+      card.classList.add('together-open');
+      card.appendChild(root);
+    }
+    root.addEventListener('click', (e) => {
+      if (e.target.closest('[data-tg-close]')) return this._closeTogether();
+      const mode = e.target.closest('[data-tg-mode]'); if (mode) { tg.mode = mode.dataset.tgMode; return this._togetherPaintLayout(); }
+      const tile = e.target.closest('[data-tg-tile]');
+      if (tile) {
+        tg.sel = tile.dataset.tgTile;
+        tg.muted = false; // sound starts only when asked for: the tap is the user gesture iPhone requires
+        return this._togetherPaintLayout();
+      }
+      if (e.target.closest('[data-tg-play]')) return this._togetherToggle();
+      if (e.target.closest('[data-tg-mute]')) return this._togetherToggleMute();
+    });
+    root.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.stopPropagation(); this._closeTogether(); return; }
+      if (e.key === 'Enter' || e.key === ' ') {
+        const tile = e.target.closest?.('[data-tg-tile]');
+        if (tile) { e.preventDefault(); tg.sel = tile.dataset.tgTile; this._togetherPaintLayout(); }
+      }
+    });
+    root.querySelector('#tg-range').addEventListener('input', (e) => { tg.t = Number(e.target.value); tg.waitMs = 0; this._togetherSync(true); this._togetherPaintTime(); });
+    for (const ev of events) {
+      const el = [...root.querySelectorAll('[data-tg-tile]')].find((n) => n.dataset.tgTile === String(ev.id));
+      tg.tiles.set(String(ev.id), { ev, el, load: 'idle', player: null, video: null, key: '', bindTimer: 0, lastSeek: 0 });
+    }
+    this._togetherPaintLayout();
+    this._togetherLoop(tg);
+    root.querySelector('.tg-close')?.focus({ preventScroll: true });
+    // wide cards: bring the player to the top of the screen, so the clips and the controls are in view together (phones get a full-screen sheet)
+    if (!narrow) { try { root.scrollIntoView({ block: 'start' }); } catch (_) { /* older browsers */ } }
+  },
+
+  _closeTogether() {
+    const tg = this._tg;
+    this._tg = null;
+    if (tg) {
+      cancelAnimationFrame(tg.raf);
+      for (const tile of tg.tiles.values()) {
+        clearInterval(tile.bindTimer);
+        try { tile.video?.pause(); } catch (_) { /* the element is going away */ }
+        tile.player?.remove?.();
+      }
+    }
+    if (tg) {
+      tg.host?.remove();
+      tg.root?.remove();
+      if (tg.host) document.body.style.overflow = tg.bodyOverflow || '';
+    }
+    this.shadowRoot?.querySelector?.('.card')?.classList.remove('together-open');
+  },
+
+  /** Open one clip's stream. Called when the clip's turn is near, so only the clips in play are being streamed. */
+  async _togetherLoadTile(tg, tile) {
+    if (tile.load !== 'idle') return;
+    tile.load = 'loading';
+    const { ev, el } = tile;
+    let url = null;
+    try { url = await this._togetherResolveClip(ev); } catch (_) { url = null; }
+    if (this._tg !== tg) return; // closed or replaced while resolving
+    if (!url) { tile.load = 'failed'; el.querySelector('.tg-ld').textContent = 'Clip not available'; return; }
+    const player = this._createHlsPlayer(url, { controls: false, muted: true, autoplay: false });
+    player.classList.add('tg-player');
+    tile.player = player;
+    el.querySelector('.tg-media').appendChild(player);
+    let tries = 0;
+    tile.bindTimer = setInterval(() => {
+      const video = this._findVideo(player);
+      if (!video) { if (++tries > 60) { clearInterval(tile.bindTimer); tile.load = 'failed'; el.querySelector('.tg-ld').textContent = 'Clip not available'; } return; }
+      clearInterval(tile.bindTimer);
+      tile.video = video;
+      tile.load = 'ready';
+      video.muted = String(ev.id) !== String(tg.sel); video.playsInline = true; video.controls = false; video.loop = false;
+      // the clip's picture fills the tile the way video_fit says (set on the <video> itself, whatever the player's own styles do)
+      const fit = this._config?.video_fit;
+      if (fit && fit !== 'contain') video.style.setProperty('object-fit', fit, 'important');
+      const ready = () => { el.querySelector('.tg-ld').hidden = true; if (this._tg === tg) tg.dirty = true; };
+      for (const name of ['loadedmetadata', 'canplay', 'playing', 'seeked']) video.addEventListener(name, ready);
+      if (video.readyState >= 1) ready();
+    }, 200);
+  },
+
+  /** The clip's video URL, asked of the Frigate instance that owns the clip's camera. */
+  async _togetherResolveClip(ev) {
+    const owner = (this._config?.cameras || []).map((c) => this._camCache?.[c.entity]).find((cc) => cc && String(cc.cam) === String(ev.camera));
+    if (owner?.clientId) {
+      const url = await this._resolveMediaContentId(`media-source://frigate/${owner.clientId}/event/clips/${owner.cam}/${ev.id}`);
+      if (url) return url;
+    }
+    return this._resolveFrigateMedia(ev, 'clip');
+  },
+
+  /** The shared clock. It runs every frame, but the clips are only checked a few times a second, and the clock waits while a stream buffers. */
+  _togetherLoop(tg) {
+    const step = (now) => {
+      if (this._tg !== tg) return;
+      const dt = Math.min(0.25, Math.max(0, (now - tg.last) / 1000));
+      tg.last = now;
+      if (tg.playing && !tg.waiting) {
+        tg.t = Math.min(tg.end, tg.t + dt);
+        if (tg.t >= tg.end) { tg.playing = false; this._togetherPaintPlay(); tg.dirty = true; }
+      }
+      if (tg.dirty || now - tg.lastSync >= TOGETHER_SYNC_MS) {
+        const elapsed = tg.lastSync ? now - tg.lastSync : TOGETHER_SYNC_MS;
+        tg.lastSync = now; tg.dirty = false;
+        this._togetherSync(false, elapsed);
+        this._togetherPaintTime();
+      }
+      tg.raf = requestAnimationFrame(step);
+    };
+    tg.raf = requestAnimationFrame(step);
+  },
+
+  _togetherToggle() {
+    const tg = this._tg; if (!tg) return;
+    if (!tg.playing && tg.t >= tg.end) tg.t = tg.start; // replay from the beginning
+    tg.playing = !tg.playing;
+    tg.blocked = false;
+    tg.last = performance.now();
+    this._togetherSync(true);
+    this._togetherPaintPlay();
+  },
+
+  /**
+   * Put every clip where the shared clock says it should be.
+   * @param {boolean} force seek every clip (the person scrubbed, or pressed play after a stop)
+   * @param {number} [elapsed] ms since the last check, used to time how long the clock has been waiting
+   */
+  _togetherSync(force, elapsed = 0) {
+    const tg = this._tg; if (!tg) return;
+    const now = Date.now();
+    const states = [];
+    let waiting = false;
+    for (const tile of tg.tiles.values()) {
+      const video = tile.video;
+      const duration = video && Number.isFinite(video.duration) && video.duration > 0 ? video.duration : undefined;
+      const st = togetherClipState(tg.t, tile.ev, duration);
+      states.push([tile, st]);
+      // open the stream shortly before the clip's turn (or at once when its turn has come)
+      if (tile.load === 'idle' && (st.state === 'playing' || (st.state === 'before' && -st.rel <= TOGETHER_PRELOAD_SECONDS)) && this._togetherLoadTile) this._togetherLoadTile(tg, tile);
+      // a clip whose turn it is but whose stream is not ready yet makes the clock wait for it
+      if (st.state === 'playing' && tile.load !== 'failed' && (!video || video.readyState < 3 || video.seeking)) {
+        if (!waiting) tg.waitInfo = `${this._mediaCameraDisplay(tile.ev.camera)}: ${tile.load === 'loading' && !video ? 'opening the stream' : video ? `loading (state ${video.readyState})` : 'starting the player'}`;
+        waiting = true;
+      }
+    }
+    tg.waitMs = waiting ? tg.waitMs + elapsed : 0;
+    tg.waiting = waiting && tg.waitMs < TOGETHER_MAX_WAIT_MS;
+    const run = tg.playing && !tg.waiting;
+    for (const [tile, st] of states) {
+      const video = tile.video;
+      if (video) { const mute = tg.muted || String(tile.ev.id) !== String(tg.sel); if (video.muted !== mute) video.muted = mute; }
+      if (st.state === 'playing' && video && video.readyState >= 1) {
+        const duration = Number.isFinite(video.duration) && video.duration > 0 ? video.duration : undefined;
+        const wanted = Math.max(0, duration ? Math.min(st.rel, duration - 0.05) : st.rel);
+        const current = Number(video.currentTime);
+        const drift = Number.isFinite(current) ? current - wanted : Infinity;
+        if (force || !Number.isFinite(current) || (Math.abs(drift) > TOGETHER_SEEK_SECONDS && !video.seeking && now - tile.lastSeek > TOGETHER_SEEK_COOLDOWN_MS)) {
+          tile.lastSeek = now;
+          try { video.currentTime = wanted; } catch (_) { /* not seekable yet */ }
+          if (video.playbackRate !== 1) video.playbackRate = 1;
+        } else if (run && Math.abs(drift) > TOGETHER_NUDGE_SECONDS) {
+          video.playbackRate = drift < 0 ? 1.08 : 0.92; // a little behind: speed up; a little ahead: slow down
+        } else if (video.playbackRate !== 1) video.playbackRate = 1;
+        // while the clock waits, the stream that is not ready is asked to play (that is what makes it load); the others hold
+        const loading = tg.waiting && tg.playing && video.readyState < 3;
+        if (run || loading) {
+          if (video.paused) {
+            try {
+              const p = video.play();
+              // the browser refused to start the video on its own (iPhone does this in Low Power Mode, for example): stop the clock and ask for a tap
+              if (p?.catch) p.catch((err) => { if (err?.name === 'NotAllowedError' && this._tg === tg && !tg.blocked) { tg.blocked = true; tg.playing = false; this._togetherPaintPlay(); } });
+            } catch (_) { /* autoplay refused */ }
+          }
+        }
+        else if (!video.paused) video.pause();
+      } else if (video && !video.paused) video.pause();
+      this._togetherPaintTile(tile, st);
+    }
+    const ctl = tg.root?.querySelector?.('#tg-sound');
+    if (ctl) { const sel = tg.events.find((ev) => String(ev.id) === String(tg.sel)); const text = tg.blocked ? 'Tap play to start the video' : `${tg.muted ? 'Muted · tap a camera or the speaker for sound' : `Sound: ${sel ? this._mediaCameraDisplay(sel.camera) : ''}`}${tg.waiting ? (tg.waitMs > 3000 && tg.waitInfo ? ` · Waiting for ${tg.waitInfo}` : ' · Buffering…') : ''}`; if (ctl.textContent !== text) ctl.textContent = text; }
+  },
+
+  _togetherPaintTile(tile, st) {
+    const key = st.state === 'before' ? `before:${Math.ceil(-st.rel)}` : st.state;
+    if (key === tile.key) return;
+    tile.key = key;
+    const off = tile.el.querySelector('.tg-off');
+    const loading = tile.el.querySelector('.tg-ld');
+    if (loading) loading.style.visibility = st.state === 'playing' ? '' : 'hidden'; // the countdown or "ended" note replaces "Loading…"
+    tile.el.classList.toggle('idle', st.state !== 'playing');
+    if (st.state === 'playing') { off.hidden = true; off.textContent = ''; return; }
+    off.hidden = false;
+    off.innerHTML = st.state === 'before'
+      ? `<b>Starts in ${Math.ceil(-st.rel)} s</b><span>${tgEsc(this._time(tile.ev.start_time))}</span>`
+      : `<b>Clip ended ${tgEsc(this._time(st.end))}</b><span>Nothing recorded after this</span>`;
+  },
+
+  _togetherPaintTime() {
+    const tg = this._tg; if (!tg) return;
+    const root = tg.root; if (!root) return;
+    // a few pixels of rounding must not turn the tile area into a scroller that traps the mouse wheel
+    const stage = root.querySelector('#tg-stage');
+    if (stage) stage.classList.toggle('scrolls', stage.scrollHeight - stage.clientHeight > 12);
+    root.querySelector('#tg-time').textContent = `${tgMmss(tg.t - tg.start)} / ${tgMmss(tg.end - tg.start)}`;
+    const range = root.querySelector('#tg-range');
+    if (range && root.getRootNode().activeElement !== range) range.value = String(tg.t);
+    const head = root.querySelector('#tg-headline');
+    if (head) head.style.left = `${((tg.t - tg.start) / Math.max(1, tg.end - tg.start) * 100).toFixed(2)}%`;
+  },
+
+  /** The mute button: silences every clip, and a second tap brings the chosen camera's sound back. */
+  _togetherToggleMute() {
+    const tg = this._tg; if (!tg) return;
+    tg.muted = !tg.muted;
+    this._togetherPaintMute();
+    this._togetherSync(false);
+  },
+
+  _togetherPaintMute() {
+    const tg = this._tg; if (!tg) return;
+    const root = tg.root; if (!root) return;
+    const btn = root.querySelector('[data-tg-mute]');
+    if (btn) { btn.innerHTML = tg.muted ? TG_ICON_MUTED : TG_ICON_SOUND; btn.setAttribute('aria-pressed', tg.muted ? 'true' : 'false'); btn.setAttribute('aria-label', tg.muted ? 'Unmute' : 'Mute'); btn.classList.toggle('on', tg.muted); }
+    root.querySelectorAll('.tg-snd').forEach((el) => { el.innerHTML = tg.muted ? TG_ICON_MUTED : TG_ICON_SOUND; });
+  },
+
+  _togetherPaintPlay() {
+    const tg = this._tg; if (!tg) return;
+    const btn = tg.root?.querySelector('[data-tg-play]');
+    if (!btn) return;
+    btn.innerHTML = tg.playing ? TG_ICON_PAUSE : TG_ICON_PLAY;
+    btn.setAttribute('aria-label', tg.playing ? 'Pause' : 'Play');
+  },
+
+  _togetherPaintLayout() {
+    const tg = this._tg; if (!tg) return;
+    const root = tg.root; if (!root) return;
+    const stage = root.querySelector('#tg-stage');
+    stage.className = `tg-stage ${tg.mode}${tg.mode === 'focus' && !tg.narrow ? ' wide' : ''}`;
+    stage.style.setProperty('--others', String(Math.max(1, tg.events.length - 1)));
+    root.querySelectorAll('[data-tg-mode]').forEach((b) => { const on = b.dataset.tgMode === tg.mode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+    root.querySelectorAll('[data-tg-tile]').forEach((el) => el.classList.toggle('sel', el.dataset.tgTile === String(tg.sel)));
+    const sel = tg.events.find((ev) => String(ev.id) === String(tg.sel));
+    const sound = root.querySelector('#tg-sound');
+    if (sound && sel) sound.textContent = tg.muted ? 'Muted · tap a camera or the speaker for sound' : `Sound: ${this._mediaCameraDisplay(sel.camera)}`;
+    this._togetherPaintPlay();
+    this._togetherPaintMute();
+    this._togetherSync(false);
+  },
+};
+
 // ── src/card/browser.js ──
 /**
  * Public method-group barrel for browserMethods.
@@ -7930,6 +8582,7 @@ const browserMethods = mergeMethodGroups(
   mediaNavigationMethods,
   mediaGalleryMethods,
   mediaFilterMethods,
+  togetherMethods,
 );
 
 // ── src/card/playback/event-controller.js ──
@@ -13576,6 +14229,7 @@ _render() {
           <label><span class="field-label">Browser history window (hours)</span><input class="tf" id="window_hours" type="number" min="1" max="720" value="${this._config?.window_hours||24}"><small class="mini-help">Initial events/reviews history loaded for browsing.</small></label>
           <label><span class="field-label">Refresh interval (seconds)</span><input class="tf" id="refresh_seconds" type="number" min="15" max="3600" value="${this._config?.refresh_seconds||45}"><small class="mini-help">Background Frigate metadata/event refresh.</small></label>
           <label><span class="field-label">Reviews default</span><select class="tf" id="reviewed_default"><option value="all" ${(med.reviewed_default||'all')==='all'?'selected':''}>All</option><option value="unreviewed" ${med.reviewed_default==='unreviewed'?'selected':''}>Unreviewed</option><option value="reviewed" ${med.reviewed_default==='reviewed'?'selected':''}>Reviewed</option></select></label>
+          <label class="chk-lbl"><input type="checkbox" id="group_overlapping_clips" ${med.group_overlapping_clips!==false?'checked':''}> Group overlapping clips<small class="mini-help">Clips from different cameras at the same time become one card you can watch together.</small></label>
         </div>
       </div>
 
@@ -13787,7 +14441,7 @@ _u() {
       default_range_seconds: Math.min(Math.round(dlMax*60),Math.max(2,Math.min(1800,Math.round(Number(g('download_default_range_seconds')||60))))),
       max_range_minutes: dlMax,
     };
-    c.media = { reviewed_default: this.querySelector('#reviewed_default')?.value || 'all' };
+    c.media = { reviewed_default: this.querySelector('#reviewed_default')?.value || 'all', group_overlapping_clips: this.querySelector('#group_overlapping_clips')?.checked !== false };
 
     // Startup behavior. Hidden tabs cannot be selected as the initial view, and
     // at least one tab always remains visible.

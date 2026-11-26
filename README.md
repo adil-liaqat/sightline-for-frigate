@@ -331,6 +331,15 @@ media:
   reviewed_default: all
 ```
 
+### Overlapping clips
+
+Clips from different cameras that happen at the same time (at least 3 seconds in common) are grouped into one card in **Clips**, with a thumbnail from each camera. **Watch together** plays them side by side on one shared clock: one play/pause and scrubber for all cameras, sound from one camera at a time (tap a camera to switch), and **Grid** or **Focus** layouts. A camera whose clip has not started yet or has already ended is dimmed until the shared clock reaches it. Up to four clips play at once (the longest four when more overlap). The arrow on the card lists the individual clips, which open as usual.
+
+```yaml
+media:
+  group_overlapping_clips: true   # false keeps the plain Clips list
+```
+
 When recorded playback is active, Sightline displays a clear **Back to Live** control over the player. If the clip was opened from grid/Multiview, the control becomes **Back to Multiview** and restores the grid.
 
 ## Download a recording range
