@@ -115,3 +115,27 @@ test('Reviews Mark all asks for confirmation and marks only what the filters sho
   await expect(btn).toBeHidden();
   await expect(card(page).locator('.media-gallery-grid [data-mark]')).toHaveCount(0);
 });
+test('a clip that has another shape than the live camera plays in a box of its own shape',async({page})=>{
+  await ready(page);
+  // the preview card has a fixed 16:9 box; the behaviour is for aspect_ratio: auto (the default), so mount a card with that
+  await page.evaluate(async()=>{
+    const mock=window.preview.mock, host=document.querySelector('sightline-card').parentElement, el=document.createElement('sightline-card');
+    el.setConfig({type:'custom:sightline-card',cameras:[{entity:'camera.front_door',name:'Front Door'}],default_tab:'clips',stream_type:'hls'});
+    host.replaceChildren(el);el.hass=mock.hass;window.__auto=el;
+  });
+  await expect.poll(()=>page.evaluate(()=>!!window.__auto.shadowRoot.querySelector('.media-gallery-grid [data-ev]'))).toBe(true);
+  await page.evaluate(()=>window.__auto.shadowRoot.querySelector('.media-gallery-grid [data-ev]').click());
+  await expect.poll(()=>page.evaluate(()=>!!window.__auto._findVideo(window.__auto.shadowRoot.querySelector('#viewer')))).toBe(true);
+  const liveShape=await page.evaluate(()=>window.__auto.shadowRoot.querySelector('.card').style.getPropertyValue('--stream-ar'));
+  // the clip's video is 4:3 (the mock clips are 16:9 and the preview browser cannot report another size, so state it)
+  await page.evaluate(()=>{
+    const v=window.__auto._findVideo(window.__auto.shadowRoot.querySelector('#viewer'));
+    Object.defineProperty(v,'videoWidth',{value:1440,configurable:true});Object.defineProperty(v,'videoHeight',{value:1080,configurable:true});
+    v.dispatchEvent(new Event('resize'));
+  });
+  await expect.poll(()=>page.evaluate(()=>window.__auto.shadowRoot.querySelector('.card').style.getPropertyValue('--stream-ar'))).toBe('1440/1080');
+  expect(await page.evaluate(()=>window.__auto.shadowRoot.querySelector('#eng-wrap').style.getPropertyValue('aspect-ratio'))).toBe('1440 / 1080');
+  // back to live: the box returns to the live camera's shape
+  await page.evaluate(()=>window.__auto._showLive());
+  await expect.poll(()=>page.evaluate(()=>window.__auto.shadowRoot.querySelector('.card').style.getPropertyValue('--stream-ar'))).toBe(liveShape);
+});

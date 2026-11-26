@@ -110,3 +110,35 @@ console.log('Media browser and desktop playback regression test passed.');
   assert.equal(on({ enabled: true, show_on_mobile: false }, 1200), true, 'show_on_mobile:false keeps the timeline on desktop');
   assert.equal(on({ enabled: false, show_on_mobile: true }, 1200), false, 'enabled:false hides it everywhere');
 }
+// Clips, reviews and recordings play in a box of their own video's shape (aspect_ratio: auto), not the live camera's.
+{
+  const { layoutMethods } = await import('../src/card/layout.js');
+  const video = (w, h) => ({ tagName: 'VIDEO', videoWidth: w, videoHeight: h, addEventListener() {} });
+  const mk = (aspect, viewerDisplay, media) => {
+    const applied = [];
+    const viewer = { style: { display: viewerDisplay }, querySelector: () => null };
+    const card = {
+      _config: { aspect_ratio: aspect }, _playbackAspect: null, shadowRoot: { querySelector: (s) => (s === '#viewer' ? viewer : null) },
+      _findVideo: () => media, _applyCardStyle: () => applied.push(card._playbackAspect),
+      _syncPlaybackAspect: layoutMethods._syncPlaybackAspect, _playbackMediaAspect: layoutMethods._playbackMediaAspect,
+    };
+    return { card, applied };
+  };
+  let t = mk('auto', 'block', video(1280, 960));
+  t.card._syncPlaybackAspect();
+  assert.equal(t.card._playbackAspect, '1280/960', 'While a clip plays, the box takes the clip\'s own shape');
+  assert.equal(t.applied.length, 1, 'The layout is refreshed once');
+  t.card._syncPlaybackAspect();
+  assert.equal(t.applied.length, 1, 'Nothing changes, nothing is refreshed');
+  t = mk('auto', 'block', video(0, 0));
+  t.card._syncPlaybackAspect();
+  assert.equal(t.card._playbackAspect, null, 'Before the video has a size the live shape stays');
+  t = mk('auto', 'none', video(1280, 960));
+  t.card._playbackAspect = '1280/960';
+  t.card._syncPlaybackAspect();
+  assert.equal(t.card._playbackAspect, null, 'When playback ends the box goes back to the live shape');
+  t = mk('16:9', 'block', video(1280, 960));
+  t.card._syncPlaybackAspect();
+  assert.equal(t.card._playbackAspect, null, 'A fixed aspect_ratio is never overridden');
+}
+
