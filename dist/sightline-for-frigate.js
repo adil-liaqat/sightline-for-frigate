@@ -1537,13 +1537,17 @@ const TOGETHER_STYLES = `
 .card .tg-mute svg{width:17px;height:17px;}
 .card .tg-mute:focus-visible{outline:2px solid #0a84ff;outline-offset:2px;}
 .card.theme-light .tg-mute{background:#e5e5ea;color:#1d1d1f;}
-.card .tg-time{font-variant-numeric:tabular-nums;font-size:12px;color:#a1a1a6;white-space:nowrap;}
-.card .tg-scrub{position:relative;flex:1 1 auto;height:34px;min-width:80px;}
+.card .tg-time{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.card .tg-time b{font-size:12px;font-weight:600;color:#f5f5f7;}
+.card .tg-time small{font-size:10px;color:#a1a1a6;}
+.card .tg-ticks{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;font-size:10px;line-height:1;color:#a1a1a6;font-variant-numeric:tabular-nums;pointer-events:none;}
+.card.mobile .tg-tick-mid{display:none;}
+.card .tg-scrub{position:relative;flex:1 1 auto;height:48px;min-width:80px;}
 .card .tg-segs{position:absolute;left:0;right:0;top:4px;display:flex;flex-direction:column;gap:3px;pointer-events:none;}
 .card .tg-seg{height:5px;position:relative;border-radius:3px;background:rgba(255,255,255,.07);}
 .card .tg-seg i{position:absolute;top:0;bottom:0;border-radius:3px;background:#0a84ff;}
-.card .tg-head-line{position:absolute;top:0;bottom:0;width:2px;background:#fff;border-radius:1px;pointer-events:none;transition:left .25s linear;box-shadow:0 0 0 2px rgba(0,0,0,.5);}
-.card .tg-scrub input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;}
+.card .tg-head-line{position:absolute;top:0;bottom:14px;width:2px;background:#fff;border-radius:1px;pointer-events:none;transition:left .25s linear;box-shadow:0 0 0 2px rgba(0,0,0,.5);}
+.card .tg-scrub input{position:absolute;left:0;right:0;top:0;bottom:14px;width:100%;height:calc(100% - 14px);margin:0;opacity:0;cursor:pointer;}
 .card .tg-sound{font-size:11px;color:#a1a1a6;}
 /* Phones: a full-screen sheet over the page (the same way live fullscreen works on iPhone), tiles centred between the header and the controls. */
 .card.mobile.together-open .together{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-height:none;z-index:2147483000;border-radius:0;overflow:hidden;
@@ -1563,7 +1567,8 @@ const TOGETHER_STYLES = `
 .card.mobile .tg-stage.grid .tg-tile:first-child{margin-top:auto;}
 .card.mobile .tg-stage.grid .tg-tile:last-child{margin-bottom:auto;}
 .card.theme-light .together{background:#f2f2f7;color:#1d1d1f;}
-.card.theme-light .tg-title span,.card.theme-light .tg-sound,.card.theme-light .tg-time{color:#6e6e73;}
+.card.theme-light .tg-title span,.card.theme-light .tg-sound,.card.theme-light .tg-time small,.card.theme-light .tg-ticks{color:#6e6e73;}
+.card.theme-light .tg-time b{color:#1d1d1f;}
 .card.theme-light .tg-modes button,.card.theme-light .tg-close{background:#e5e5ea;color:#1d1d1f;}
 .card.theme-light .tg-modes button.on{background:#0a84ff;color:#fff;}
 .card.theme-light .tg-ctl{background:#fff;border-color:rgba(0,0,0,.08);}
@@ -8297,9 +8302,9 @@ const togetherMethods = {
       <div class="tg-stage" id="tg-stage">${events.map((ev) => `<div class="tg-tile" data-tg-tile="${tgEsc(ev.id)}" tabindex="0" role="button" aria-label="${tgEsc(this._mediaCameraDisplay(ev.camera))}: play sound from this camera">
           <div class="tg-media"></div><span class="tg-nm">${tgEsc(this._mediaCameraDisplay(ev.camera))}</span><span class="tg-lb">${tgEsc(cap(ev.label || ''))}</span><span class="tg-snd">${TG_ICON_SOUND}</span>
           <div class="tg-off" hidden></div><div class="tg-ld">Loading…</div></div>`).join('')}</div>
-      <div class="tg-ctl"><div class="tg-row"><button type="button" class="tg-play" data-tg-play aria-label="Pause">${TG_ICON_PAUSE}</button><span class="tg-time" id="tg-time"></span>
+      <div class="tg-ctl"><div class="tg-row"><button type="button" class="tg-play" data-tg-play aria-label="Pause">${TG_ICON_PAUSE}</button><span class="tg-time" id="tg-time"><b id="tg-clock"></b><small id="tg-elapsed"></small></span>
         <div class="tg-scrub"><div class="tg-segs">${events.map((ev) => { const a = (Number(ev.start_time) - start) / (end - start) * 100, w = (overlapClipEnd(ev) - Number(ev.start_time)) / (end - start) * 100; return `<div class="tg-seg"><i style="left:${a.toFixed(2)}%;width:${Math.max(1, w).toFixed(2)}%"></i></div>`; }).join('')}</div>
-          <div class="tg-head-line" id="tg-headline"></div><input type="range" id="tg-range" min="${start}" max="${end}" step="0.1" value="${start}" aria-label="Shared position"></div>
+          <div class="tg-head-line" id="tg-headline"></div><div class="tg-ticks" aria-hidden="true"><span>${tgEsc(this._timeSec(start))}</span><span class="tg-tick-mid">${tgEsc(this._timeSec(start + (end - start) / 2))}</span><span>${tgEsc(this._timeSec(end))}</span></div><input type="range" id="tg-range" min="${start}" max="${end}" step="0.1" value="${start}" aria-label="Shared position"></div>
         <button type="button" class="tg-mute" data-tg-mute aria-label="Mute" aria-pressed="false">${TG_ICON_SOUND}</button></div>
         <div class="tg-sound" id="tg-sound"></div></div>`;
     tg.root = root;
@@ -8535,7 +8540,11 @@ const togetherMethods = {
       }
       stage.classList.toggle('scrolls', stage.scrollHeight - stage.clientHeight > 12);
     }
-    root.querySelector('#tg-time').textContent = `${tgMmss(tg.t - tg.start)} / ${tgMmss(tg.end - tg.start)}`;
+    // the real time of day first (the clips are recorded at a time; seconds, in Home Assistant's 12 or 24 hour style), the elapsed time under it
+    const clock = root.querySelector('#tg-clock'), elapsed = root.querySelector('#tg-elapsed');
+    const clockText = this._timeSec(tg.t), elapsedText = `${tgMmss(tg.t - tg.start)} / ${tgMmss(tg.end - tg.start)}`;
+    if (clock && clock.textContent !== clockText) clock.textContent = clockText;
+    if (elapsed && elapsed.textContent !== elapsedText) elapsed.textContent = elapsedText;
     const range = root.querySelector('#tg-range');
     if (range && root.getRootNode().activeElement !== range) range.value = String(tg.t);
     const head = root.querySelector('#tg-headline');

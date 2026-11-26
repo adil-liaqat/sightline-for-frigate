@@ -182,7 +182,11 @@ test('overlapping clips group into one card and play together on one clock',asyn
   // streams open lazily: only the clip in play at the start, the others when scrubbed to or close to their turn
   await expect(together.locator('.tg-player')).toHaveCount(1);
   await together.locator('#tg-range').evaluate(el=>{el.value=String(Number(el.min)+20);el.dispatchEvent(new Event('input',{bubbles:true}));});
-  await expect(together.locator('#tg-time')).toHaveText(/^0:20 \//);
+  await expect(together.locator('#tg-elapsed')).toHaveText(/^0:20 \//);
+  // the real time of day is shown too, with seconds, and under the scrubber the start and end times
+  await expect(together.locator('#tg-clock')).toHaveText(/\d:\d\d:\d\d/);
+  await expect(together.locator('.tg-ticks span')).toHaveCount(3);
+  await expect(together.locator('.tg-ticks span').first()).toHaveText(/\d:\d\d:\d\d/);
   await expect(together.locator('.tg-player')).toHaveCount(3);
   await together.locator('[data-tg-mode="focus"]').click();
   await expect(together.locator('.tg-stage')).toHaveClass(/focus/);

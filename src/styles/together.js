@@ -78,13 +78,17 @@ export const TOGETHER_STYLES = `
 .card .tg-mute svg{width:17px;height:17px;}
 .card .tg-mute:focus-visible{outline:2px solid #0a84ff;outline-offset:2px;}
 .card.theme-light .tg-mute{background:#e5e5ea;color:#1d1d1f;}
-.card .tg-time{font-variant-numeric:tabular-nums;font-size:12px;color:#a1a1a6;white-space:nowrap;}
-.card .tg-scrub{position:relative;flex:1 1 auto;height:34px;min-width:80px;}
+.card .tg-time{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.card .tg-time b{font-size:12px;font-weight:600;color:#f5f5f7;}
+.card .tg-time small{font-size:10px;color:#a1a1a6;}
+.card .tg-ticks{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;font-size:10px;line-height:1;color:#a1a1a6;font-variant-numeric:tabular-nums;pointer-events:none;}
+.card.mobile .tg-tick-mid{display:none;}
+.card .tg-scrub{position:relative;flex:1 1 auto;height:48px;min-width:80px;}
 .card .tg-segs{position:absolute;left:0;right:0;top:4px;display:flex;flex-direction:column;gap:3px;pointer-events:none;}
 .card .tg-seg{height:5px;position:relative;border-radius:3px;background:rgba(255,255,255,.07);}
 .card .tg-seg i{position:absolute;top:0;bottom:0;border-radius:3px;background:#0a84ff;}
-.card .tg-head-line{position:absolute;top:0;bottom:0;width:2px;background:#fff;border-radius:1px;pointer-events:none;transition:left .25s linear;box-shadow:0 0 0 2px rgba(0,0,0,.5);}
-.card .tg-scrub input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;}
+.card .tg-head-line{position:absolute;top:0;bottom:14px;width:2px;background:#fff;border-radius:1px;pointer-events:none;transition:left .25s linear;box-shadow:0 0 0 2px rgba(0,0,0,.5);}
+.card .tg-scrub input{position:absolute;left:0;right:0;top:0;bottom:14px;width:100%;height:calc(100% - 14px);margin:0;opacity:0;cursor:pointer;}
 .card .tg-sound{font-size:11px;color:#a1a1a6;}
 /* Phones: a full-screen sheet over the page (the same way live fullscreen works on iPhone), tiles centred between the header and the controls. */
 .card.mobile.together-open .together{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-height:none;z-index:2147483000;border-radius:0;overflow:hidden;
@@ -104,7 +108,8 @@ export const TOGETHER_STYLES = `
 .card.mobile .tg-stage.grid .tg-tile:first-child{margin-top:auto;}
 .card.mobile .tg-stage.grid .tg-tile:last-child{margin-bottom:auto;}
 .card.theme-light .together{background:#f2f2f7;color:#1d1d1f;}
-.card.theme-light .tg-title span,.card.theme-light .tg-sound,.card.theme-light .tg-time{color:#6e6e73;}
+.card.theme-light .tg-title span,.card.theme-light .tg-sound,.card.theme-light .tg-time small,.card.theme-light .tg-ticks{color:#6e6e73;}
+.card.theme-light .tg-time b{color:#1d1d1f;}
 .card.theme-light .tg-modes button,.card.theme-light .tg-close{background:#e5e5ea;color:#1d1d1f;}
 .card.theme-light .tg-modes button.on{background:#0a84ff;color:#fff;}
 .card.theme-light .tg-ctl{background:#fff;border-color:rgba(0,0,0,.08);}

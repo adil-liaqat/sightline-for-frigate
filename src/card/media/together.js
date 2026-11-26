@@ -176,9 +176,9 @@ export const togetherMethods = {
       <div class="tg-stage" id="tg-stage">${events.map((ev) => `<div class="tg-tile" data-tg-tile="${tgEsc(ev.id)}" tabindex="0" role="button" aria-label="${tgEsc(this._mediaCameraDisplay(ev.camera))}: play sound from this camera">
           <div class="tg-media"></div><span class="tg-nm">${tgEsc(this._mediaCameraDisplay(ev.camera))}</span><span class="tg-lb">${tgEsc(cap(ev.label || ''))}</span><span class="tg-snd">${TG_ICON_SOUND}</span>
           <div class="tg-off" hidden></div><div class="tg-ld">Loading…</div></div>`).join('')}</div>
-      <div class="tg-ctl"><div class="tg-row"><button type="button" class="tg-play" data-tg-play aria-label="Pause">${TG_ICON_PAUSE}</button><span class="tg-time" id="tg-time"></span>
+      <div class="tg-ctl"><div class="tg-row"><button type="button" class="tg-play" data-tg-play aria-label="Pause">${TG_ICON_PAUSE}</button><span class="tg-time" id="tg-time"><b id="tg-clock"></b><small id="tg-elapsed"></small></span>
         <div class="tg-scrub"><div class="tg-segs">${events.map((ev) => { const a = (Number(ev.start_time) - start) / (end - start) * 100, w = (overlapClipEnd(ev) - Number(ev.start_time)) / (end - start) * 100; return `<div class="tg-seg"><i style="left:${a.toFixed(2)}%;width:${Math.max(1, w).toFixed(2)}%"></i></div>`; }).join('')}</div>
-          <div class="tg-head-line" id="tg-headline"></div><input type="range" id="tg-range" min="${start}" max="${end}" step="0.1" value="${start}" aria-label="Shared position"></div>
+          <div class="tg-head-line" id="tg-headline"></div><div class="tg-ticks" aria-hidden="true"><span>${tgEsc(this._timeSec(start))}</span><span class="tg-tick-mid">${tgEsc(this._timeSec(start + (end - start) / 2))}</span><span>${tgEsc(this._timeSec(end))}</span></div><input type="range" id="tg-range" min="${start}" max="${end}" step="0.1" value="${start}" aria-label="Shared position"></div>
         <button type="button" class="tg-mute" data-tg-mute aria-label="Mute" aria-pressed="false">${TG_ICON_SOUND}</button></div>
         <div class="tg-sound" id="tg-sound"></div></div>`;
     tg.root = root;
@@ -414,7 +414,11 @@ export const togetherMethods = {
       }
       stage.classList.toggle('scrolls', stage.scrollHeight - stage.clientHeight > 12);
     }
-    root.querySelector('#tg-time').textContent = `${tgMmss(tg.t - tg.start)} / ${tgMmss(tg.end - tg.start)}`;
+    // the real time of day first (the clips are recorded at a time; seconds, in Home Assistant's 12 or 24 hour style), the elapsed time under it
+    const clock = root.querySelector('#tg-clock'), elapsed = root.querySelector('#tg-elapsed');
+    const clockText = this._timeSec(tg.t), elapsedText = `${tgMmss(tg.t - tg.start)} / ${tgMmss(tg.end - tg.start)}`;
+    if (clock && clock.textContent !== clockText) clock.textContent = clockText;
+    if (elapsed && elapsed.textContent !== elapsedText) elapsed.textContent = elapsedText;
     const range = root.querySelector('#tg-range');
     if (range && root.getRootNode().activeElement !== range) range.value = String(tg.t);
     const head = root.querySelector('#tg-headline');
